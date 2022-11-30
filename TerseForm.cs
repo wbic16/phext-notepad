@@ -5,7 +5,22 @@ namespace TerseNotepad
     public partial class TerseForm : Form
     {
         private static readonly string TERSE_FILTER = "Terse File (*.t)|*.t|All files (*.*)|*.*";
-        private Dictionary<uint, string> _data = new();
+        private SortedDictionary<uint, SortedDictionary<uint, string>> _group = new();
+        private SortedDictionary<uint, string> _data
+        {
+            get
+            {
+                if (!_group.ContainsKey(_g))
+                {
+                    _group[_g] = new();
+                }
+                return _group[_g];
+            }
+            set
+            {
+                _group[_g] = value;
+            }
+        }
 
         // Editor State
         private uint _priorLine = 1;
@@ -70,13 +85,19 @@ Use F2 - F11 to access additional dimensions.
             if (result == DialogResult.OK)
             {
                 var data = File.ReadAllText(dialog.FileName);
-                var pages = data.Split("\x17\n");
-                _p = 1;
-                foreach ( var page in pages)
+                var groups = data.Split("\x18\n");
+                foreach (var group in groups)
                 {
-                    _data[_p] = page;
-                    ++_p;
+                    var pages = group.Split("\x17\n");
+                    _p = 1;
+                    foreach (var page in pages)
+                    {
+                        _data[_p] = page;
+                        ++_p;
+                    }
                 }
+                
+                _g = 1;
                 _p = 1;
                 loadPage();
             }
@@ -95,9 +116,14 @@ Use F2 - F11 to access additional dimensions.
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var text = "";
-            foreach (var page in _data)
+            foreach (var group_index in _group.Keys)
             {
-                text += $"{page.Value}\x17\n";
+                _g = group_index;
+                foreach (var page in _data)
+                {
+                    text += $"{page.Value}\x17\n";
+                }
+                text += "\x18\n";
             }
             var saver = new SaveFileDialog();
             saver.Filter = TERSE_FILTER;
@@ -121,11 +147,8 @@ Use F2 - F11 to access additional dimensions.
         private void textBox_SelectionChanged(object sender, EventArgs e)
         {
             _n = 1;
-            var total = 0;
-            //  5
-            // 10
-            // 20
-            var offset = textBox.SelectionStart; // 34 of 35
+            var total = 0;            
+            var offset = textBox.SelectionStart;
             foreach (var line in textBox.Lines)
             {
                 var delta = line.Length + 1;                
@@ -146,22 +169,36 @@ Use F2 - F11 to access additional dimensions.
 
         private void UpdateStatusBar()
         {
-            status.Text = $"Line: {_n}  Column: {_x}  Page: {_p}";
+            status.Text = $"Line: {_n}  Column: {_x}  Page: {_p}  Group: {_g}";
         }
 
         private void textBox_KeyUp(object sender, KeyEventArgs e)
         {
-            int delta = 0;
+            int page_delta = 0;
+            int group_delta = 0;
             bool arrowShifted = false;
 
+            // Group Shifts
+            if (!e.Shift && e.KeyCode == Keys.F3)
+            {
+                group_delta = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.F3)
+            {
+                group_delta = -1;
+                e.Handled = true;
+            }
+
+            // Page Shifts
             if (!e.Shift && e.KeyCode == Keys.F2)
             {
-                delta = 1;
+                page_delta = 1;
                 e.Handled = true;
             }
             if (e.Shift && e.KeyCode == Keys.F2)
             {
-                delta = -1;
+                page_delta = -1;
                 e.Handled = true;
             }
             var reachedEnd = textBox.SelectionStart == textBox.TextLength &&
@@ -169,7 +206,7 @@ Use F2 - F11 to access additional dimensions.
                 _priorColumn > textBox.Lines.Last().Length;
             if (!e.Shift && e.KeyCode == Keys.Right && reachedEnd)
             {
-                delta = 1;
+                page_delta = 1;
                 arrowShifted = true;
                 e.Handled = true;
             }
@@ -177,36 +214,39 @@ Use F2 - F11 to access additional dimensions.
                                _priorColumn == 1;
             if (!e.Shift && e.KeyCode == Keys.Left && reachedStart)
             {
-                delta = -1;
+                page_delta = -1;
                 arrowShifted = true;
                 e.Handled = true;
             }
             if (!e.Shift && e.KeyCode == Keys.Down && _priorLine == _n)
             {
-                delta = 1;
+                page_delta = 1;
                 arrowShifted = true;
                 e.Handled = true;
             }
             if (!e.Shift && e.KeyCode == Keys.Up && _priorLine == 1)
             {
-                delta = -1;
+                page_delta = -1;
                 arrowShifted = true;
                 e.Handled = true;
             }
-            if (delta != 0)
+            if (page_delta != 0 || group_delta != 0)
             {
                 collectPage();
-                if (delta > 0) { ++_p; }
-                if (delta < 0) { --_p; }
+                if (page_delta > 0) { ++_p; }
+                if (page_delta < 0) { --_p; }
+                if (group_delta > 0) { ++_g; }
+                if (group_delta < 0) { --_g; }
                 if (_p < 1) { _p = 1; }
+                if (_g < 1) { _g = 1; }
                 loadPage();
                 if (arrowShifted)
                 {
-                    if (delta < 0)
+                    if (page_delta < 0)
                     {
                         textBox.SelectionStart = textBox.TextLength > 1 ? textBox.TextLength - 1 : 0;
                     }
-                    if (delta > 0)
+                    if (page_delta > 0)
                     {
                         textBox.SelectionStart = 0;
                     }
