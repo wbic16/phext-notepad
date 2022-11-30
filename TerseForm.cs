@@ -1,11 +1,27 @@
 using System.Security.Policy;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace TerseNotepad
 {
     public partial class TerseForm : Form
     {
         private static readonly string TERSE_FILTER = "Terse File (*.t)|*.t|All files (*.*)|*.*";
-        private SortedDictionary<uint, SortedDictionary<uint, string>> _group = new();
+        private SortedDictionary<uint, SortedDictionary<uint, SortedDictionary<uint, string>>> _set = new();
+        private SortedDictionary<uint, SortedDictionary<uint, string>> _group
+        {
+            get
+            {
+                if (!_set.ContainsKey(_s))
+                {
+                    _set[_s] = new();
+                }
+                return _set[_s];
+            }
+            set
+            {
+                _set[_s] = value;
+            }
+        }
         private SortedDictionary<uint, string> _data
         {
             get
@@ -25,6 +41,7 @@ namespace TerseNotepad
         // Editor State
         private uint _priorLine = 1;
         private uint _priorColumn = 1;
+        private string _filename = "";
 
         // Coordinates
         private uint _x = 1; // x = Column
@@ -79,13 +96,39 @@ Use F2 - F11 to access additional dimensions.
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog();
-            dialog.Filter = TERSE_FILTER;
+            OpenNewFile();
+        }
+
+        private void OpenNewFile()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = TERSE_FILTER
+            };
+            dialog.FileName = _filename;
             var result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
-                var data = File.ReadAllText(dialog.FileName);
-                var groups = data.Split("\x18\n");
+                LoadFile(dialog.FileName);                
+            }
+        }
+
+        private void LoadFile(string filename)
+        {
+            var data = File.ReadAllText(filename);
+            _filename = filename;
+            LoadData(data);
+        }
+
+        private void LoadData(string data)
+        {
+            var sets = data.Split("\x19\n");
+            _s = 1;
+            _set = new();
+            foreach (var set in sets)
+            {
+                var groups = set.Split("\x18\n");
+                _g = 1;
                 foreach (var group in groups)
                 {
                     var pages = group.Split("\x17\n");
@@ -95,17 +138,26 @@ Use F2 - F11 to access additional dimensions.
                         _data[_p] = page;
                         ++_p;
                     }
+                    ++_g;
                 }
-                
-                _g = 1;
-                _p = 1;
-                loadPage();
+                ++_s;
             }
+            jumpToOrigin();            
+            loadPage();
         }
 
-        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void jumpToOrigin()
         {
+            _p = 1;
+            _g = 1;
+            _s = 1;
+        }
 
+        private void newToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _filename = "";
+            jumpToOrigin();
+            LoadData("");
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -115,18 +167,39 @@ Use F2 - F11 to access additional dimensions.
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            SaveCurrentFile();
+        }
+
+        private void SaveCurrentFile()
+        {
             var text = "";
-            foreach (var group_index in _group.Keys)
+            var group_break_counter = 0;
+            var set_break_counter = 0;
+            foreach (var set_index in _set.Keys)
             {
-                _g = group_index;
-                foreach (var page in _data)
+                _s = set_index;
+                foreach (var group_index in _group.Keys)
                 {
-                    text += $"{page.Value}\x17\n";
+                    _g = group_index;
+                    foreach (var page in _data)
+                    {
+                        text += page.Value;
+                        text += "\x17\n";
+                    }
+                    while (group_break_counter++ < _g)
+                    {
+                        text += "\x18\n";
+                    }
                 }
-                text += "\x18\n";
+                while (set_break_counter++ < _s)
+                {
+                    text += "\x19\n";
+                }
             }
-            var saver = new SaveFileDialog();
-            saver.Filter = TERSE_FILTER;
+            var saver = new SaveFileDialog
+            {
+                Filter = TERSE_FILTER
+            };
             var result = saver.ShowDialog();
             if (result == DialogResult.OK)
             {
@@ -169,14 +242,42 @@ Use F2 - F11 to access additional dimensions.
 
         private void UpdateStatusBar()
         {
-            status.Text = $"Line: {_n}  Column: {_x}  Page: {_p}  Group: {_g}";
+            status.Text = $"Line: {_n}  Column: {_x}  Page: {_p}  Group: {_g}  Set: {_s}";
         }
 
         private void textBox_KeyUp(object sender, KeyEventArgs e)
         {
             int page_delta = 0;
             int group_delta = 0;
+            int set_delta = 0;
             bool arrowShifted = false;
+
+            // Ctrl-S
+            if (e.Control && e.KeyCode == Keys.S)
+            {
+                SaveCurrentFile();
+                e.Handled = true;
+                return;
+            }
+            // Ctrl-O
+            if (e.Control && e.KeyCode == Keys.O)
+            {
+                OpenNewFile();
+                e.Handled = true;
+                return;
+            }
+
+            // Set Shifts
+            if (!e.Shift && e.KeyCode == Keys.F4)
+            {
+                set_delta = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.F4)
+            {
+                set_delta = -1;
+                e.Handled = true;
+            }
 
             // Group Shifts
             if (!e.Shift && e.KeyCode == Keys.F3)
@@ -230,15 +331,18 @@ Use F2 - F11 to access additional dimensions.
                 arrowShifted = true;
                 e.Handled = true;
             }
-            if (page_delta != 0 || group_delta != 0)
+            if (page_delta != 0 || group_delta != 0 || set_delta != 0)
             {
                 collectPage();
                 if (page_delta > 0) { ++_p; }
                 if (page_delta < 0) { --_p; }
                 if (group_delta > 0) { ++_g; }
                 if (group_delta < 0) { --_g; }
+                if (set_delta > 0) { ++_s; }
+                if (set_delta < 0) { --_s; }
                 if (_p < 1) { _p = 1; }
                 if (_g < 1) { _g = 1; }
+                if (_s < 1) { _s = 1; }
                 loadPage();
                 if (arrowShifted)
                 {
