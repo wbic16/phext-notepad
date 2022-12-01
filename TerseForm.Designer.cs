@@ -262,6 +262,7 @@
             // 
             this.multiverseID.Enabled = false;
             this.multiverseID.Location = new System.Drawing.Point(98, 20);
+            this.multiverseID.MaxLength = 4;
             this.multiverseID.Name = "multiverseID";
             this.multiverseID.Size = new System.Drawing.Size(55, 23);
             this.multiverseID.TabIndex = 1;
@@ -284,6 +285,7 @@
             // 
             this.galaxyID.Enabled = false;
             this.galaxyID.Location = new System.Drawing.Point(219, 20);
+            this.galaxyID.MaxLength = 4;
             this.galaxyID.Name = "galaxyID";
             this.galaxyID.Size = new System.Drawing.Size(55, 23);
             this.galaxyID.TabIndex = 2;
@@ -306,6 +308,7 @@
             // 
             this.worldID.Enabled = false;
             this.worldID.Location = new System.Drawing.Point(331, 20);
+            this.worldID.MaxLength = 4;
             this.worldID.Name = "worldID";
             this.worldID.Size = new System.Drawing.Size(55, 23);
             this.worldID.TabIndex = 3;
@@ -328,6 +331,7 @@
             // 
             this.languageID.Enabled = false;
             this.languageID.Location = new System.Drawing.Point(472, 20);
+            this.languageID.MaxLength = 4;
             this.languageID.Name = "languageID";
             this.languageID.Size = new System.Drawing.Size(55, 23);
             this.languageID.TabIndex = 4;
@@ -350,6 +354,7 @@
             // 
             this.branchID.Enabled = false;
             this.branchID.Location = new System.Drawing.Point(98, 55);
+            this.branchID.MaxLength = 4;
             this.branchID.Name = "branchID";
             this.branchID.Size = new System.Drawing.Size(55, 23);
             this.branchID.TabIndex = 5;
@@ -372,6 +377,7 @@
             // 
             this.volumeID.Enabled = false;
             this.volumeID.Location = new System.Drawing.Point(219, 55);
+            this.volumeID.MaxLength = 4;
             this.volumeID.Name = "volumeID";
             this.volumeID.Size = new System.Drawing.Size(55, 23);
             this.volumeID.TabIndex = 6;
@@ -434,6 +440,7 @@
             // 
             this.setID.Enabled = false;
             this.setID.Location = new System.Drawing.Point(331, 55);
+            this.setID.MaxLength = 4;
             this.setID.Name = "setID";
             this.setID.Size = new System.Drawing.Size(55, 23);
             this.setID.TabIndex = 7;
@@ -442,6 +449,7 @@
             // 
             this.groupID.Enabled = false;
             this.groupID.Location = new System.Drawing.Point(472, 55);
+            this.groupID.MaxLength = 4;
             this.groupID.Name = "groupID";
             this.groupID.Size = new System.Drawing.Size(55, 23);
             this.groupID.TabIndex = 8;
@@ -450,6 +458,7 @@
             // 
             this.pageID.Enabled = false;
             this.pageID.Location = new System.Drawing.Point(602, 55);
+            this.pageID.MaxLength = 4;
             this.pageID.Name = "pageID";
             this.pageID.Size = new System.Drawing.Size(55, 23);
             this.pageID.TabIndex = 9;
