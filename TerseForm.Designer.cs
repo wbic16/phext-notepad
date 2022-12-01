@@ -239,7 +239,7 @@
             // dimensionReportToolStripMenuItem
             // 
             this.dimensionReportToolStripMenuItem.Name = "dimensionReportToolStripMenuItem";
-            this.dimensionReportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.dimensionReportToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.dimensionReportToolStripMenuItem.Text = "&Dimension Report";
             this.dimensionReportToolStripMenuItem.Click += new System.EventHandler(this.dimensionReportToolStripMenuItem_Click);
             // 
@@ -263,7 +263,7 @@
             this.multiverseID.Enabled = false;
             this.multiverseID.Location = new System.Drawing.Point(98, 20);
             this.multiverseID.Name = "multiverseID";
-            this.multiverseID.Size = new System.Drawing.Size(53, 23);
+            this.multiverseID.Size = new System.Drawing.Size(55, 23);
             this.multiverseID.TabIndex = 4;
             // 
             // galaxyLabel
@@ -285,7 +285,7 @@
             this.galaxyID.Enabled = false;
             this.galaxyID.Location = new System.Drawing.Point(219, 20);
             this.galaxyID.Name = "galaxyID";
-            this.galaxyID.Size = new System.Drawing.Size(53, 23);
+            this.galaxyID.Size = new System.Drawing.Size(55, 23);
             this.galaxyID.TabIndex = 4;
             // 
             // worldLabel
@@ -307,7 +307,7 @@
             this.worldID.Enabled = false;
             this.worldID.Location = new System.Drawing.Point(331, 20);
             this.worldID.Name = "worldID";
-            this.worldID.Size = new System.Drawing.Size(53, 23);
+            this.worldID.Size = new System.Drawing.Size(55, 23);
             this.worldID.TabIndex = 4;
             // 
             // languageLabel
@@ -329,7 +329,7 @@
             this.languageID.Enabled = false;
             this.languageID.Location = new System.Drawing.Point(472, 20);
             this.languageID.Name = "languageID";
-            this.languageID.Size = new System.Drawing.Size(53, 23);
+            this.languageID.Size = new System.Drawing.Size(55, 23);
             this.languageID.TabIndex = 4;
             // 
             // branchLabel
@@ -351,7 +351,7 @@
             this.branchID.Enabled = false;
             this.branchID.Location = new System.Drawing.Point(98, 55);
             this.branchID.Name = "branchID";
-            this.branchID.Size = new System.Drawing.Size(53, 23);
+            this.branchID.Size = new System.Drawing.Size(55, 23);
             this.branchID.TabIndex = 4;
             // 
             // volumeLabel
@@ -373,7 +373,7 @@
             this.volumeID.Enabled = false;
             this.volumeID.Location = new System.Drawing.Point(219, 55);
             this.volumeID.Name = "volumeID";
-            this.volumeID.Size = new System.Drawing.Size(53, 23);
+            this.volumeID.Size = new System.Drawing.Size(55, 23);
             this.volumeID.TabIndex = 4;
             // 
             // setLabel
@@ -435,7 +435,7 @@
             this.setID.Enabled = false;
             this.setID.Location = new System.Drawing.Point(331, 55);
             this.setID.Name = "setID";
-            this.setID.Size = new System.Drawing.Size(53, 23);
+            this.setID.Size = new System.Drawing.Size(55, 23);
             this.setID.TabIndex = 4;
             // 
             // groupID
@@ -443,7 +443,7 @@
             this.groupID.Enabled = false;
             this.groupID.Location = new System.Drawing.Point(472, 55);
             this.groupID.Name = "groupID";
-            this.groupID.Size = new System.Drawing.Size(53, 23);
+            this.groupID.Size = new System.Drawing.Size(55, 23);
             this.groupID.TabIndex = 4;
             // 
             // pageID
@@ -451,17 +451,18 @@
             this.pageID.Enabled = false;
             this.pageID.Location = new System.Drawing.Point(602, 55);
             this.pageID.Name = "pageID";
-            this.pageID.Size = new System.Drawing.Size(53, 23);
+            this.pageID.Size = new System.Drawing.Size(55, 23);
             this.pageID.TabIndex = 4;
             // 
             // jumpButton
             // 
-            this.jumpButton.Location = new System.Drawing.Point(714, 21);
+            this.jumpButton.Location = new System.Drawing.Point(701, 55);
             this.jumpButton.Name = "jumpButton";
-            this.jumpButton.Size = new System.Drawing.Size(77, 41);
+            this.jumpButton.Size = new System.Drawing.Size(55, 23);
             this.jumpButton.TabIndex = 5;
             this.jumpButton.Text = "Jump";
             this.jumpButton.UseVisualStyleBackColor = true;
+            this.jumpButton.Click += new System.EventHandler(this.jumpButton_Click);
             // 
             // panel1
             // 
