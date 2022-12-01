@@ -1,4 +1,5 @@
 using System.Security.Policy;
+using System.Text;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace TerseNotepad
@@ -11,30 +12,30 @@ namespace TerseNotepad
         {
             get
             {
-                if (!_set.ContainsKey(_s))
+                if (!_set.ContainsKey(_coords.Set))
                 {
-                    _set[_s] = new();
+                    _set[_coords.Set] = new();
                 }
-                return _set[_s];
+                return _set[_coords.Set];
             }
             set
             {
-                _set[_s] = value;
+                _set[_coords.Set] = value;
             }
         }
         private SortedDictionary<uint, string> _data
         {
             get
             {
-                if (!_group.ContainsKey(_g))
+                if (!_group.ContainsKey(_coords.Group))
                 {
-                    _group[_g] = new();
+                    _group[_coords.Group] = new();
                 }
-                return _group[_g];
+                return _group[_coords.Group];
             }
             set
             {
-                _group[_g] = value;
+                _group[_coords.Group] = value;
             }
         }
 
@@ -44,17 +45,46 @@ namespace TerseNotepad
         private string _filename = "";
 
         // Coordinates
-        private uint _x = 1; // x = Column
-        private uint _n = 1; // n = Line
-        private uint _p = 1; // p = Page
-        private uint _g = 1; // g = Group
-        private uint _s = 1; // s = Set
-        private uint _y = 1; // y = Volume
-        private uint _h = 1; // h = Branch
-        private uint _e = 1; // e = Language
-        private uint _w = 1; // w = World
-        private uint _i = 1; // i = Galaxy
-        private uint _m = 1; // m = Multiverse
+        private class Coordinates
+        {
+            public uint Column { get; set; } = 1;
+            public uint Line { get; set; } = 1;
+            public uint Page { get; set; } = 1;
+            public uint Group { get; set; } = 1;
+            public uint Set { get; set; } = 1;
+            public uint Volume { get; set; } = 1;
+            public uint Branch { get; set; } = 1;
+            public uint Language { get; set; } = 1;
+            public uint World { get; set; } = 1;
+            public uint Galaxy { get; set; } = 1;
+            public uint Multiverse { get; set; } = 1;
+
+            public override string ToString()
+            {
+                return $"Multiverse: {Multiverse},  Galaxy: {Galaxy},  World: {World},  Language: {Language},  Branch: {Branch},  Volume: {Volume},  Set: {Set},  Group:  {Group},  Page: {Page},  Line: {Line},  Column: {Column}";
+            }
+
+            public string EditorSummary()
+            {
+                return $"Line: {Line},  Column: {Column}";
+            }
+
+            public void Reset()
+            {
+                Column = 1;
+                Line = 1;
+                Page = 1;
+                Group = 1;
+                Set = 1;
+                Volume = 1;
+                Branch = 1;
+                Language = 1;
+                World = 1;
+                Galaxy = 1;
+                Multiverse = 1;
+            }
+        };
+        private Coordinates _coords = new Coordinates();
         public TerseForm()
         {
             InitializeComponent();
@@ -79,19 +109,39 @@ Use F2 - F11 to access additional dimensions.
         private void collectPage()
         {
             vScrollBar1.Maximum = textBox.Lines.Length;
-            _data[_p] = textBox.Text;
+            _data[_coords.Page] = textBox.Text;
         }
 
         private void loadPage()
         {
-            if (!_data.ContainsKey(_p))
+            if (!_data.ContainsKey(_coords.Page))
             {
-                _data[_p] = "";
+                _data[_coords.Page] = "";
             }
-            textBox.Text = _data[_p];
-            _n = 1;
+            textBox.Text = _data[_coords.Page];
+            _coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
+            // todo: enable the remaining dimensions
+            // multiverseID.Enabled = true;
+            // multiverseLabel.Enabled = true;
+            // galaxyID.Enabled = true;
+            // galaxyLabel.Enabled = true;
+            // worldID.Enabled = true;
+            // worldLabel.Enabled = true;
+            // languageID.Enabled = true;
+            // languageLabel.Enabled = true;
+            // branchID.Enabled = true;
+            // branchLabel.Enabled = true;
+            // volumeID.Enabled = true;
+            // volumeLabel.Enabled = true;
+            setID.Enabled = true;
+            setLabel.Enabled = true;
+            groupID.Enabled = true;
+            groupLabel.Enabled = true;
+            pageID.Enabled = true;
+            pageLabel.Enabled = true;
+            UpdateStatusBar();
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -109,7 +159,7 @@ Use F2 - F11 to access additional dimensions.
             var result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
-                LoadFile(dialog.FileName);                
+                LoadFile(dialog.FileName);
             }
         }
 
@@ -123,24 +173,24 @@ Use F2 - F11 to access additional dimensions.
         private void LoadData(string data)
         {
             var sets = data.Split("\x19\n");
-            _s = 1;
+            _coords.Set = 1;
             _set = new();
             foreach (var set in sets)
             {
                 var groups = set.Split("\x18\n");
-                _g = 1;
+                _coords.Group = 1;
                 foreach (var group in groups)
                 {
                     var pages = group.Split("\x17\n");
-                    _p = 1;
+                    _coords.Page = 1;
                     foreach (var page in pages)
                     {
-                        _data[_p] = page;
-                        ++_p;
+                        _data[_coords.Page] = page;
+                        ++_coords.Page;
                     }
-                    ++_g;
+                    ++_coords.Group;
                 }
-                ++_s;
+                ++_coords.Set;
             }
             jumpToOrigin();            
             loadPage();
@@ -148,9 +198,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void jumpToOrigin()
         {
-            _p = 1;
-            _g = 1;
-            _s = 1;
+            _coords.Reset();
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
@@ -177,21 +225,21 @@ Use F2 - F11 to access additional dimensions.
             var set_break_counter = 0;
             foreach (var set_index in _set.Keys)
             {
-                _s = set_index;
+                _coords.Set = set_index;
                 foreach (var group_index in _group.Keys)
                 {
-                    _g = group_index;
+                    _coords.Group = group_index;
                     foreach (var page in _data)
                     {
                         text += page.Value;
                         text += "\x17\n";
                     }
-                    while (group_break_counter++ < _g)
+                    while (group_break_counter++ < _coords.Group)
                     {
                         text += "\x18\n";
                     }
                 }
-                while (set_break_counter++ < _s)
+                while (set_break_counter++ < _coords.Set)
                 {
                     text += "\x19\n";
                 }
@@ -209,7 +257,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void vScrollBar1_Scroll(object sender, ScrollEventArgs e)
         {
-            _n = (uint)vScrollBar1.Value;
+            _coords.Line = (uint)vScrollBar1.Value;
         }
 
         private void vScrollBar2_ValueChanged(object sender, EventArgs e)
@@ -219,7 +267,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void textBox_SelectionChanged(object sender, EventArgs e)
         {
-            _n = 1;
+            _coords.Line = 1;
             var total = 0;            
             var offset = textBox.SelectionStart;
             foreach (var line in textBox.Lines)
@@ -228,12 +276,12 @@ Use F2 - F11 to access additional dimensions.
                 if ((total + delta) <= offset)
                 {
                     total += delta;
-                    ++_n;
-                    _x = 1;
+                    ++_coords.Line;
+                    _coords.Column = 1;
                 }
                 else
                 {
-                    _x = (uint)(offset - total) + 1;
+                    _coords.Column = (uint)(offset - total) + 1;
                     break;
                 }
             }
@@ -242,7 +290,16 @@ Use F2 - F11 to access additional dimensions.
 
         private void UpdateStatusBar()
         {
-            status.Text = $"Line: {_n}  Column: {_x}  Page: {_p}  Group: {_g}  Set: {_s}";
+            multiverseID.Text = _coords.Multiverse.ToString();
+            galaxyID.Text = _coords.Galaxy.ToString();
+            worldID.Text = _coords.World.ToString();
+            languageID.Text = _coords.Language.ToString();
+            branchID.Text = _coords.Branch.ToString();
+            volumeID.Text = _coords.Volume.ToString();
+            setID.Text = _coords.Set.ToString();
+            groupID.Text = _coords.Group.ToString();
+            pageID.Text = _coords.Page.ToString();
+            status.Text = _coords.EditorSummary();
         }
 
         private void textBox_KeyUp(object sender, KeyEventArgs e)
@@ -278,6 +335,16 @@ Use F2 - F11 to access additional dimensions.
                 set_delta = -1;
                 e.Handled = true;
             }
+            if (e.Control && e.KeyCode == Keys.PageDown)
+            {
+                set_delta = 1;
+                e.Handled = true;
+            }
+            if (e.Control && e.KeyCode == Keys.PageUp)
+            {
+                set_delta = -1;
+                e.Handled = true;
+            }
 
             // Group Shifts
             if (!e.Shift && e.KeyCode == Keys.F3)
@@ -290,6 +357,16 @@ Use F2 - F11 to access additional dimensions.
                 group_delta = -1;
                 e.Handled = true;
             }
+            if (e.Shift && e.KeyCode == Keys.PageDown)
+            {
+                group_delta = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.PageUp)
+            {
+                group_delta = -1;
+                e.Handled = true;
+            }
 
             // Page Shifts
             if (!e.Shift && e.KeyCode == Keys.F2)
@@ -298,6 +375,16 @@ Use F2 - F11 to access additional dimensions.
                 e.Handled = true;
             }
             if (e.Shift && e.KeyCode == Keys.F2)
+            {
+                page_delta = -1;
+                e.Handled = true;
+            }
+            if (!e.Shift && !e.Control && e.KeyCode == Keys.PageDown)
+            {
+                page_delta = 1;
+                e.Handled = true;
+            }
+            if (!e.Shift && !e.Control && e.KeyCode == Keys.PageUp)
             {
                 page_delta = -1;
                 e.Handled = true;
@@ -319,7 +406,7 @@ Use F2 - F11 to access additional dimensions.
                 arrowShifted = true;
                 e.Handled = true;
             }
-            if (!e.Shift && e.KeyCode == Keys.Down && _priorLine == _n)
+            if (!e.Shift && e.KeyCode == Keys.Down && _priorLine == _coords.Line)
             {
                 page_delta = 1;
                 arrowShifted = true;
@@ -334,15 +421,15 @@ Use F2 - F11 to access additional dimensions.
             if (page_delta != 0 || group_delta != 0 || set_delta != 0)
             {
                 collectPage();
-                if (page_delta > 0) { ++_p; }
-                if (page_delta < 0) { --_p; }
-                if (group_delta > 0) { ++_g; }
-                if (group_delta < 0) { --_g; }
-                if (set_delta > 0) { ++_s; }
-                if (set_delta < 0) { --_s; }
-                if (_p < 1) { _p = 1; }
-                if (_g < 1) { _g = 1; }
-                if (_s < 1) { _s = 1; }
+                if (page_delta > 0) { ++_coords.Page; }
+                if (page_delta < 0) { --_coords.Page; }
+                if (group_delta > 0) { ++_coords.Group; }
+                if (group_delta < 0) { --_coords.Group; }
+                if (set_delta > 0) { ++_coords.Set; }
+                if (set_delta < 0) { --_coords.Set; }
+                if (_coords.Page < 1) { _coords.Page = 1; }
+                if (_coords.Group < 1) { _coords.Group = 1; }
+                if (_coords.Set < 1) { _coords.Set = 1; }
                 loadPage();
                 if (arrowShifted)
                 {
@@ -361,14 +448,35 @@ Use F2 - F11 to access additional dimensions.
 
         private void textBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (_priorLine != _n)
+            if (_priorLine != _coords.Line)
             {
-                _priorLine = _n;
+                _priorLine = _coords.Line;
             }
-            if (_priorColumn != _x)
+            if (_priorColumn != _coords.Column)
             {
-                _priorColumn = _x;
+                _priorColumn = _coords.Column;
             }
+        }
+
+        private void dimensionReportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var result = new StringBuilder();
+            foreach (var s in _set.Keys)
+            {
+                foreach (var g in _set[s].Keys)
+                {
+                    foreach (var p in _set[s][g].Keys)
+                    {
+                        var count = _set[s][g][p].Length;
+                        if (count > 0)
+                        {
+                            result.AppendLine($"Set: {s}, Group: {g}, Page: {p} has {count} bytes.");
+                        }
+                    }
+                }
+            }
+
+            textBox.AppendText(result.ToString());
         }
     }
 }
