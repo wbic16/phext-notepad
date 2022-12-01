@@ -79,7 +79,18 @@
 
         public void setPageText(string text)
         {
-            Page[Coords.Page] = text;
+            if (text.Length > 0)
+            {
+                Page[Coords.Page] = text;
+            }
+            // note: the key checks here optimize performance on sparse files
+            if (text.Length == 0 &&
+                Set.ContainsKey(Coords.Set) &&
+                Group.ContainsKey(Coords.Group) &&
+                Page.ContainsKey(Coords.Page))
+            {
+                Page.Remove(Coords.Page);
+            }
         }
 
         public void processDelta(int set_delta, int group_delta, int page_delta)

@@ -264,7 +264,7 @@
             this.multiverseID.Location = new System.Drawing.Point(98, 20);
             this.multiverseID.Name = "multiverseID";
             this.multiverseID.Size = new System.Drawing.Size(55, 23);
-            this.multiverseID.TabIndex = 4;
+            this.multiverseID.TabIndex = 1;
             // 
             // galaxyLabel
             // 
@@ -286,7 +286,7 @@
             this.galaxyID.Location = new System.Drawing.Point(219, 20);
             this.galaxyID.Name = "galaxyID";
             this.galaxyID.Size = new System.Drawing.Size(55, 23);
-            this.galaxyID.TabIndex = 4;
+            this.galaxyID.TabIndex = 2;
             // 
             // worldLabel
             // 
@@ -308,7 +308,7 @@
             this.worldID.Location = new System.Drawing.Point(331, 20);
             this.worldID.Name = "worldID";
             this.worldID.Size = new System.Drawing.Size(55, 23);
-            this.worldID.TabIndex = 4;
+            this.worldID.TabIndex = 3;
             // 
             // languageLabel
             // 
@@ -352,7 +352,7 @@
             this.branchID.Location = new System.Drawing.Point(98, 55);
             this.branchID.Name = "branchID";
             this.branchID.Size = new System.Drawing.Size(55, 23);
-            this.branchID.TabIndex = 4;
+            this.branchID.TabIndex = 5;
             // 
             // volumeLabel
             // 
@@ -374,7 +374,7 @@
             this.volumeID.Location = new System.Drawing.Point(219, 55);
             this.volumeID.Name = "volumeID";
             this.volumeID.Size = new System.Drawing.Size(55, 23);
-            this.volumeID.TabIndex = 4;
+            this.volumeID.TabIndex = 6;
             // 
             // setLabel
             // 
@@ -436,7 +436,7 @@
             this.setID.Location = new System.Drawing.Point(331, 55);
             this.setID.Name = "setID";
             this.setID.Size = new System.Drawing.Size(55, 23);
-            this.setID.TabIndex = 4;
+            this.setID.TabIndex = 7;
             // 
             // groupID
             // 
@@ -444,7 +444,7 @@
             this.groupID.Location = new System.Drawing.Point(472, 55);
             this.groupID.Name = "groupID";
             this.groupID.Size = new System.Drawing.Size(55, 23);
-            this.groupID.TabIndex = 4;
+            this.groupID.TabIndex = 8;
             // 
             // pageID
             // 
@@ -452,14 +452,14 @@
             this.pageID.Location = new System.Drawing.Point(602, 55);
             this.pageID.Name = "pageID";
             this.pageID.Size = new System.Drawing.Size(55, 23);
-            this.pageID.TabIndex = 4;
+            this.pageID.TabIndex = 9;
             // 
             // jumpButton
             // 
             this.jumpButton.Location = new System.Drawing.Point(701, 55);
             this.jumpButton.Name = "jumpButton";
             this.jumpButton.Size = new System.Drawing.Size(55, 23);
-            this.jumpButton.TabIndex = 5;
+            this.jumpButton.TabIndex = 10;
             this.jumpButton.Text = "Jump";
             this.jumpButton.UseVisualStyleBackColor = true;
             this.jumpButton.Click += new System.EventHandler(this.jumpButton_Click);

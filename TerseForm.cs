@@ -404,11 +404,11 @@ Use F2 - F11 to access additional dimensions.
                 {
                     foreach (var p in _terse.Set[s][g].Keys)
                     {
-                        var count = _terse.Set[s][g][p].Length;
-                        if (count > 0)
-                        {
-                            result.AppendLine($"Set: {s}, Group: {g}, Page: {p} has {count} bytes.");
-                        }
+                        var content = _terse.Set[s][g][p];
+                        var count = content.Length;
+                        var summary = content.Split("\n")[0];
+                        if (summary.Length > 40) { summary = summary[..40]; }
+                        result.AppendLine($"Set: {s}, Group: {g}, Page: {p} has {count} bytes = {summary}.");
                     }
                 }
             }
