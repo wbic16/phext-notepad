@@ -1,4 +1,9 @@
+using System.Reflection;
+using System.Runtime;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using static TerseNotepad.TerseText;
 
 namespace TerseNotepad
 {
@@ -7,49 +12,63 @@ namespace TerseNotepad
         private static readonly string TERSE_FILTER = "Terse File (*.t)|*.t|All files (*.*)|*.*";
         private TerseText _terse = new();
 
+        private static readonly string SCROLL_BREAK = "\x17\n";
+        private static readonly string SECTION_BREAK = "\x18\n";
+        private static readonly string CHAPTER_BREAK = "\x19\n";
+
         // Editor State
         private uint _priorLine = 1;
         private uint _priorColumn = 1;
-        private string _filename = "";
+        private TerseConfig _settings = new();
 
         public TerseForm()
         {
             InitializeComponent();
+            treeViewToolStripMenuItem.Checked = _settings.TreeView;
+            treeView.Visible = _settings.TreeView;
+            coordinateJump(_settings.Coords);
+            if (File.Exists(_settings.Filename))
+            {
+                LoadFile(_settings.Filename);
+            }
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(@"Terse Notepad
-Version 1.0
+            var version = Assembly.GetExecutingAssembly()?.GetName()?.Version;
+            if (version == null)
+            {
+                version = new Version(0, 0, 5);
+            }
+            MessageBox.Show($@"Terse Notepad
 
 A reference editor for multi-dimensional text.
 
 Use F2 - F11 to access additional dimensions.
-", "Terse Notepad v1.0");
+", $"Terse Notepad {version.Major}.{version.Minor}.{version.Build}");
         }
 
         private void textBox_TextChanged(object sender, EventArgs e)
         {
-            collectPage();
+            collectScroll();
         }
 
-        private void collectPage()
+        private void collectScroll()
         {
-            vScrollBar1.Maximum = textBox.Lines.Length;
-            _terse.setPageText(textBox.Text);
+            _terse.setScrollText(textBox.Text);
         }
 
-        private void loadPage()
+        private void loadScroll()
         {
-            textBox.Text = _terse.getPage();
+            textBox.Text = _terse.getScroll();
             _terse.Coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
             // todo: enable the remaining dimensions
-            // multiverseID.Enabled = true;
-            // multiverseLabel.Enabled = true;
-            // galaxyID.Enabled = true;
-            // galaxyLabel.Enabled = true;
+            // libraryID.Enabled = true;
+            // libraryLabel.Enabled = true;
+            // shelfID.Enabled = true;
+            // shelfLabel.Enabled = true;
             // worldID.Enabled = true;
             // worldLabel.Enabled = true;
             // languageID.Enabled = true;
@@ -58,11 +77,11 @@ Use F2 - F11 to access additional dimensions.
             // branchLabel.Enabled = true;
             // volumeID.Enabled = true;
             // volumeLabel.Enabled = true;
-            setID.Enabled = true;
-            setLabel.Enabled = true;
-            groupID.Enabled = true;
-            groupLabel.Enabled = true;
-            pageID.Enabled = true;
+            chapterID.Enabled = true;
+            chapterLabel.Enabled = true;
+            sectionID.Enabled = true;
+            sectionLabel.Enabled = true;
+            scrollID.Enabled = true;
             pageLabel.Enabled = true;
             UpdateStatusBar();
         }
@@ -77,7 +96,7 @@ Use F2 - F11 to access additional dimensions.
             var dialog = new OpenFileDialog
             {
                 Filter = TERSE_FILTER,
-                FileName = _filename
+                FileName = _settings.Filename
             };
             var result = dialog.ShowDialog();
             if (result == DialogResult.OK)
@@ -89,53 +108,83 @@ Use F2 - F11 to access additional dimensions.
         private void LoadFile(string filename)
         {
             var data = File.ReadAllText(filename);
-            _filename = filename;
+            _settings.Filename = filename;
             LoadData(data);
         }
 
         private void LoadData(string data)
         {
-            var dimensionStream = data.Split("\x19\n");
-            _terse.Set = new();
-            uint set_index = 1;
-            foreach (var set in dimensionStream)
-            {                
-                uint group_index = 1;
-                var groups = set.Split("\x18\n");
-                foreach (var group in groups)
-                {                    
-                    uint page_index = 1;
-                    var pages = group.Split("\x17\n");
-                    foreach (var page in pages)
+            var dimensionStream = data.Split(CHAPTER_BREAK);
+            _terse.Chapter = new();
+            treeView.Nodes.Clear();
+            uint chapter_index = 1;
+            foreach (var chapter in dimensionStream)
+            {
+                uint section_index = 1;
+                var sections = chapter.Split(SECTION_BREAK);
+                var chapterNode = new TreeNode($"Chapter {chapter_index}");
+                foreach (var section in sections)
+                {
+                    uint scroll_index = 1;
+                    var scrolls = section.Split(SCROLL_BREAK);
+                    var scrollNode = new TreeNode($"Section {scroll_index}");
+                    foreach (var scroll in scrolls)
                     {
-                        _terse.Coords.Page = page_index;
-                        _terse.Coords.Group = group_index;
-                        _terse.Coords.Set = set_index;
-                        _terse.setPageText(page);
-                        ++page_index;
+                        _terse.Coords.Chapter = chapter_index;
+                        _terse.Coords.Section = section_index;
+                        _terse.Coords.Scroll = scroll_index;
+                        if (scroll.Length > 0)
+                        {
+                            _terse.setScrollText(scroll);
+                            var key = $"{scroll_index}-{section_index}-{chapter_index}";
+                            var line = getScrollSummary(_terse.Coords, scroll);
+                            scrollNode.Nodes.Add(key, line);
+                        }
+                        ++scroll_index;
                     }
-                    ++group_index;
+                    if (scrollNode.Nodes.Count > 0)
+                    {
+                        chapterNode.Nodes.Add(scrollNode);
+                    }
+                    ++section_index;
                 }
-                ++set_index;
+                if (chapterNode.Nodes.Count > 0)
+                {
+                    treeView.Nodes.Add(chapterNode);
+                }
+                ++chapter_index;
             }
-            jumpToOrigin();            
-            loadPage();
+            jumpToOrigin();
+            loadScroll();
+        }
+
+        private string getScrollSummary(Coordinates coords, string scroll)
+        {
+            var firstLine = scroll.Split("\n")[0];
+            var line = firstLine.Length > 40 ? firstLine[..40] : firstLine;
+            if (line.Length > 0)
+            {
+                return line;
+            }
+            return coords.EditorSummary();
         }
 
         private void jumpToOrigin()
         {
             _terse.Coords.Reset();
+            treeView.ExpandAll();
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            _filename = "";
+            _settings.Filename = "";
             jumpToOrigin();
             LoadData("");
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            _settings.Save();
             Close();
         }
 
@@ -147,63 +196,66 @@ Use F2 - F11 to access additional dimensions.
         private void SaveCurrentFile()
         {
             var collector = new StringBuilder();
-            uint set_break_counter = 0;            
-            foreach (var set_index in _terse.Set.Keys)
+            uint chapter_break_counter = 0;
+            foreach (var chapter_index in _terse.Chapter.Keys)
             {
-                while (++set_break_counter < set_index)
+                while (++chapter_break_counter < chapter_index)
                 {
-                    collector.Append("\x19\n");
+                    collector.Append(CHAPTER_BREAK);
                 }
-                uint group_break_counter = 0;
-                foreach (var group_index in _terse.Set[set_index].Keys)
+                uint section_break_counter = 0;
+                foreach (var section_index in _terse.Chapter[chapter_index].Keys)
                 {
-                    while (++group_break_counter < group_index)
+                    while (++section_break_counter < section_index)
                     {
-                        collector.Append("\x18\n");
+                        collector.Append(SECTION_BREAK);
                     }
-                    uint page_break_counter = 0;
-                    foreach (var page_index in _terse.Set[set_index][group_index].Keys)
+                    uint scroll_break_counter = 0;
+                    foreach (var scroll_index in _terse.Chapter[chapter_index][section_index].Keys)
                     {
-                        while (++page_break_counter < page_index)
+                        while (++scroll_break_counter < scroll_index)
                         {
-                            collector.Append("\x17\n");
+                            collector.Append(SCROLL_BREAK);
                         }
-                        collector.Append(_terse.Set[set_index][group_index][page_index]);
-                        collector.Append("\x17\n");
+                        collector.Append(_terse.Chapter[chapter_index][section_index][scroll_index]);
+                        collector.Append(SCROLL_BREAK);
                     }
-                    collector.Append("\x18\n");
+                    collector.Append(SECTION_BREAK);
                 }
-                collector.Append("\x19\n");
+                collector.Append(CHAPTER_BREAK);
             }
-            var saver = new SaveFileDialog
+
+            bool saved = false;
+            try
             {
-                Filter = TERSE_FILTER
-            };
-            var result = saver.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                File.WriteAllText(saver.FileName, collector.ToString());
+                File.WriteAllText(_settings.Filename, collector.ToString());
             }
-        }
+            catch (System.ArgumentException)
+            {
+                ChooseSaveFilename();
+            }
 
-        private void vScrollBar1_Scroll(object sender, ScrollEventArgs e)
-        {
-            _terse.Coords.Line = (uint)vScrollBar1.Value;
-        }
-
-        private void vScrollBar2_ValueChanged(object sender, EventArgs e)
-        {
-
+            if (!saved)
+            {
+                try
+                {
+                    File.WriteAllText(_settings.Filename, collector.ToString());
+                }
+                catch (System.ArgumentException)
+                {
+                    MessageBox.Show("Unable to save - please choose a different filename.", "Save Error");
+                }
+            }
         }
 
         private void textBox_SelectionChanged(object sender, EventArgs e)
         {
             _terse.Coords.Line = 1;
-            var total = 0;            
+            var total = 0;
             var offset = textBox.SelectionStart;
             foreach (var line in textBox.Lines)
             {
-                var delta = line.Length + 1;                
+                var delta = line.Length + 1;
                 if ((total + delta) <= offset)
                 {
                     total += delta;
@@ -221,16 +273,30 @@ Use F2 - F11 to access additional dimensions.
 
         private void UpdateStatusBar()
         {
-            multiverseID.Text = _terse.Coords.Multiverse.ToString();
-            galaxyID.Text = _terse.Coords.Galaxy.ToString();
-            worldID.Text = _terse.Coords.World.ToString();
-            languageID.Text = _terse.Coords.Language.ToString();
-            branchID.Text = _terse.Coords.Branch.ToString();
-            volumeID.Text = _terse.Coords.Volume.ToString();
-            setID.Text = _terse.Coords.Set.ToString();
-            groupID.Text = _terse.Coords.Group.ToString();
-            pageID.Text = _terse.Coords.Page.ToString();
+            libraryID.Text = _terse.Coords.Library.ToString();
+            shelfID.Text = _terse.Coords.Shelf.ToString();
+            seriesID.Text = _terse.Coords.Series.ToString();
+            collectionID.Text = _terse.Coords.Collection.ToString();
+            bookID.Text = _terse.Coords.Volume.ToString();
+            bookID.Text = _terse.Coords.Book.ToString();
+            chapterID.Text = _terse.Coords.Chapter.ToString();
+            sectionID.Text = _terse.Coords.Section.ToString();
+            scrollID.Text = _terse.Coords.Scroll.ToString();
             status.Text = _terse.EditorSummary();
+        }
+
+        private void ChooseSaveFilename()
+        {
+            var saver = new SaveFileDialog
+            {
+                Filter = TERSE_FILTER,
+                FileName = _settings.Filename
+            };
+            var result = saver.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                _settings.Filename = saver.FileName;
+            }
         }
 
         private void textBox_KeyUp(object sender, KeyEventArgs e)
@@ -240,6 +306,14 @@ Use F2 - F11 to access additional dimensions.
             int set_delta = 0;
             bool arrowShifted = false;
 
+            // Ctrl-Shift-S: Save As File
+            if (e.Control && e.Shift && e.KeyCode == Keys.S)
+            {
+                ChooseSaveFilename();
+                SaveCurrentFile();
+                e.Handled = true;
+                return;
+            }
             // Ctrl-S: Save File
             if (e.Control && e.KeyCode == Keys.S)
             {
@@ -335,7 +409,7 @@ Use F2 - F11 to access additional dimensions.
                 e.Handled = true;
             }
             var reachedEnd = textBox.SelectionStart == textBox.TextLength &&
-                textBox.Lines.Length > 0 &&             
+                textBox.Lines.Length > 0 &&
                 _priorColumn > textBox.Lines.Last().Length;
             if (!e.Shift && e.KeyCode == Keys.Right && reachedEnd)
             {
@@ -365,9 +439,9 @@ Use F2 - F11 to access additional dimensions.
             }
             if (page_delta != 0 || group_delta != 0 || set_delta != 0)
             {
-                collectPage();
+                collectScroll();
                 _terse.processDelta(set_delta, group_delta, page_delta);
-                loadPage();
+                loadScroll();
                 if (arrowShifted)
                 {
                     if (page_delta < 0)
@@ -398,17 +472,17 @@ Use F2 - F11 to access additional dimensions.
         private void dimensionReportToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var result = new StringBuilder();
-            foreach (var s in _terse.Set.Keys)
+            foreach (var chapter_index in _terse.Chapter.Keys)
             {
-                foreach (var g in _terse.Set[s].Keys)
+                foreach (var section_index in _terse.Chapter[chapter_index].Keys)
                 {
-                    foreach (var p in _terse.Set[s][g].Keys)
+                    foreach (var scroll_index in _terse.Chapter[chapter_index][section_index].Keys)
                     {
-                        var content = _terse.Set[s][g][p];
+                        var content = _terse.Chapter[chapter_index][section_index][scroll_index];
                         var count = content.Length;
                         var summary = content.Split("\n")[0];
                         if (summary.Length > 40) { summary = summary[..40]; }
-                        result.AppendLine($"Set: {s}, Group: {g}, Page: {p} has {count} bytes = {summary}.");
+                        result.AppendLine($"Chapter: {chapter_index}, Section: {section_index}, Scroll: {scroll_index} => {summary} ({count})");
                     }
                 }
             }
@@ -418,11 +492,46 @@ Use F2 - F11 to access additional dimensions.
 
         private void jumpButton_Click(object sender, EventArgs e)
         {
-            collectPage();
-            _terse.Coords.Set = uint.Parse(setID.Text);
-            _terse.Coords.Group = uint.Parse(groupID.Text);
-            _terse.Coords.Page = uint.Parse(pageID.Text);
-            loadPage();
+            collectScroll();
+            _terse.Coords.Chapter = uint.Parse(chapterID.Text);
+            _terse.Coords.Section = uint.Parse(sectionID.Text);
+            _terse.Coords.Scroll = uint.Parse(scrollID.Text);
+            loadScroll();
+        }
+
+        private void treeViewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            treeView.Visible = treeViewToolStripMenuItem.Checked;
+            _settings.TreeView = treeView.Visible;
+        }
+
+        private void treeView_DoubleClick(object sender, EventArgs e)
+        {
+            var coordinates = treeView.SelectedNode.Name;
+            if (coordinates.Length == 0)
+            {
+                return;
+            }
+            collectScroll();
+            coordinateJump(coordinates);
+        }
+
+        private void coordinateJump(string coordinates)
+        {
+            if (!coordinates.Contains('-'))
+            {
+                return;
+            }
+            _terse.Coords.Load(coordinates);
+            chapterID.Text = _terse.Coords.Chapter.ToString();
+            sectionID.Text = _terse.Coords.Section.ToString();
+            scrollID.Text = _terse.Coords.Scroll.ToString();
+            loadScroll();
+        }
+
+        private void TerseForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _settings.Save();
         }
     }
 }

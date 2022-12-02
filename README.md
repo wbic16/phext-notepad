@@ -40,21 +40,21 @@ The first two dimensions are special. The comment plane (c) exists outside of th
 Text Dimensions
 ---------------
 
-* \x = Column (letters, words)
-* \n = Line (words, sentences, ideas)
-* \p = Page (paragraphs, scrolls, items, objects)
-* \g = Group (chapters, tabs, directories)
-* \s = Set (books, zip, archives)
-* \y = Volume (series, anthologies, collections)
-* \h = Branch (source control)
-* \e = Language (translations)
-* \w = World (Earth, Mars, Venus, etc.)
-* \i = Galaxy (Milky Way)
-* \m = Multiverse (surely, you have enough dimensions now?!)
+* \x = Column
+* \n = Line
+* \p = Scroll
+* \g = Section
+* \s = Chapter
+* \y = Book
+* \h = Volume
+* \e = Collection
+* \w = Series
+* \i = Shelf
+* \m = Library
 
 Ruler
 -----
-Column: 1  Line: 1  Page: 1  Group: 1  Set: 1  Volume: 1  Branch: 1  Language: 1  World: 1  Galaxy: 1  Multiverse: 1
+Library: 1,  Shelf: 1,  Series: 1,  Collection: 1,  Volume: 1,  Book: 1,  Chapter: 1,  Section: 1,  Scroll: 1,  Line: 1,  Column: 1
 
 Historic Control Codes
 ----------------------
@@ -95,7 +95,7 @@ Conforming editors must implement MORE COWBELL!
 
 Remapped Dimension Controls
 ---------------------------
-01: \m Multiverse Break
+01: \m Library Break
 02: \z Binary Start
 05: \q Coordinates Start
 06: \k Coordinates End
@@ -104,14 +104,14 @@ Remapped Dimension Controls
 0D: \r Carriage Return
 0E: \c Start Comment
 0F: \d End Comment
-17: \p Page Break
-18: \g Group Break
-19: \s Set Break
-1A: \y Volume Break
-1C: \h Branch Break
-1D: \e Language Break
-1E: \w World Break
-1F: \i Galaxy Break
+17: \p Scroll Break
+18: \g Section Break
+19: \s Chapter Break
+1A: \y Book Break
+1C: \h Volume Break
+1D: \e Collection Break
+1E: \w Series Break
+1F: \i Shelf Break
 
 Megatext Initialization Information
 -----------------------------------

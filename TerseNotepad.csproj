@@ -7,6 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <PlatformTarget>x64</PlatformTarget>
+    <VersionPrefix>0.0.5</VersionPrefix>
   </PropertyGroup>
 
 </Project>

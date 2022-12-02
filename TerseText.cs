@@ -1,119 +1,137 @@
-﻿namespace TerseNotepad
+﻿using static System.Collections.Specialized.BitVector32;
+
+namespace TerseNotepad
 {
-    public class PagedText : SortedDictionary<uint, string> { };
-    public class GroupedText : SortedDictionary<uint, PagedText> { };
-    public class SettedText : SortedDictionary<uint, GroupedText> { };
+    public class ScrollText : SortedDictionary<uint, string> { };
+    public class SectionText : SortedDictionary<uint, ScrollText> { };
+    public class ChapterText : SortedDictionary<uint, SectionText> { };
     public class TerseText
     {
-        public SettedText Set = new();
-        public GroupedText Group
+        public ChapterText Chapter = new();
+        public SectionText Section
         {
             get
             {
-                if (!Set.ContainsKey(Coords.Set))
+                if (!Chapter.ContainsKey(Coords.Chapter))
                 {
-                    Set[Coords.Set] = new();
+                    Chapter[Coords.Chapter] = new();
                 }
-                return Set[Coords.Set];
+                return Chapter[Coords.Chapter];
             }
             set
             {
-                Set[Coords.Set] = value;
+                Chapter[Coords.Chapter] = value;
             }
         }
-        public PagedText Page
+        public ScrollText Scroll
         {
             get
             {
-                if (!Group.ContainsKey(Coords.Group))
+                if (!Section.ContainsKey(Coords.Section))
                 {
-                    Group[Coords.Group] = new();
+                    Section[Coords.Section] = new();
                 }
-                return Group[Coords.Group];
+                return Section[Coords.Section];
             }
             set
             {
-                Group[Coords.Group] = value;
+                Section[Coords.Section] = value;
             }
         }
         public class Coordinates
         {
             public uint Column { get; set; } = 1;
             public uint Line { get; set; } = 1;
-            public uint Page { get; set; } = 1;
-            public uint Group { get; set; } = 1;
-            public uint Set { get; set; } = 1;
+            public uint Scroll { get; set; } = 1;
+            public uint Section { get; set; } = 1;
+            public uint Chapter { get; set; } = 1;
+            public uint Book { get; set; } = 1;
             public uint Volume { get; set; } = 1;
-            public uint Branch { get; set; } = 1;
-            public uint Language { get; set; } = 1;
-            public uint World { get; set; } = 1;
-            public uint Galaxy { get; set; } = 1;
-            public uint Multiverse { get; set; } = 1;            
+            public uint Collection { get; set; } = 1;
+            public uint Series { get; set; } = 1;
+            public uint Shelf { get; set; } = 1;
+            public uint Library { get; set; } = 1;            
 
             public override string ToString()
             {
-                return $"Multiverse: {Multiverse},  Galaxy: {Galaxy},  World: {World},  Language: {Language},  Branch: {Branch},  Volume: {Volume},  Set: {Set},  Group:  {Group},  Page: {Page},  Line: {Line},  Column: {Column}";
+                return $"Library: {Library},  Shelf: {Shelf},  Series: {Series}," +
+                    $"  Collection: {Collection},  Volume: {Volume},  Book: {Book}," +
+                    $"  Chapter: {Chapter},  Section:  {Section},  Scroll: {Scroll}," +
+                    $"  Line: {Line},  Column: {Column}";
             }
 
-            public string EditorSummary(int length)
+            public string EditorSummary()
             {
-                return $"Line: {Line},  Column: {Column},  Bytes: {length}";
+                return $"Ln: {Line}, Col: {Column}";
             }
 
             public void Reset()
             {
                 Column = 1;
                 Line = 1;
-                Page = 1;
-                Group = 1;
-                Set = 1;
+                Scroll = 1;
+                Section = 1;
+                Chapter = 1;
+                Book = 1;
                 Volume = 1;
-                Branch = 1;
-                Language = 1;
-                World = 1;
-                Galaxy = 1;
-                Multiverse = 1;
+                Collection = 1;
+                Series = 1;
+                Shelf = 1;
+                Library = 1;
             }
-        };
+
+            public void Load(string coordinates)
+            {
+                // TODO: Support Book through Library
+                var parts = coordinates.Split('-', 3);
+                if (parts.Length != 3)
+                {
+                    return;
+                }
+                Scroll = uint.Parse(parts[0]);
+                Section = uint.Parse(parts[1]);
+                Chapter = uint.Parse(parts[2]);
+            }
+        }
         public Coordinates Coords = new Coordinates();
 
-        public void setPageText(string text)
+        public void setScrollText(string text)
         {
             if (text.Length > 0)
             {
-                Page[Coords.Page] = text;
+                Scroll[Coords.Scroll] = text;
             }
             // note: the key checks here optimize performance on sparse files
             if (text.Length == 0 &&
-                Set.ContainsKey(Coords.Set) &&
-                Group.ContainsKey(Coords.Group) &&
-                Page.ContainsKey(Coords.Page))
+                Chapter.ContainsKey(Coords.Chapter) &&
+                Section.ContainsKey(Coords.Section) &&
+                Scroll.ContainsKey(Coords.Scroll))
             {
-                Page.Remove(Coords.Page);
+                Scroll.Remove(Coords.Scroll);
             }
         }
 
-        public void processDelta(int set_delta, int group_delta, int page_delta)
+        public void processDelta(int chapter_delta, int section_delta, int scroll_delta)
         {
-            if (page_delta > 0) { ++Coords.Page; }
-            if (page_delta < 0) { --Coords.Page; }
-            if (group_delta > 0) { ++Coords.Group; }
-            if (group_delta < 0) { --Coords.Group; }
-            if (set_delta > 0) { ++Coords.Set; }
-            if (set_delta < 0) { --Coords.Set; }
-            if (Coords.Page < 1) { Coords.Page = 1; }
-            if (Coords.Group < 1) { Coords.Group = 1; }
-            if (Coords.Set < 1) { Coords.Set = 1; }
+            if (scroll_delta > 0) { ++Coords.Scroll; }
+            if (scroll_delta < 0) { --Coords.Scroll; }
+            if (section_delta > 0) { ++Coords.Section; }
+            if (section_delta < 0) { --Coords.Section; }
+            if (chapter_delta > 0) { ++Coords.Chapter; }
+            if (chapter_delta < 0) { --Coords.Chapter; }
+            if (Coords.Scroll < 1) { Coords.Scroll = 1; }
+            if (Coords.Section < 1) { Coords.Section = 1; }
+            if (Coords.Chapter < 1) { Coords.Chapter = 1; }
         }
 
-        public string getPage()
+        public string getScroll()
         {
-            return Page.ContainsKey(Coords.Page) ? Page[Coords.Page] : "";
+            return Scroll.ContainsKey(Coords.Scroll) ? Scroll[Coords.Scroll] : "";
         }
 
         public string EditorSummary()
         {
-            return Coords.EditorSummary(getPage().Length);
+            return Coords.EditorSummary();
         }
     }
 }
