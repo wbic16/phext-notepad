@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TerseForm));
             this.textBox = new System.Windows.Forms.RichTextBox();
             this.libraryLabel = new System.Windows.Forms.Label();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
@@ -35,15 +36,17 @@
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dimensionReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.treeViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.wordWrapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultTerseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.libraryID = new System.Windows.Forms.TextBox();
             this.shelfLabel = new System.Windows.Forms.Label();
             this.shelfID = new System.Windows.Forms.TextBox();
@@ -57,12 +60,11 @@
             this.bookID = new System.Windows.Forms.TextBox();
             this.chapterLabel = new System.Windows.Forms.Label();
             this.sectionLabel = new System.Windows.Forms.Label();
-            this.pageLabel = new System.Windows.Forms.Label();
+            this.scrollLabel = new System.Windows.Forms.Label();
             this.status = new System.Windows.Forms.Label();
             this.chapterID = new System.Windows.Forms.TextBox();
             this.sectionID = new System.Windows.Forms.TextBox();
             this.scrollID = new System.Windows.Forms.TextBox();
-            this.jumpButton = new System.Windows.Forms.Button();
             this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.libraryScrollbar = new System.Windows.Forms.VScrollBar();
             this.shelfScrollbar = new System.Windows.Forms.VScrollBar();
@@ -73,18 +75,25 @@
             this.sectionScrollbar = new System.Windows.Forms.VScrollBar();
             this.chapterScrollbar = new System.Windows.Forms.VScrollBar();
             this.treeView = new System.Windows.Forms.TreeView();
-            this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.menuStrip.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBox
             // 
-            this.textBox.Font = new System.Drawing.Font("Cascadia Code", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.textBox.Location = new System.Drawing.Point(256, 27);
+            this.textBox.AcceptsTab = true;
+            this.textBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.textBox.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.textBox.Font = new System.Drawing.Font("Cascadia Code", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.textBox.Location = new System.Drawing.Point(259, 5);
             this.textBox.MaxLength = 100000000;
             this.textBox.Name = "textBox";
-            this.textBox.Size = new System.Drawing.Size(917, 543);
+            this.textBox.Size = new System.Drawing.Size(905, 544);
             this.textBox.TabIndex = 0;
             this.textBox.Text = "";
             this.textBox.SelectionChanged += new System.EventHandler(this.textBox_SelectionChanged);
@@ -151,6 +160,13 @@
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
+            // saveAsToolStripMenuItem
+            // 
+            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.saveAsToolStripMenuItem.Text = "Save As";
+            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
@@ -177,7 +193,8 @@
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dimensionReportToolStripMenuItem,
-            this.treeViewToolStripMenuItem});
+            this.treeViewToolStripMenuItem,
+            this.wordWrapToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "&View";
@@ -185,7 +202,7 @@
             // dimensionReportToolStripMenuItem
             // 
             this.dimensionReportToolStripMenuItem.Name = "dimensionReportToolStripMenuItem";
-            this.dimensionReportToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.dimensionReportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.dimensionReportToolStripMenuItem.Text = "&Dimension Report";
             this.dimensionReportToolStripMenuItem.Click += new System.EventHandler(this.dimensionReportToolStripMenuItem_Click);
             // 
@@ -195,9 +212,19 @@
             this.treeViewToolStripMenuItem.CheckOnClick = true;
             this.treeViewToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.treeViewToolStripMenuItem.Name = "treeViewToolStripMenuItem";
-            this.treeViewToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.treeViewToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.treeViewToolStripMenuItem.Text = "Tree View";
             this.treeViewToolStripMenuItem.Click += new System.EventHandler(this.treeViewToolStripMenuItem_Click);
+            // 
+            // wordWrapToolStripMenuItem
+            // 
+            this.wordWrapToolStripMenuItem.Checked = true;
+            this.wordWrapToolStripMenuItem.CheckOnClick = true;
+            this.wordWrapToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.wordWrapToolStripMenuItem.Name = "wordWrapToolStripMenuItem";
+            this.wordWrapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.wordWrapToolStripMenuItem.Text = "&Word Wrap";
+            this.wordWrapToolStripMenuItem.Click += new System.EventHandler(this.wordWrapToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -208,19 +235,19 @@
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "&Help";
             // 
-            // aboutToolStripMenuItem
-            // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.aboutToolStripMenuItem.Text = "&About";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
             // defaultTerseToolStripMenuItem
             // 
             this.defaultTerseToolStripMenuItem.Name = "defaultTerseToolStripMenuItem";
             this.defaultTerseToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
             this.defaultTerseToolStripMenuItem.Text = "&Contents";
             this.defaultTerseToolStripMenuItem.Click += new System.EventHandler(this.defaultTerseToolStripMenuItem_Click);
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.aboutToolStripMenuItem.Text = "&About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // libraryID
             // 
@@ -232,6 +259,7 @@
             this.libraryID.Name = "libraryID";
             this.libraryID.Size = new System.Drawing.Size(55, 23);
             this.libraryID.TabIndex = 1;
+            this.libraryID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.libraryID_KeyUp);
             // 
             // shelfLabel
             // 
@@ -256,6 +284,7 @@
             this.shelfID.Name = "shelfID";
             this.shelfID.Size = new System.Drawing.Size(55, 23);
             this.shelfID.TabIndex = 2;
+            this.shelfID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.shelfID_KeyUp);
             // 
             // seriesLabel
             // 
@@ -280,6 +309,7 @@
             this.seriesID.Name = "seriesID";
             this.seriesID.Size = new System.Drawing.Size(55, 23);
             this.seriesID.TabIndex = 3;
+            this.seriesID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.seriesID_KeyUp);
             // 
             // collectionLabel
             // 
@@ -304,6 +334,7 @@
             this.collectionID.Name = "collectionID";
             this.collectionID.Size = new System.Drawing.Size(55, 23);
             this.collectionID.TabIndex = 4;
+            this.collectionID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.collectionID_KeyUp);
             // 
             // volumeLabel
             // 
@@ -328,6 +359,7 @@
             this.volumeID.Name = "volumeID";
             this.volumeID.Size = new System.Drawing.Size(55, 23);
             this.volumeID.TabIndex = 5;
+            this.volumeID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.volumeID_KeyUp);
             // 
             // bookLabel
             // 
@@ -352,6 +384,7 @@
             this.bookID.Name = "bookID";
             this.bookID.Size = new System.Drawing.Size(55, 23);
             this.bookID.TabIndex = 6;
+            this.bookID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.bookID_KeyUp);
             // 
             // chapterLabel
             // 
@@ -379,27 +412,27 @@
             this.sectionLabel.Text = "Section:";
             this.sectionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // pageLabel
+            // scrollLabel
             // 
-            this.pageLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.pageLabel.CausesValidation = false;
-            this.pageLabel.Enabled = false;
-            this.pageLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.pageLabel.Location = new System.Drawing.Point(510, 38);
-            this.pageLabel.Name = "pageLabel";
-            this.pageLabel.Size = new System.Drawing.Size(80, 20);
-            this.pageLabel.TabIndex = 2;
-            this.pageLabel.Text = "Scroll:";
-            this.pageLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.scrollLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.scrollLabel.CausesValidation = false;
+            this.scrollLabel.Enabled = false;
+            this.scrollLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.scrollLabel.Location = new System.Drawing.Point(510, 38);
+            this.scrollLabel.Name = "scrollLabel";
+            this.scrollLabel.Size = new System.Drawing.Size(80, 20);
+            this.scrollLabel.TabIndex = 2;
+            this.scrollLabel.Text = "Scroll:";
+            this.scrollLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // status
             // 
             this.status.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.status.CausesValidation = false;
             this.status.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.status.Location = new System.Drawing.Point(765, 38);
+            this.status.Location = new System.Drawing.Point(679, 38);
             this.status.Name = "status";
-            this.status.Size = new System.Drawing.Size(147, 20);
+            this.status.Size = new System.Drawing.Size(230, 20);
             this.status.TabIndex = 2;
             this.status.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -413,6 +446,7 @@
             this.chapterID.Name = "chapterID";
             this.chapterID.Size = new System.Drawing.Size(55, 23);
             this.chapterID.TabIndex = 7;
+            this.chapterID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.chapterID_KeyUp);
             // 
             // sectionID
             // 
@@ -424,6 +458,7 @@
             this.sectionID.Name = "sectionID";
             this.sectionID.Size = new System.Drawing.Size(55, 23);
             this.sectionID.TabIndex = 8;
+            this.sectionID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.sectionID_KeyUp);
             // 
             // scrollID
             // 
@@ -435,17 +470,7 @@
             this.scrollID.Name = "scrollID";
             this.scrollID.Size = new System.Drawing.Size(55, 23);
             this.scrollID.TabIndex = 9;
-            // 
-            // jumpButton
-            // 
-            this.jumpButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.jumpButton.Location = new System.Drawing.Point(679, 32);
-            this.jumpButton.Name = "jumpButton";
-            this.jumpButton.Size = new System.Drawing.Size(80, 23);
-            this.jumpButton.TabIndex = 10;
-            this.jumpButton.Text = "Jump";
-            this.jumpButton.UseVisualStyleBackColor = true;
-            this.jumpButton.Click += new System.EventHandler(this.jumpButton_Click);
+            this.scrollID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.scrollID_KeyUp);
             // 
             // flowLayoutPanel
             // 
@@ -465,12 +490,11 @@
             this.flowLayoutPanel.Controls.Add(this.chapterID);
             this.flowLayoutPanel.Controls.Add(this.sectionLabel);
             this.flowLayoutPanel.Controls.Add(this.sectionID);
-            this.flowLayoutPanel.Controls.Add(this.pageLabel);
+            this.flowLayoutPanel.Controls.Add(this.scrollLabel);
             this.flowLayoutPanel.Controls.Add(this.scrollID);
-            this.flowLayoutPanel.Controls.Add(this.jumpButton);
             this.flowLayoutPanel.Controls.Add(this.status);
             this.flowLayoutPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.flowLayoutPanel.Location = new System.Drawing.Point(250, 576);
+            this.flowLayoutPanel.Location = new System.Drawing.Point(0, 576);
             this.flowLayoutPanel.MaximumSize = new System.Drawing.Size(925, 65);
             this.flowLayoutPanel.MinimumSize = new System.Drawing.Size(925, 65);
             this.flowLayoutPanel.Name = "flowLayoutPanel";
@@ -543,19 +567,25 @@
             // 
             // treeView
             // 
-            this.treeView.Dock = System.Windows.Forms.DockStyle.Left;
-            this.treeView.Location = new System.Drawing.Point(0, 24);
+            this.treeView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.treeView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.treeView.Location = new System.Drawing.Point(3, 5);
             this.treeView.Name = "treeView";
-            this.treeView.Size = new System.Drawing.Size(250, 617);
+            this.treeView.Size = new System.Drawing.Size(250, 547);
             this.treeView.TabIndex = 29;
-            this.treeView.DoubleClick += new System.EventHandler(this.treeView_DoubleClick);
+            this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
+            this.treeView.KeyUp += new System.Windows.Forms.KeyEventHandler(this.treeView_KeyUp);
             // 
-            // saveAsToolStripMenuItem
+            // panel1
             // 
-            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.saveAsToolStripMenuItem.Text = "Save As";
-            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            this.panel1.Controls.Add(this.textBox);
+            this.panel1.Controls.Add(this.treeView);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(0, 24);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(1176, 552);
+            this.panel1.TabIndex = 30;
             // 
             // TerseForm
             // 
@@ -563,8 +593,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlDark;
             this.ClientSize = new System.Drawing.Size(1384, 641);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.flowLayoutPanel);
-            this.Controls.Add(this.treeView);
             this.Controls.Add(this.chapterScrollbar);
             this.Controls.Add(this.sectionScrollbar);
             this.Controls.Add(this.bookScrollbar);
@@ -573,8 +603,8 @@
             this.Controls.Add(this.seriesScrollbar);
             this.Controls.Add(this.shelfScrollbar);
             this.Controls.Add(this.libraryScrollbar);
-            this.Controls.Add(this.textBox);
             this.Controls.Add(this.menuStrip);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
             this.MinimumSize = new System.Drawing.Size(850, 400);
             this.Name = "TerseForm";
@@ -585,6 +615,7 @@
             this.menuStrip.PerformLayout();
             this.flowLayoutPanel.ResumeLayout(false);
             this.flowLayoutPanel.PerformLayout();
+            this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -617,12 +648,11 @@
         private TextBox bookID;
         private Label chapterLabel;
         private Label sectionLabel;
-        private Label pageLabel;
+        private Label scrollLabel;
         private Label status;
         private TextBox chapterID;
         private TextBox sectionID;
         private TextBox scrollID;
-        private Button jumpButton;
         private VScrollBar libraryScrollbar;
         private VScrollBar shelfScrollbar;
         private VScrollBar seriesScrollbar;
@@ -638,5 +668,7 @@
         private ToolStripMenuItem preferencesToolStripMenuItem;
         private ToolStripMenuItem defaultTerseToolStripMenuItem;
         private ToolStripMenuItem saveAsToolStripMenuItem;
+        private Panel panel1;
+        private ToolStripMenuItem wordWrapToolStripMenuItem;
     }
 }

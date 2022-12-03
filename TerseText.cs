@@ -1,14 +1,30 @@
-﻿using static System.Collections.Specialized.BitVector32;
+﻿using System;
+using static System.Collections.Specialized.BitVector32;
 
 namespace TerseNotepad
 {
-    public class ScrollText : SortedDictionary<uint, string> { };
-    public class SectionText : SortedDictionary<uint, ScrollText> { };
-    public class ChapterText : SortedDictionary<uint, SectionText> { };
+    public class TextNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public string Text { get; set; } = string.Empty;
+    };
+    public class ScrollNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<uint, TextNode> Children { get; set; } = new();
+    };
+    public class SectionNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<uint, ScrollNode> Children { get; set; } = new();
+    };
+    public class ChapterNode : SortedDictionary<uint, SectionNode>
+    {
+    };
     public class TerseText
     {
-        public ChapterText Chapter = new();
-        public SectionText Section
+        public ChapterNode Chapter = new();
+        public SectionNode Section
         {
             get
             {
@@ -23,19 +39,19 @@ namespace TerseNotepad
                 Chapter[Coords.Chapter] = value;
             }
         }
-        public ScrollText Scroll
+        public ScrollNode Scroll
         {
             get
             {
-                if (!Section.ContainsKey(Coords.Section))
+                if (!Section.Children.ContainsKey(Coords.Section))
                 {
-                    Section[Coords.Section] = new();
+                    Section.Children[Coords.Section] = new();
                 }
-                return Section[Coords.Section];
+                return Section.Children[Coords.Section];
             }
             set
             {
-                Section[Coords.Section] = value;
+                Section.Children[Coords.Section] = value;
             }
         }
         public class Coordinates
@@ -54,15 +70,17 @@ namespace TerseNotepad
 
             public override string ToString()
             {
-                return $"Library: {Library},  Shelf: {Shelf},  Series: {Series}," +
-                    $"  Collection: {Collection},  Volume: {Volume},  Book: {Book}," +
-                    $"  Chapter: {Chapter},  Section:  {Section},  Scroll: {Scroll}," +
-                    $"  Line: {Line},  Column: {Column}";
+                return $"{Scroll}-{Section}-{Chapter}";
             }
 
-            public string EditorSummary()
+            public string EditorSummary(string action = "")
             {
-                return $"Ln: {Line}, Col: {Column}";
+                var result = $"Ln: {Line}, Col: {Column}";
+                if (action.Length > 0)
+                {
+                    result += $" {action}";
+                }
+                return result;
             }
 
             public void Reset()
@@ -95,19 +113,27 @@ namespace TerseNotepad
         }
         public Coordinates Coords = new Coordinates();
 
-        public void setScrollText(string text)
+        public void setScroll(string text, TreeNode? node = null)
         {
             if (text.Length > 0)
             {
-                Scroll[Coords.Scroll] = text;
+                if (!Scroll.Children.ContainsKey(Coords.Scroll))
+                {
+                    Scroll.Children[Coords.Scroll] = new();
+                }
+                Scroll.Children[Coords.Scroll].Text = text;
+                if (node != null)
+                {
+                    Scroll.Children[Coords.Scroll].Node = node;
+                }
             }
             // note: the key checks here optimize performance on sparse files
             if (text.Length == 0 &&
                 Chapter.ContainsKey(Coords.Chapter) &&
-                Section.ContainsKey(Coords.Section) &&
-                Scroll.ContainsKey(Coords.Scroll))
+                Section.Children.ContainsKey(Coords.Section) &&
+                Scroll.Children.ContainsKey(Coords.Scroll))
             {
-                Scroll.Remove(Coords.Scroll);
+                Scroll.Children.Remove(Coords.Scroll);
             }
         }
 
@@ -126,12 +152,22 @@ namespace TerseNotepad
 
         public string getScroll()
         {
-            return Scroll.ContainsKey(Coords.Scroll) ? Scroll[Coords.Scroll] : "";
+            return Scroll.Children.ContainsKey(Coords.Scroll) ? Scroll.Children[Coords.Scroll].Text : "";
         }
 
-        public string EditorSummary()
+        public string EditorSummary(string action = "")
         {
-            return Coords.EditorSummary();
+            return Coords.EditorSummary(action);
+        }
+
+        internal void setSectionNode(TreeNode sectionNode, uint chapter_index, uint section_index)
+        {
+            Chapter[chapter_index].Children[section_index].Node = sectionNode;
+        }
+
+        internal void setChapterNode(TreeNode chapterNode, uint chapter_index)
+        {
+            Chapter[chapter_index].Node = chapterNode;
         }
     }
 }

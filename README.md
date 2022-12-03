@@ -1,3 +1,7 @@
+Terse Notepad
+-------------
+There's now a reference editor (v0.0.6) that you can use to explore the concept of multi-dimensional text. Be sure to open Terse.t after downloading a copy of trs.exe!
+
 Megatext File Format
 ---------------------
 The megatext file format (.t) provides modern systems with a large text space. This format is suitable for serializing many datasets, as it provides 11 dimensions of free-form text. Traditional editors only explore 2-dimensional text (columns and lines). Operating systems provide access to files and folders - providing access to a 4-dimensional text space.

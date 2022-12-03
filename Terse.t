@@ -46,35 +46,41 @@ Help
 
 Bugs
 
-  * font settings should persist
   * rich text paste is wonky
-  * taskbar pin icon is broken
   * unit test coverage
 Requests
 
-  * Add Save As Menu Item
-  * configurable dimension names
-  * 🦘 Remove Jump button - load pages live as you enter values below
-  * 🌲 Tree view should be live
-  * 🎄 Tree view selection should navigate (not double click)
+  * 🌲 Tree view should update immediately
   * scroll bars should do something
   * add multiple viewports
   * add dark mode
   * explore tabs
   * add zoomed UI
   * 🆕 Selecting the end of the row should not select the newline
-Release Notes
+Terse Release Notes
 
 v0.0.6
 ------
-* Renamed TODO.t to Terse.t
-* Added Release Notes to Terse.t
-* Added File Formats to Terse.t
-* Added Terse Notepad Documentation to Terse.t
-* Added "Welcome to the Terse" Summary
-* Embedded Terse.t with the build
-* Added License.md
-* Added Save As Menu Item
+* Editor Improvements
+  * Editor State is now synchronized across sessions
+  * Added Save As Menu Item
+* Settings Version 2
+  * Added Dimension Labels (Dimension1 through Dimension11)
+  * Added WordWrap boolean - controls text box word wrapping
+  * Added Font and FontSize
+* Program Enhancements
+  * Renamed executable to trs.exe
+  * Renamed TODO.t to Terse.t
+  * Added Release Notes to Terse.t
+  * Added File Formats to Terse.t
+  * Added Terse Notepad Documentation to Terse.t
+  * Added "Welcome to the Terse" Summary
+  * Embedded a copy of Terse.t on Build
+  * Added License.md
+* User Requests
+  * 🦘 Removed the Jump button - pages load as you type now!
+  * 🌲 Tree view updates on save and delete - more to come🎉
+  * 🎄 Tree view selection is now single-click \o/
 
 v0.0.5
 ------
@@ -105,7 +111,42 @@ v0.0.1
 * Proof of Concept with 5 of 11 dimensions
 * Multiverse, Galaxy, World, Language, Branch, Volume, Set, Group, and Page
 
+File Formats
+
+This is a list of Terse-based file formats.
+
+Extension  Status       Description
+---------  ------       -----------
+.t         Implemented  Reference File Format
+.tweb      Proposed     HTML + Resources in One Byte Stream
+.todb      Proposed     Text-Only Database
+.tfl       Proposed     Text Flow Notes
+.tjur      Proposed     Jurassic Park Style Viewer
+
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
