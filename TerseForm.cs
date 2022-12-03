@@ -21,15 +21,48 @@ namespace TerseNotepad
         private uint _priorColumn = 1;
         private TerseConfig _settings = new();
 
-        public TerseForm()
+        public TerseForm(string[] args)
         {
             InitializeComponent();
             treeViewToolStripMenuItem.Checked = _settings.TreeView;
             treeView.Visible = _settings.TreeView;
-            coordinateJump(_settings.Coords);
-            if (File.Exists(_settings.Filename))
+            if (args.Length > 0)
+            {
+                var filename = args[0];
+                if (File.Exists(filename))
+                {
+                    _settings.Filename = filename;
+                    _settings.Coords = args.Length > 1 ? args[1] : _settings.Coords;
+                }
+            }
+
+            if (_settings.Filename.Length == 0)
+            {
+                LoadDefaultTerse();
+            }
+            
+            if (_settings.Filename.Length > 0 && File.Exists(_settings.Filename))
             {
                 LoadFile(_settings.Filename);
+            }
+            coordinateJump(_settings.Coords);
+        }
+
+        private void LoadDefaultTerse()
+        {
+            _settings.Filename = "";
+            var currentAssembly = Assembly.GetExecutingAssembly();
+            var items = currentAssembly.GetManifestResourceNames();
+            var stream = currentAssembly.GetManifestResourceStream("TerseNotepad.Terse.t");
+            if (stream != null)
+            {
+                var reader = new StreamReader(stream);
+                var buffer = reader.ReadToEnd();
+                if (buffer != null)
+                {
+                    LoadData(buffer);
+                    jumpToOrigin();
+                }
             }
         }
 
@@ -193,8 +226,16 @@ Use F2 - F11 to access additional dimensions.
             SaveCurrentFile();
         }
 
-        private void SaveCurrentFile()
+        private void SaveCurrentFile(bool chooseFile = false)
         {
+            if (chooseFile || _settings.Filename.Length == 0)
+            {
+                if (!ChooseSaveFilename())
+                {
+                    return;
+                }
+            }
+
             var collector = new StringBuilder();
             uint chapter_break_counter = 0;
             foreach (var chapter_index in _terse.Chapter.Keys)
@@ -225,27 +266,7 @@ Use F2 - F11 to access additional dimensions.
                 collector.Append(CHAPTER_BREAK);
             }
 
-            bool saved = false;
-            try
-            {
-                File.WriteAllText(_settings.Filename, collector.ToString());
-            }
-            catch (System.ArgumentException)
-            {
-                ChooseSaveFilename();
-            }
-
-            if (!saved)
-            {
-                try
-                {
-                    File.WriteAllText(_settings.Filename, collector.ToString());
-                }
-                catch (System.ArgumentException)
-                {
-                    MessageBox.Show("Unable to save - please choose a different filename.", "Save Error");
-                }
-            }
+            File.WriteAllText(_settings.Filename, collector.ToString());
         }
 
         private void textBox_SelectionChanged(object sender, EventArgs e)
@@ -285,7 +306,7 @@ Use F2 - F11 to access additional dimensions.
             status.Text = _terse.EditorSummary();
         }
 
-        private void ChooseSaveFilename()
+        private bool ChooseSaveFilename()
         {
             var saver = new SaveFileDialog
             {
@@ -296,7 +317,10 @@ Use F2 - F11 to access additional dimensions.
             if (result == DialogResult.OK)
             {
                 _settings.Filename = saver.FileName;
+                return true;
             }
+
+            return false;
         }
 
         private void textBox_KeyUp(object sender, KeyEventArgs e)
@@ -339,6 +363,13 @@ Use F2 - F11 to access additional dimensions.
             if (e.Control && e.KeyCode == Keys.N)
             {
                 newToolStripMenuItem_Click(sender, e);
+                e.Handled = true;
+                return;
+            }
+            // Ctrl-,: Preferences
+            if (e.Control && e.KeyCode == Keys.Oemcomma)
+            {
+                preferencesToolStripMenuItem_Click(sender, e);
                 e.Handled = true;
                 return;
             }
@@ -532,6 +563,21 @@ Use F2 - F11 to access additional dimensions.
         private void TerseForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             _settings.Save();
+        }
+
+        private void preferencesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadFile(_settings.IniFilePath);
+        }
+
+        private void defaultTerseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadDefaultTerse();
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveCurrentFile(true);
         }
     }
 }

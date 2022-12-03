@@ -4,7 +4,15 @@ namespace TerseNotepad
 {
     public class TerseConfig
     {
-        private string _configFilename = "";
+        private readonly string _configFilename = "";
+
+        public string IniFilePath
+        {
+            get
+            {
+                return _configFilename;
+            }
+        }
         public TerseConfig()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
