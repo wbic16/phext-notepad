@@ -34,8 +34,23 @@ namespace TerseNotepad
             }
         }
         public string Format { get; set; } = "TerseConfig";
-        public string Version { get; set; } = "1";
-        public string Filename { get; set; } = "";
+        public string Version { get; private set; } = "3";
+        private string _filename = "";
+        public string Filename
+        {
+            get
+            {
+                return _filename;
+            }
+            set
+            {
+                if (!RecentFile.Contains(_filename) && _filename.Length > 0)
+                {
+                    RecentFile.Add(_filename);
+                }
+                _filename = value;
+            }
+        }
         public string Coords { get; set; } = "";
         public bool TreeView { get; set; } = true;
         public string Font { get; set; } = "Cascadia Code";
@@ -53,12 +68,14 @@ namespace TerseNotepad
         public string Dimension10 { get; set; } = "Shelf";
         public string Dimension11 { get; set; } = "Library";
         public bool WordWrap { get; set; } = true;
+        public float ZoomFactor { get; set; } = 1.0f;
+        public SortedSet<string> RecentFile { get; set; } = new();
 
         public string Serialize()
         {
-            return $"[TerseConfig]\n"
+            var result = $"[TerseConfig]\n"
                  + $"Format = {Format}\n"
-                 + $"Version = 2\n"
+                 + $"Version = {Version}\n"
                  + $"Filename = {Filename}\n"
                  + $"TreeView = {TreeView}\n"
                  + $"Coords = {Coords}\n"
@@ -76,7 +93,13 @@ namespace TerseNotepad
                  + $"Dimension9 = {Dimension9}\n"
                  + $"Dimension10 = {Dimension10}\n"
                  + $"Dimension11 = {Dimension11}\n"
-                 + $"WordWrap = {WordWrap}\n";
+                 + $"WordWrap = {WordWrap}\n"
+                 + $"ZoomFactor = {ZoomFactor}\n";
+            foreach (var file in RecentFile)
+            {
+                result += $"RecentFile = {file}\n";
+            }
+            return result;
         }
 
         public void Deserialize(string ini)
@@ -108,7 +131,11 @@ namespace TerseNotepad
                             Font = parts[1];
                             break;
                         case "FontSize":
-                            FontSize = int.Parse(parts[1]);
+                            try
+                            {
+                                FontSize = int.Parse(parts[1]);
+                            }
+                            catch { }
                             break;
                         case "LastError":
                             LastError = parts[1];
@@ -148,6 +175,16 @@ namespace TerseNotepad
                             break;
                         case "WordWrap":
                             WordWrap = parts[1] == "True";
+                            break;
+                        case "ZoomFactor":
+                            try
+                            {
+                                ZoomFactor = float.Parse(parts[1]);
+                            }
+                            catch { }
+                            break;
+                        case "RecentFile":
+                            RecentFile.Add(parts[1]);
                             break;
                     }
                 }

@@ -3,6 +3,7 @@ using System.Runtime;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static TerseNotepad.TerseText;
 
 namespace TerseNotepad
@@ -152,6 +153,10 @@ Use F2 - F11 to access additional dimensions.
             }
             treeView.Visible = _settings.TreeView;
             textBox.WordWrap = _settings.WordWrap;
+            textBox.ZoomFactor = _settings.ZoomFactor;
+            var menu = CreateRecentFilesMenu(_settings.RecentFile);
+            recentToolStripMenuItem.DropDownItems.Clear();
+            recentToolStripMenuItem.DropDownItems.AddRange(menu);
             libraryLabel.Text = _settings.Dimension11;
             shelfLabel.Text = _settings.Dimension10;
             seriesLabel.Text = _settings.Dimension9;
@@ -165,6 +170,30 @@ Use F2 - F11 to access additional dimensions.
             if (!File.Exists(_settings.IniFilePath))
             {
                 _settings.Save();
+            }
+        }
+        private ToolStripMenuItem[] CreateRecentFilesMenu(SortedSet<string> files)
+        {
+            var items = new ToolStripMenuItem[files.Count];
+            for (int i = 0; i < files.Count; ++i)
+            {
+                items[i] = new ToolStripMenuItem
+                {
+                    Name = $"RecentMenuItem{i}",
+                    Text = files.ElementAt(i)
+                };
+                items[i].Click += new EventHandler(MenuItemClickHandler);
+            }
+
+            return items;
+        }
+
+        public void MenuItemClickHandler(object? sender, EventArgs e)
+        {
+            if (sender != null)
+            {
+                ToolStripMenuItem clickedItem = (ToolStripMenuItem)sender;
+                LoadFile(clickedItem.Text);
             }
         }
 
@@ -315,6 +344,11 @@ Use F2 - F11 to access additional dimensions.
             _terse.Coords.Line = 1;
             var total = 0;
             var offset = textBox.SelectionStart;
+            var index = offset + textBox.SelectionLength - 1;
+            if (index > -1 && index < textBox.Text.Length && textBox.Text[index] == '\n' && textBox.SelectionLength > 0)
+            {
+                --textBox.SelectionLength;
+            }
             foreach (var line in textBox.Lines)
             {
                 var delta = line.Length + 1;
@@ -597,6 +631,9 @@ Use F2 - F11 to access additional dimensions.
         {
             SaveCurrentFile(false, false);
             _settings.Coords = _terse.Coords.ToString();
+            _settings.ZoomFactor = textBox.ZoomFactor;
+            _settings.WordWrap = textBox.WordWrap;
+            _settings.TreeView = treeView.Visible;
             _settings.Save();
         }
 
@@ -726,7 +763,7 @@ Use F2 - F11 to access additional dimensions.
             jumpButton_Click(sender, e);
         }
 
-        private void BumpCoordinate(TextBox box, int amount)
+        private void BumpCoordinate(System.Windows.Forms.TextBox box, int amount)
         {
             var value = int.Parse(box.Text) + amount;
             if (value < 1) { value = 1; }
@@ -734,7 +771,7 @@ Use F2 - F11 to access additional dimensions.
             box.Text = value.ToString();
         }
 
-        private void UpDownHandler(TextBox box, KeyEventArgs e)
+        private void UpDownHandler(System.Windows.Forms.TextBox box, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Up)
             {

@@ -55,9 +55,17 @@ Requests
   * add multiple viewports
   * add dark mode
   * explore tabs
-  * add zoomed UI
-  * 🆕 Selecting the end of the row should not select the newline
+  * add zoomed UI  
+
 Terse Release Notes
+
+v0.0.7
+------
+* Settings Version 3
+  * Added ZoomFactor to preserve text resizing (separate from font size) - 1.0 = 100%
+  * Added Recent File List (Sorted)
+* User Requests
+  * 🆕 Selecting the end of the row no longer selects the newline \o/
 
 v0.0.6
 ------
@@ -124,6 +132,25 @@ Extension  Status       Description
 .tjur      Proposed     Jurassic Park Style Viewer
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
