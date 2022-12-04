@@ -88,6 +88,30 @@ Use F2 - F11 to access additional dimensions.
         private void collectScroll()
         {
             _terse.setScroll(textBox.Text);
+            if (textBox.Text.Contains('\n'))
+            {
+                var node = getTreeNode(_terse.Coords.ToString());
+                if (node == null)
+                {
+                    var parent = getParentTreeNode(_terse.Coords);
+                    if (parent != null)
+                    {
+                        TreeNode sectionNode;
+                        if (parent.Text.StartsWith("Chapter"))
+                        {
+                            sectionNode = parent.Nodes.Add($"Section {_terse.Coords.Section}");
+                        }
+                        else
+                        {
+                            sectionNode = parent;
+                        }
+
+                        var key = _terse.Coords.ToString();
+                        var line = getScrollSummary(_terse.Coords, textBox.Text);
+                        sectionNode.Nodes.Add(key, line);
+                    }
+                }
+            }
         }
 
         private void loadScroll()
@@ -217,11 +241,13 @@ Use F2 - F11 to access additional dimensions.
                 uint section_index = 1;
                 var sections = chapter.Split(SECTION_BREAK);
                 var chapterNode = new TreeNode($"Chapter {chapter_index}");
+                chapterNode.Name = $"{chapter_index}-0-0";
                 foreach (var section in sections)
                 {
                     uint scroll_index = 1;
                     var scrolls = section.Split(SCROLL_BREAK);
                     var sectionNode = new TreeNode($"Section {section_index}");
+                    sectionNode.Name = $"{chapter_index}-{section_index}-0";
                     foreach (var scroll in scrolls)
                     {
                         _terse.Coords.Scroll = scroll_index;
@@ -594,9 +620,20 @@ Use F2 - F11 to access additional dimensions.
             return null;
         }
 
-        private TreeNode? getTreeNode(Coordinates coords)
+        private TreeNode? getParentTreeNode(Coordinates coords)
         {
-            return getTreeNode(coords.ToString());
+            TreeNode? node;
+
+            var sectionNodeID = $"{coords.Chapter}-{coords.Section}-0";
+            node = getTreeNode(sectionNodeID);
+            if (node != null)
+            {
+                return node;
+            }
+
+            var chapterNodeID = $"{coords.Chapter}-0-0";
+            return getTreeNode(chapterNodeID);
+            
         }
 
         private void deleteNode(string coordinates)

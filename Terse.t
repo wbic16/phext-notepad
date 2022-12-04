@@ -50,7 +50,6 @@ Bugs
   * unit test coverage
 Requests
 
-  * 🌲 Tree view should update immediately
   * scroll bars should do something
   * add multiple viewports
   * add dark mode
@@ -58,6 +57,12 @@ Requests
   * add zoomed UI  
 
 Terse Release Notes
+
+v0.0.8
+------
+  * 🌲 Tree view is now instant! \o/
+    * New pages appear in the tree view once a line break occurs
+    * Empty pages are cleared on save
 
 v0.0.7
 ------
@@ -132,6 +137,15 @@ Extension  Status       Description
 .tjur      Proposed     Jurassic Park Style Viewer
 
 
+
+
+
+
+
+
+
+
+
 
 
 
