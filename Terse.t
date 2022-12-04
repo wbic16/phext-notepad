@@ -58,6 +58,10 @@ Requests
 
 Terse Release Notes
 
+v0.0.9
+------
+  * 🌲 Tree view now updates in real-time
+
 v0.0.8
 ------
   * 🌲 Tree view is now instant! \o/
@@ -137,6 +141,16 @@ Extension  Status       Description
 .tjur      Proposed     Jurassic Park Style Viewer
 
 
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -73,6 +73,11 @@ namespace TerseNotepad
                 return $"{Scroll}-{Section}-{Chapter}";
             }
 
+            public string GetNodeSummary()
+            {
+                return $"Scroll #{Scroll}";
+            }
+
             public string EditorSummary(string action = "")
             {
                 var result = $"Ln: {Line}, Col: {Column}";

@@ -88,28 +88,36 @@ Use F2 - F11 to access additional dimensions.
         private void collectScroll()
         {
             _terse.setScroll(textBox.Text);
-            if (textBox.Text.Contains('\n'))
+            if (textBox.Text.Length == 0)
             {
-                var node = getTreeNode(_terse.Coords.ToString());
-                if (node == null)
+                return;
+            }
+            var node = getTreeNode(_terse.Coords.ToString());
+            if (node != null)
+            {
+                if (textBox.Lines != null && textBox.Lines.Length >= 1)
                 {
-                    var parent = getParentTreeNode(_terse.Coords);
-                    if (parent != null)
+                    node.Text = getScrollSummary(_terse.Coords, textBox.Lines.First());
+                }
+            }
+            else
+            {
+                var parent = getParentTreeNode(_terse.Coords);
+                if (parent != null)
+                {
+                    TreeNode sectionNode;
+                    if (parent.Text.StartsWith("Chapter"))
                     {
-                        TreeNode sectionNode;
-                        if (parent.Text.StartsWith("Chapter"))
-                        {
-                            sectionNode = parent.Nodes.Add($"Section {_terse.Coords.Section}");
-                        }
-                        else
-                        {
-                            sectionNode = parent;
-                        }
-
-                        var key = _terse.Coords.ToString();
-                        var line = getScrollSummary(_terse.Coords, textBox.Text);
-                        sectionNode.Nodes.Add(key, line);
+                        sectionNode = parent.Nodes.Add($"Section {_terse.Coords.Section}");
                     }
+                    else
+                    {
+                        sectionNode = parent;
+                    }
+
+                    var key = _terse.Coords.ToString();
+                    var line = getScrollSummary(_terse.Coords, textBox.Text);
+                    sectionNode.Nodes.Add(key, line);
                 }
             }
         }
@@ -280,7 +288,6 @@ Use F2 - F11 to access additional dimensions.
             loadScroll();
             coordinateJump(_settings.Coords);
         }
-
         private string getScrollSummary(Coordinates coords, string scroll)
         {
             var firstLine = scroll.Split("\n")[0];
@@ -289,7 +296,7 @@ Use F2 - F11 to access additional dimensions.
             {
                 return line;
             }
-            return coords.EditorSummary();
+            return coords.GetNodeSummary();
         }
 
         private void jumpToOrigin()
