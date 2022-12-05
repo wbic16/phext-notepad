@@ -122,12 +122,24 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
+        private void updateScrollbarValue(System.Windows.Forms.ScrollBar bar, uint value)
+        {
+            int translated = (int)value;
+            if (translated >= bar.Minimum && translated <= bar.Maximum)
+            {
+                bar.Value = translated;
+            }
+        }
+
         private void loadScroll()
         {
             textBox.Text = _terse.getScroll();
             _terse.Coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
+            updateScrollbarValue(scrollScrollbar, _terse.Coords.Scroll);
+            updateScrollbarValue(sectionScrollbar, _terse.Coords.Section);
+            updateScrollbarValue(chapterScrollbar, _terse.Coords.Chapter);           
             // todo: enable the remaining dimensions
             // libraryID.Enabled = true;
             // libraryLabel.Enabled = true;
@@ -277,6 +289,7 @@ Use F2 - F11 to access additional dimensions.
                     }
                     ++section_index;
                 }
+                sectionScrollbar.Maximum = (int)section_index;
                 if (chapterNode.Nodes.Count > 0)
                 {
                     treeView.Nodes.Add(chapterNode);
@@ -284,6 +297,8 @@ Use F2 - F11 to access additional dimensions.
                 }
                 ++chapter_index;
             }
+            chapterScrollbar.Maximum = (int)chapter_index;
+            
             treeView.ExpandAll();
             loadScroll();
             coordinateJump(_settings.Coords);
@@ -849,6 +864,54 @@ Use F2 - F11 to access additional dimensions.
         {
             textBox.WordWrap = wordWrapToolStripMenuItem.Checked;
             _settings.WordWrap = textBox.WordWrap;
+        }
+
+        private void scrollScrollbar_ValueChanged(object sender, EventArgs e)
+        {
+            scrollID.Text = scrollScrollbar.Value.ToString();
+            jumpButton_Click(sender, e);
+        }
+
+        private void sectionScrollbar_ValueChanged(object sender, EventArgs e)
+        {
+            sectionID.Text = sectionScrollbar.Value.ToString();
+            jumpButton_Click(sender, e);
+        }
+
+        private void chapterScrollbar_ValueChanged(object sender, EventArgs e)
+        {
+            chapterID.Text = chapterScrollbar.Value.ToString();
+            jumpButton_Click(sender, e);
+        }        
+
+        private void UpdateScrollbarMaximum(System.Windows.Forms.TextBox box, System.Windows.Forms.ScrollBar bar)
+        {
+            try
+            {
+                var test = int.Parse(box.Text);
+                if (test > bar.Maximum)
+                {
+                    bar.Maximum = test;
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private void scrollID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(scrollID, scrollScrollbar);
+        }
+
+        private void sectionID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(sectionID, sectionScrollbar);
+        }
+
+        private void chapterID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(chapterID, chapterScrollbar);
         }
     }
 }

@@ -1,4 +1,3 @@
-
 Welcome to the Terse
 --------------------
 
@@ -47,8 +46,10 @@ Help
 
 Bugs
 
-  * rich text paste is wonky
-  * unit test coverage
+ * volumeID is blank
+ * rich text paste is wonky
+ * unit test coverage
+
 Roadmap
 
 v0.1.0
@@ -68,16 +69,15 @@ v0.3.0
 v0.4.0
 ------
   * add zoomed UI  
-  * add Series, Shelf, and Library Dimensions
-
-Terse Release Notes
--------------------
+  * add Series, Shelf, and Library Dimensions
+Release Notes
+-------------
 December 4, 2022
 
 v0.1.0
 ------
-* Renamed Requests to Roadmap
-* Planned features up to v0.4.0
+* 🛣️ Renamed Requests to Roadmap
+* 📜  Witness Operational Scrollbars!
 
 v0.0.9
 ------
@@ -86,27 +86,27 @@ v0.0.9
 v0.0.8
 ------
 * 🌲 Tree view is now instant! \o/
-  * New pages appear in the tree view once a line break occurs
-  * Empty pages are cleared on save
+  * 📃 New pages appear in the tree view once a line break occurs
+  * 🫗Empty pages are cleared on save
 
 v0.0.7
 ------
-* Settings Version 3
-  * Added ZoomFactor to preserve text resizing (separate from font size) - 1.0 = 100%
-  * Added Recent File List (Sorted)
+* 💿 Settings Version 3
+  * 🔍 Added ZoomFactor to preserve text resizing (separate from font size) - 1.0 = 100%
+  * 📂 Added Recent File List (Sorted)
 * User Requests
   * 🆕 Selecting the end of the row no longer selects the newline \o/
 
 v0.0.6
 ------
 * Editor Improvements
-  * Editor State is now synchronized across sessions
-  * Added Save As Menu Item
-* Settings Version 2
-  * Added Dimension Labels (Dimension1 through Dimension11)
-  * Added WordWrap boolean - controls text box word wrapping
-  * Added Font and FontSize
-* Program Enhancements
+  * 🚄 Editor State is now synchronized across sessions
+  * 💡 Added Save As Menu Item
+* 💿 Settings Version 2
+  * 🏷️ Added Dimension Labels (Dimension1 through Dimension11)
+  * 🎁 Added WordWrap boolean - controls text box word wrapping
+  * 🗨️ Added Font and FontSize
+* 🍰 Program Enhancements
   * Renamed executable to trs.exe
   * Renamed TODO.t to Terse.t
   * Added Release Notes to Terse.t
@@ -147,8 +147,7 @@ v0.0.2
 v0.0.1
 ------
 * Proof of Concept with 5 of 11 dimensions
-* Multiverse, Galaxy, World, Language, Branch, Volume, Set, Group, and Page
-
+* Multiverse, Galaxy, World, Language, Branch, Volume, Set, Group, and Page
 File Formats
 
 This is a list of Terse-based file formats.
@@ -159,9 +158,45 @@ Extension  Status       Description
 .tweb      Proposed     HTML + Resources in One Byte Stream
 .todb      Proposed     Text-Only Database
 .tfl       Proposed     Text Flow Notes
-.tjur      Proposed     Jurassic Park Style Viewer
-
+.tjur      Proposed     Jurassic Park Style Viewer
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
