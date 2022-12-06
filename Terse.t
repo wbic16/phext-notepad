@@ -52,10 +52,6 @@ Bugs
 
 Roadmap
 
-v0.1.0
-------
-  * scroll bars should do something
-
 v0.2.0
 ------
  * Add Book, Volume, and Collection Dimensions
@@ -70,35 +66,40 @@ v0.4.0
 ------
   * add zoomed UI  
   * add Series, Shelf, and Library Dimensions
-Release Notes
--------------
-December 4, 2022
+Terse Notepad Release Notes
+---------------------------
+(c) 2022 Will Bickford
+MIT License
 
-v0.1.0
-------
+v0.1.1 (2022-12-05)
+-------------------
+* 🧪 Added unit test coverage for scrolls and sections
+
+v0.1.0 (2022-12-04)
+-------------------
 * 🛣️ Renamed Requests to Roadmap
 * 📜  Witness Operational Scrollbars!
 
-v0.0.9
-------
+v0.0.9 (2022-12-04)
+-------------------
 * 🌲 Tree view now updates in real-time
 
-v0.0.8
-------
+v0.0.8 (2022-12-04)
+-------------------
 * 🌲 Tree view is now instant! \o/
   * 📃 New pages appear in the tree view once a line break occurs
   * 🫗Empty pages are cleared on save
 
-v0.0.7
-------
+v0.0.7 (2022-12-04)
+-------------------
 * 💿 Settings Version 3
   * 🔍 Added ZoomFactor to preserve text resizing (separate from font size) - 1.0 = 100%
   * 📂 Added Recent File List (Sorted)
 * User Requests
   * 🆕 Selecting the end of the row no longer selects the newline \o/
 
-v0.0.6
-------
+v0.0.6 (2022-12-03)
+-------------------
 * Editor Improvements
   * 🚄 Editor State is now synchronized across sessions
   * 💡 Added Save As Menu Item
@@ -120,32 +121,32 @@ v0.0.6
   * 🌲 Tree view updates on save and delete - more to come🎉
   * 🎄 Tree view selection is now single-click \o/
 
-v0.0.5
-------
+v0.0.5 (2022-12-02)
+-------------------
 * Switched to TODO.t
 * First Version with .ini support
 * Added Tree View
 * Revised Coordinates: Library, Shelf, Series, Collection, Volume, Book, Chapter, Section, and Scroll
 * Implemented Direct Page Jumps
 
-v0.0.4
-------
+v0.0.4 (2022-12-01)
+-------------------
 * Performance Tweaks and Bug fixes
 * Limited Dimension Inputs to 4 digits
 
-v0.0.3
+v0.0.3 (2022-11-30)
 ------
 * Added TODO.md
 * Fixed Bugs with 5D Editing
 
-v0.0.2
-------
+v0.0.2 (2022-11-30)
+-------------------
 * Added Dimension Report to Assist with Sparse Page Views
 * Added README.md
 * Added Dimension Input Boxes
 
-v0.0.1
-------
+v0.0.1 (2022-11-30)
+-------------------
 * Proof of Concept with 5 of 11 dimensions
 * Multiverse, Galaxy, World, Language, Branch, Volume, Set, Group, and Page
 File Formats
@@ -160,6 +161,16 @@ Extension  Status       Description
 .tfl       Proposed     Text Flow Notes
 .tjur      Proposed     Jurassic Park Style Viewer
 
+
+
+
+
+
+
+
+
+
+
 
 
 

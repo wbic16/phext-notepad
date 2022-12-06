@@ -1,9 +1,5 @@
 using System.Reflection;
-using System.Runtime;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static TerseNotepad.TerseText;
 
 namespace TerseNotepad
@@ -11,11 +7,7 @@ namespace TerseNotepad
     public partial class TerseForm : Form
     {
         private static readonly string TERSE_FILTER = "Terse File (*.t)|*.t|All files (*.*)|*.*";
-        private TerseText _terse = new();
-
-        private static readonly string SCROLL_BREAK = "\x17\n";
-        private static readonly string SECTION_BREAK = "\x18\n";
-        private static readonly string CHAPTER_BREAK = "\x19\n";
+        private TerseModel _model = new();        
 
         // Editor State
         private uint _priorLine = 1;
@@ -52,7 +44,6 @@ namespace TerseNotepad
         {
             _settings.Filename = "";
             var currentAssembly = Assembly.GetExecutingAssembly();
-            var items = currentAssembly.GetManifestResourceNames();
             var stream = currentAssembly.GetManifestResourceStream("TerseNotepad.Terse.t");
             if (stream != null)
             {
@@ -87,36 +78,36 @@ Use F2 - F11 to access additional dimensions.
 
         private void collectScroll()
         {
-            _terse.setScroll(textBox.Text);
+            _model.Terse.setScroll(textBox.Text);
             if (textBox.Text.Length == 0)
             {
                 return;
             }
-            var node = getTreeNode(_terse.Coords.ToString());
+            var node = getTreeNode(_model.Terse.Coords.ToString());
             if (node != null)
             {
                 if (textBox.Lines != null && textBox.Lines.Length >= 1)
                 {
-                    node.Text = getScrollSummary(_terse.Coords, textBox.Lines.First());
+                    node.Text = TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Lines.First());
                 }
             }
             else
             {
-                var parent = getParentTreeNode(_terse.Coords);
+                var parent = getParentTreeNode(_model.Terse.Coords);
                 if (parent != null)
                 {
                     TreeNode sectionNode;
                     if (parent.Text.StartsWith("Chapter"))
                     {
-                        sectionNode = parent.Nodes.Add($"Section {_terse.Coords.Section}");
+                        sectionNode = parent.Nodes.Add($"Section {_model.Terse.Coords.Section}");
                     }
                     else
                     {
                         sectionNode = parent;
                     }
 
-                    var key = _terse.Coords.ToString();
-                    var line = getScrollSummary(_terse.Coords, textBox.Text);
+                    var key = _model.Terse.Coords.ToString();
+                    var line = TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Text);
                     sectionNode.Nodes.Add(key, line);
                 }
             }
@@ -133,13 +124,13 @@ Use F2 - F11 to access additional dimensions.
 
         private void loadScroll()
         {
-            textBox.Text = _terse.getScroll();
-            _terse.Coords.Line = 1;
+            textBox.Text = _model.Terse.getScroll();
+            _model.Terse.Coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
-            updateScrollbarValue(scrollScrollbar, _terse.Coords.Scroll);
-            updateScrollbarValue(sectionScrollbar, _terse.Coords.Section);
-            updateScrollbarValue(chapterScrollbar, _terse.Coords.Chapter);           
+            updateScrollbarValue(scrollScrollbar, _model.Terse.Coords.Scroll);
+            updateScrollbarValue(sectionScrollbar, _model.Terse.Coords.Section);
+            updateScrollbarValue(chapterScrollbar, _model.Terse.Coords.Chapter);           
             // todo: enable the remaining dimensions
             // libraryID.Enabled = true;
             // libraryLabel.Enabled = true;
@@ -252,71 +243,16 @@ Use F2 - F11 to access additional dimensions.
 
         private void LoadData(string data)
         {
-            var dimensionStream = data.Split(CHAPTER_BREAK);
-            _terse.Chapter = new();
             treeView.Nodes.Clear();
-            uint chapter_index = 1;
-            foreach (var chapter in dimensionStream)
-            {
-                uint section_index = 1;
-                var sections = chapter.Split(SECTION_BREAK);
-                var chapterNode = new TreeNode($"Chapter {chapter_index}");
-                chapterNode.Name = $"{chapter_index}-0-0";
-                foreach (var section in sections)
-                {
-                    uint scroll_index = 1;
-                    var scrolls = section.Split(SCROLL_BREAK);
-                    var sectionNode = new TreeNode($"Section {section_index}");
-                    sectionNode.Name = $"{chapter_index}-{section_index}-0";
-                    foreach (var scroll in scrolls)
-                    {
-                        _terse.Coords.Scroll = scroll_index;
-                        _terse.Coords.Section = section_index;
-                        _terse.Coords.Chapter = chapter_index;
-                        if (scroll.Length > 0)
-                        {
-                            var key = _terse.Coords.ToString();
-                            var line = getScrollSummary(_terse.Coords, scroll);
-                            var scrollNode = sectionNode.Nodes.Add(key, line);
-                            _terse.setScroll(scroll, scrollNode);
-                        }
-                        ++scroll_index;
-                    }
-                    if (sectionNode.Nodes.Count > 0)
-                    {
-                        chapterNode.Nodes.Add(sectionNode);
-                        _terse.setSectionNode(sectionNode, chapter_index, section_index);
-                    }
-                    ++section_index;
-                }
-                sectionScrollbar.Maximum = (int)section_index;
-                if (chapterNode.Nodes.Count > 0)
-                {
-                    treeView.Nodes.Add(chapterNode);
-                    _terse.setChapterNode(chapterNode, chapter_index);
-                }
-                ++chapter_index;
-            }
-            chapterScrollbar.Maximum = (int)chapter_index;
-            
+            _model.Load(data, treeView, sectionScrollbar, chapterScrollbar);
             treeView.ExpandAll();
             loadScroll();
             coordinateJump(_settings.Coords);
         }
-        private string getScrollSummary(Coordinates coords, string scroll)
-        {
-            var firstLine = scroll.Split("\n")[0];
-            var line = firstLine.Length > 40 ? firstLine[..40] : firstLine;
-            if (line.Length > 0)
-            {
-                return line;
-            }
-            return coords.GetNodeSummary();
-        }
 
         private void jumpToOrigin()
         {
-            _terse.Coords.Reset();
+            _model.Terse.Coords.Reset();
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
@@ -347,38 +283,10 @@ Use F2 - F11 to access additional dimensions.
                 }
             }
 
-            var collector = new StringBuilder();
-            uint chapter_break_counter = 0;
-            foreach (var chapter_index in _terse.Chapter.Keys)
-            {
-                while (++chapter_break_counter < chapter_index)
-                {
-                    collector.Append(CHAPTER_BREAK);
-                }
-                uint section_break_counter = 0;
-                foreach (var section_index in _terse.Chapter[chapter_index].Children.Keys)
-                {
-                    while (++section_break_counter < section_index)
-                    {
-                        collector.Append(SECTION_BREAK);
-                    }
-                    uint scroll_break_counter = 0;
-                    foreach (var scroll_index in _terse.Chapter[chapter_index].Children[section_index].Children.Keys)
-                    {
-                        while (++scroll_break_counter < scroll_index)
-                        {
-                            collector.Append(SCROLL_BREAK);
-                        }
-                        collector.Append(_terse.Chapter[chapter_index].Children[section_index].Children[scroll_index].Text);
-                        collector.Append(SCROLL_BREAK);
-                    }
-                    collector.Append(SECTION_BREAK);
-                }
-                collector.Append(CHAPTER_BREAK);
-            }
+            var serialized = _model.Serialize();
 
-            File.WriteAllText(_settings.Filename, collector.ToString());
-            _settings.Coords = _terse.Coords.ToString();
+            File.WriteAllText(_settings.Filename, serialized);
+            _settings.Coords = _model.Terse.Coords.ToString();
             _settings.Save();
             if (reload)
             {                
@@ -389,7 +297,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void textBox_SelectionChanged(object sender, EventArgs e)
         {
-            _terse.Coords.Line = 1;
+            _model.Terse.Coords.Line = 1;
             var total = 0;
             var offset = textBox.SelectionStart;
             var index = offset + textBox.SelectionLength - 1;
@@ -403,12 +311,12 @@ Use F2 - F11 to access additional dimensions.
                 if ((total + delta) <= offset)
                 {
                     total += delta;
-                    ++_terse.Coords.Line;
-                    _terse.Coords.Column = 1;
+                    ++_model.Terse.Coords.Line;
+                    _model.Terse.Coords.Column = 1;
                 }
                 else
                 {
-                    _terse.Coords.Column = (uint)(offset - total) + 1;
+                    _model.Terse.Coords.Column = (uint)(offset - total) + 1;
                     break;
                 }
             }
@@ -417,16 +325,16 @@ Use F2 - F11 to access additional dimensions.
 
         private void UpdateStatusBar(string action = "")
         {
-            libraryID.Text = _terse.Coords.Library.ToString();
-            shelfID.Text = _terse.Coords.Shelf.ToString();
-            seriesID.Text = _terse.Coords.Series.ToString();
-            collectionID.Text = _terse.Coords.Collection.ToString();
-            bookID.Text = _terse.Coords.Volume.ToString();
-            bookID.Text = _terse.Coords.Book.ToString();
-            chapterID.Text = _terse.Coords.Chapter.ToString();
-            sectionID.Text = _terse.Coords.Section.ToString();
-            scrollID.Text = _terse.Coords.Scroll.ToString();
-            status.Text = _terse.EditorSummary(action);
+            libraryID.Text = _model.Terse.Coords.Library.ToString();
+            shelfID.Text = _model.Terse.Coords.Shelf.ToString();
+            seriesID.Text = _model.Terse.Coords.Series.ToString();
+            collectionID.Text = _model.Terse.Coords.Collection.ToString();
+            bookID.Text = _model.Terse.Coords.Volume.ToString();
+            bookID.Text = _model.Terse.Coords.Book.ToString();
+            chapterID.Text = _model.Terse.Coords.Chapter.ToString();
+            sectionID.Text = _model.Terse.Coords.Section.ToString();
+            scrollID.Text = _model.Terse.Coords.Scroll.ToString();
+            status.Text = _model.Terse.EditorSummary(action);
         }
 
         private bool ChooseSaveFilename()
@@ -541,7 +449,7 @@ Use F2 - F11 to access additional dimensions.
                 arrowShifted = true;
                 e.Handled = true;
             }
-            if (!e.Shift && e.KeyCode == Keys.Down && _priorLine == _terse.Coords.Line)
+            if (!e.Shift && e.KeyCode == Keys.Down && _priorLine == _model.Terse.Coords.Line)
             {
                 scroll_delta = 1;
                 arrowShifted = true;
@@ -556,7 +464,7 @@ Use F2 - F11 to access additional dimensions.
             if (scroll_delta != 0 || section_delta != 0 || chapter_delta != 0)
             {
                 collectScroll();
-                _terse.processDelta(chapter_delta, section_delta, scroll_delta);
+                _model.Terse.processDelta(chapter_delta, section_delta, scroll_delta);
                 loadScroll();
                 if (arrowShifted)
                 {
@@ -575,26 +483,26 @@ Use F2 - F11 to access additional dimensions.
 
         private void textBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (_priorLine != _terse.Coords.Line)
+            if (_priorLine != _model.Terse.Coords.Line)
             {
-                _priorLine = _terse.Coords.Line;
+                _priorLine = _model.Terse.Coords.Line;
             }
-            if (_priorColumn != _terse.Coords.Column)
+            if (_priorColumn != _model.Terse.Coords.Column)
             {
-                _priorColumn = _terse.Coords.Column;
+                _priorColumn = _model.Terse.Coords.Column;
             }
         }
 
         private void dimensionReportToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var result = new StringBuilder();
-            foreach (var chapter_index in _terse.Chapter.Keys)
+            foreach (var chapter_index in _model.Terse.Chapter.Keys)
             {
-                foreach (var section_index in _terse.Chapter[chapter_index].Children.Keys)
+                foreach (var section_index in _model.Terse.Chapter[chapter_index].Children.Keys)
                 {
-                    foreach (var scroll_index in _terse.Chapter[chapter_index].Children[section_index].Children.Keys)
+                    foreach (var scroll_index in _model.Terse.Chapter[chapter_index].Children[section_index].Children.Keys)
                     {
-                        var content = _terse.Chapter[chapter_index].Children[section_index].Children[scroll_index];
+                        var content = _model.Terse.Chapter[chapter_index].Children[section_index].Children[scroll_index];
                         var count = content.Text.Length;
                         var summary = content.Text.Split("\n")[0];
                         if (summary.Length > 40) { summary = summary[..40]; }
@@ -615,14 +523,14 @@ Use F2 - F11 to access additional dimensions.
                 update.Chapter = uint.Parse(chapterID.Text);
                 update.Section = uint.Parse(sectionID.Text);
                 update.Scroll = uint.Parse(scrollID.Text);
-                _terse.Coords = update;
+                _model.Terse.Coords = update;
                 loadScroll();
             }
             catch
             {
-                chapterID.Text = _terse.Coords.Chapter.ToString();
-                sectionID.Text = _terse.Coords.Section.ToString();
-                scrollID.Text = _terse.Coords.Scroll.ToString();
+                chapterID.Text = _model.Terse.Coords.Chapter.ToString();
+                sectionID.Text = _model.Terse.Coords.Section.ToString();
+                scrollID.Text = _model.Terse.Coords.Scroll.ToString();
             }
         }
 
@@ -660,13 +568,13 @@ Use F2 - F11 to access additional dimensions.
 
         private void deleteNode(string coordinates)
         {
-            var priorCoords = _terse.Coords;
+            var priorCoords = _model.Terse.Coords;
             collectScroll();
             if (!coordinates.Contains('-'))
             {
                 return;
             }           
-            _terse.Coords.Load(coordinates);
+            _model.Terse.Coords.Load(coordinates);
             textBox.Text = "";
             getTreeNode(coordinates)?.Remove();
             coordinateJump(priorCoords.ToString());
@@ -679,17 +587,17 @@ Use F2 - F11 to access additional dimensions.
                 return;
             }
             collectScroll();
-            _terse.Coords.Load(coordinates);
-            chapterID.Text = _terse.Coords.Chapter.ToString();
-            sectionID.Text = _terse.Coords.Section.ToString();
-            scrollID.Text = _terse.Coords.Scroll.ToString();
+            _model.Terse.Coords.Load(coordinates);
+            chapterID.Text = _model.Terse.Coords.Chapter.ToString();
+            sectionID.Text = _model.Terse.Coords.Section.ToString();
+            scrollID.Text = _model.Terse.Coords.Scroll.ToString();
             loadScroll();
         }
 
         private void SyncEditorState()
         {
             SaveCurrentFile(false, false);
-            _settings.Coords = _terse.Coords.ToString();
+            _settings.Coords = _model.Terse.Coords.ToString();
             _settings.ZoomFactor = textBox.ZoomFactor;
             _settings.WordWrap = textBox.WordWrap;
             _settings.TreeView = treeView.Visible;
