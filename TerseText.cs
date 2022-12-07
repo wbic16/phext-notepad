@@ -23,6 +23,16 @@
     {
         public Coordinates Coords = new();
         public ChapterNode Chapter = new();
+        public int NodeCount { get; private set; } = 0;
+        public int WordCount { get; private set; } = 0;
+
+        public int ScrollWordCount
+        {
+            get
+            {
+                return GetWordCount(getScroll());
+            }
+        }
         public SectionNode Section
         {
             get
@@ -52,7 +62,28 @@
             {
                 Section.Children[Coords.Section] = value;
             }
-        }        
+        }
+
+        public static int GetWordCount(string text)
+        {
+            var array = text.ToCharArray();
+            int words = 0;
+            bool breaking = true;
+            for (int i = 0; i < array.Length; ++i)
+            {
+                var ch = array[i];
+                if (ch == ' ' || ch == '\n' || ch == '\x17' || ch == '\x18' || ch == '\x19')
+                {
+                    breaking = true;
+                }
+                if (ch >= 0x20 && breaking)
+                {
+                    breaking = false;
+                    ++words;
+                }
+            }
+            return words;
+        }
 
         public void setScroll(string text, TreeNode? node = null)
         {
@@ -61,8 +92,13 @@
                 if (!Scroll.Children.ContainsKey(Coords.Scroll))
                 {
                     Scroll.Children[Coords.Scroll] = new();
+                    ++NodeCount;
                 }
+                var priorText = Scroll.Children[Coords.Scroll].Text;
+                var priorCount = GetWordCount(priorText);
                 Scroll.Children[Coords.Scroll].Text = text;
+                var count = GetWordCount(text);
+                WordCount += (count - priorCount);
                 if (node != null)
                 {
                     Scroll.Children[Coords.Scroll].Node = node;
@@ -75,6 +111,7 @@
                 Scroll.Children.ContainsKey(Coords.Scroll))
             {
                 Scroll.Children.Remove(Coords.Scroll);
+                --NodeCount;
             }
         }
 
@@ -101,13 +138,25 @@
             return Coords.EditorSummary(action);
         }
 
-        public void setSectionNode(TreeNode sectionNode, uint chapter_index, uint section_index)
+        public void SetSectionNode(TreeNode sectionNode, uint chapter_index, uint section_index)
         {
+            if (!Chapter.ContainsKey(chapter_index))
+            {
+                Chapter[chapter_index] = new();
+            }
+            if (!Chapter[chapter_index].Children.ContainsKey(section_index))
+            {
+                Chapter[chapter_index].Children[section_index] = new();
+            }
             Chapter[chapter_index].Children[section_index].Node = sectionNode;
         }
 
-        public void setChapterNode(TreeNode chapterNode, uint chapter_index)
+        public void SetChapterNode(TreeNode chapterNode, uint chapter_index)
         {
+            if (!Chapter.ContainsKey(chapter_index))
+            {
+                Chapter[chapter_index] = new();
+            }
             Chapter[chapter_index].Node = chapterNode;
         }
     }

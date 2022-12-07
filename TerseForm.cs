@@ -201,6 +201,10 @@ Use F2 - F11 to access additional dimensions.
             chapterLabel.Text = _settings.Dimension5;
             sectionLabel.Text = _settings.Dimension4;
             scrollLabel.Text = _settings.Dimension3;
+            treeView.BackColor = _settings.DarkMode ? Color.Black : Color.White;
+            treeView.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
+            textBox.BackColor = _settings.DarkMode ? Color.Black : Color.White;
+            textBox.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
 
             if (!File.Exists(_settings.IniFilePath))
             {
@@ -243,9 +247,12 @@ Use F2 - F11 to access additional dimensions.
 
         private void LoadData(string data)
         {
+            treeView.BeginUpdate();
             treeView.Nodes.Clear();
             _model.Load(data, treeView, sectionScrollbar, chapterScrollbar);
+            wordCountLabel.Text = $"Doc: {_model.WordCount}, Scroll: {_model.ScrollWordCount}";
             treeView.ExpandAll();
+            treeView.EndUpdate();
             loadScroll();
             coordinateJump(_settings.Coords);
         }
@@ -601,6 +608,7 @@ Use F2 - F11 to access additional dimensions.
             _settings.ZoomFactor = textBox.ZoomFactor;
             _settings.WordWrap = textBox.WordWrap;
             _settings.TreeView = treeView.Visible;
+            _settings.Theme = treeView.BackColor == Color.Black ? "Dark" : "Light";
             _settings.Save();
         }
 
@@ -820,6 +828,15 @@ Use F2 - F11 to access additional dimensions.
         private void chapterID_TextChanged(object sender, EventArgs e)
         {
             UpdateScrollbarMaximum(chapterID, chapterScrollbar);
+        }
+
+        private void darkModeMenuItem_Click(object sender, EventArgs e)
+        {
+            _settings.Theme = darkModeMenuItem.Checked ? "Dark" : "Light";
+            treeView.BackColor = _settings.DarkMode ? Color.Black : Color.White;
+            treeView.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
+            textBox.BackColor = _settings.DarkMode ? Color.Black : Color.White;
+            textBox.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
         }
     }
 }

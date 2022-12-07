@@ -34,7 +34,7 @@ namespace TerseNotepad
             }
         }
         public string Format { get; set; } = "TerseConfig";
-        public string Version { get; private set; } = "3";
+        public string Version { get; private set; } = "4";
         private string _filename = "";
         public string Filename
         {
@@ -70,6 +70,9 @@ namespace TerseNotepad
         public bool WordWrap { get; set; } = true;
         public float ZoomFactor { get; set; } = 1.0f;
         public SortedSet<string> RecentFile { get; set; } = new();
+        public string Theme { get; set; } = "Dark";
+        public bool DarkMode { get { return Theme == "Dark"; } }
+        public bool LightMode { get { return Theme == "Light"; } }
 
         public string Serialize()
         {
@@ -94,7 +97,8 @@ namespace TerseNotepad
                  + $"Dimension10 = {Dimension10}\n"
                  + $"Dimension11 = {Dimension11}\n"
                  + $"WordWrap = {WordWrap}\n"
-                 + $"ZoomFactor = {ZoomFactor}\n";
+                 + $"ZoomFactor = {ZoomFactor}\n"
+                 + $"Theme = {Theme}\n";
             foreach (var file in RecentFile)
             {
                 result += $"RecentFile = {file}\n";
@@ -185,6 +189,9 @@ namespace TerseNotepad
                             break;
                         case "RecentFile":
                             RecentFile.Add(parts[1]);
+                            break;
+                        case "Theme":
+                            Theme = parts[1];
                             break;
                     }
                 }
