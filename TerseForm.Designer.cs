@@ -42,8 +42,9 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.vimModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.editToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dimensionReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.treeViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -225,25 +226,33 @@
             // editToolStripMenuItem
             // 
             this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.preferencesToolStripMenuItem,
-            this.editToolStripMenuItem1});
+            this.vimModeToolStripMenuItem,
+            this.toolStripSeparator3,
+            this.preferencesToolStripMenuItem});
             this.editToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "&Edit";
             // 
+            // vimModeToolStripMenuItem
+            // 
+            this.vimModeToolStripMenuItem.CheckOnClick = true;
+            this.vimModeToolStripMenuItem.Name = "vimModeToolStripMenuItem";
+            this.vimModeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.vimModeToolStripMenuItem.Text = "&Vim Mode";
+            this.vimModeToolStripMenuItem.Click += new System.EventHandler(this.vimModeToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
+            // 
             // preferencesToolStripMenuItem
             // 
             this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.preferencesToolStripMenuItem.Text = "&Preferences...";
             this.preferencesToolStripMenuItem.Click += new System.EventHandler(this.preferencesToolStripMenuItem_Click);
-            // 
-            // editToolStripMenuItem1
-            // 
-            this.editToolStripMenuItem1.Name = "editToolStripMenuItem1";
-            this.editToolStripMenuItem1.Size = new System.Drawing.Size(144, 22);
-            this.editToolStripMenuItem1.Text = "&Edit";
             // 
             // viewToolStripMenuItem
             // 
@@ -260,7 +269,7 @@
             // dimensionReportToolStripMenuItem
             // 
             this.dimensionReportToolStripMenuItem.Name = "dimensionReportToolStripMenuItem";
-            this.dimensionReportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.dimensionReportToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.dimensionReportToolStripMenuItem.Text = "&Dimension Report";
             this.dimensionReportToolStripMenuItem.Click += new System.EventHandler(this.dimensionReportToolStripMenuItem_Click);
             // 
@@ -270,7 +279,7 @@
             this.treeViewToolStripMenuItem.CheckOnClick = true;
             this.treeViewToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.treeViewToolStripMenuItem.Name = "treeViewToolStripMenuItem";
-            this.treeViewToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.treeViewToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.treeViewToolStripMenuItem.Text = "Tree View";
             this.treeViewToolStripMenuItem.Click += new System.EventHandler(this.treeViewToolStripMenuItem_Click);
             // 
@@ -280,7 +289,7 @@
             this.wordWrapToolStripMenuItem.CheckOnClick = true;
             this.wordWrapToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.wordWrapToolStripMenuItem.Name = "wordWrapToolStripMenuItem";
-            this.wordWrapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.wordWrapToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.wordWrapToolStripMenuItem.Text = "&Word Wrap";
             this.wordWrapToolStripMenuItem.Click += new System.EventHandler(this.wordWrapToolStripMenuItem_Click);
             // 
@@ -290,7 +299,7 @@
             this.darkModeMenuItem.CheckOnClick = true;
             this.darkModeMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.darkModeMenuItem.Name = "darkModeMenuItem";
-            this.darkModeMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.darkModeMenuItem.Size = new System.Drawing.Size(169, 22);
             this.darkModeMenuItem.Text = "Dark &Mode";
             this.darkModeMenuItem.Click += new System.EventHandler(this.darkModeMenuItem_Click);
             // 
@@ -792,7 +801,8 @@
         private VScrollBar sectionScrollbar;
         private VScrollBar scrollScrollbar;
         private Label wordCountLabel;
-        private ToolStripMenuItem editToolStripMenuItem1;
         private ToolStripMenuItem darkModeMenuItem;
+        private ToolStripMenuItem vimModeToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator3;
     }
 }

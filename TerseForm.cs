@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using static TerseNotepad.TerseText;
 
@@ -7,16 +8,24 @@ namespace TerseNotepad
     public partial class TerseForm : Form
     {
         private static readonly string TERSE_FILTER = "Terse File (*.t)|*.t|All files (*.*)|*.*";
-        private TerseModel _model = new();        
+        private TerseModel _model = new();
 
+        // Vim Integration
+        [DllImport("USER32.DLL")]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr insertAfter, int X, int Y, int cx, int cy, uint flags);
+  
         // Editor State
         private uint _priorLine = 1;
         private uint _priorColumn = 1;
         private TerseConfig _settings = new();
 
+        private Vim.Vim? vimEditor { get; set; } = null;
+
         public TerseForm(string[] args)
         {
             InitializeComponent();
+            InitializeExternalEditor();
+
             treeViewToolStripMenuItem.Checked = _settings.TreeView;
             treeView.Visible = _settings.TreeView;
             if (args.Length > 0)
@@ -38,6 +47,30 @@ namespace TerseNotepad
             {
                 LoadFile(_settings.Filename);
             }
+
+            vimModeToolStripMenuItem.Checked = _settings.VimMode;
+            if (_settings.VimMode)
+            {                
+                vimEditor?.SetForeground();
+                SendToBack();
+            }
+        }
+
+        private void InitializeExternalEditor()
+        {
+            if (!_settings.VimMode)
+            {
+                return;
+            }
+            // VIM Integration via OLE
+            vimEditor = new();
+            var vimWindow = (IntPtr)vimEditor.GetHwnd();
+            var screenCoordinates = PointToScreen(Location);
+            var vimX = screenCoordinates.X + textBox.Left;
+            var vimY = screenCoordinates.Y + textBox.Top;
+            var vimWidth = textBox.Size.Width;
+            var vimHeight = textBox.Size.Height;
+            SetWindowPos(vimWindow, Handle, vimX, vimY, vimWidth, vimHeight, 0);
         }
 
         private void LoadDefaultTerse()
@@ -73,11 +106,28 @@ Use F2 - F11 to access additional dimensions.
 
         private void textBox_TextChanged(object sender, EventArgs e)
         {
-            collectScroll();
+            if (!_settings.VimMode)
+            {
+                collectScroll();
+            }
         }
 
         private void collectScroll()
         {
+            if (vimEditor != null)
+            {
+                var scratchpad = _settings.Filename + $".scroll-{_model.Coords}";
+                if (File.Exists(scratchpad))
+                {
+                    VimSetEditMode(false);
+                    vimEditor.SendKeys(":w!\n");
+                    try
+                    {
+                        textBox.Text = File.ReadAllText(scratchpad);
+                    }
+                    catch { }
+                }
+            }
             _model.Terse.setScroll(textBox.Text);
             if (textBox.Text.Length == 0)
             {
@@ -113,7 +163,7 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
-        private void updateScrollbarValue(System.Windows.Forms.ScrollBar bar, uint value)
+        private void updateScrollbarValue(ScrollBar bar, uint value)
         {
             int translated = (int)value;
             if (translated >= bar.Minimum && translated <= bar.Maximum)
@@ -122,9 +172,48 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
+        private void VimSetEditMode(bool insert = true, bool retry = false)
+        {
+            try
+            {
+                if (vimEditor == null)
+                {
+                    InitializeExternalEditor();
+                }
+                if (vimEditor == null)
+                {
+                    return;
+                }
+                var test = vimEditor.Eval("mode()");
+                if (test == "n" && insert)
+                {
+                    vimEditor.SendKeys("i");
+                }
+                if (test == "i" && !insert)
+                {
+                    vimEditor.SendKeys("<C-\\><C-N>");
+                }
+            }
+            catch
+            {
+                vimEditor = new();
+                if (retry)
+                {
+                    VimSetEditMode(insert, false);
+                }
+            }
+        }
+
         private void loadScroll()
         {
             textBox.Text = _model.Terse.getScroll();
+            if (_settings.VimMode && vimEditor != null)
+            {
+                VimSetEditMode(false);
+                var scratchpad = _settings.Filename + $".scroll-{_model.Coords}";
+                File.WriteAllText(scratchpad, textBox.Text);
+                vimEditor.SendKeys($":e! {scratchpad}\n");
+            }
             _model.Terse.Coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
@@ -269,8 +358,23 @@ Use F2 - F11 to access additional dimensions.
             LoadData("");
         }
 
+        private void CloseExternalEditor()
+        {
+            if (!_settings.VimMode)
+            {
+                return;
+            }
+
+            try
+            {
+                vimEditor?.SendKeys(":q!\n");
+            }
+            catch { }
+        }
+
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            CloseExternalEditor();
             SyncEditorState();
             Close();
         }
@@ -294,7 +398,10 @@ Use F2 - F11 to access additional dimensions.
 
             File.WriteAllText(_settings.Filename, serialized);
             _settings.Coords = _model.Terse.Coords.ToString();
-            _settings.Save();
+            if (!_settings.Filename.EndsWith("TerseNotepad\\terse.ini"))
+            {
+                _settings.Save();
+            }
             if (reload)
             {                
                 LoadFile(_settings.Filename);
@@ -614,12 +721,14 @@ Use F2 - F11 to access additional dimensions.
 
         private void TerseForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            CloseExternalEditor();
             SyncEditorState();
         }
 
         private void preferencesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LoadFile(_settings.IniFilePath);
+            jumpToOrigin();
         }
 
         private void defaultTerseToolStripMenuItem_Click(object sender, EventArgs e)
@@ -837,6 +946,36 @@ Use F2 - F11 to access additional dimensions.
             treeView.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
             textBox.BackColor = _settings.DarkMode ? Color.Black : Color.White;
             textBox.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
+        }
+
+        private void vimModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!_settings.VimMode && vimModeToolStripMenuItem.Checked)
+            {
+                if (_settings.Filename.Length == 0)
+                {
+                    if (!ChooseSaveFilename())
+                    {
+                        MessageBox.Show("You must save the Terse doc before enabling VIM");
+                        vimModeToolStripMenuItem.Checked = false;
+                        return;
+                    }
+                }
+            }
+            _settings.VimMode = vimModeToolStripMenuItem.Checked;
+            if (_settings.VimMode)
+            {
+                InitializeExternalEditor();
+            }
+            else
+            {
+                if (vimEditor != null)
+                {
+                    VimSetEditMode(false);
+                    vimEditor.SendKeys(":q!\n");
+                    vimEditor = null;
+                }
+            }
         }
     }
 }

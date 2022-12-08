@@ -74,6 +74,8 @@ namespace TerseNotepad
         public bool DarkMode { get { return Theme == "Dark"; } }
         public bool LightMode { get { return Theme == "Light"; } }
 
+        public bool VimMode { get; set; } = false;
+
         public string Serialize()
         {
             var result = $"[TerseConfig]\n"
@@ -98,7 +100,8 @@ namespace TerseNotepad
                  + $"Dimension11 = {Dimension11}\n"
                  + $"WordWrap = {WordWrap}\n"
                  + $"ZoomFactor = {ZoomFactor}\n"
-                 + $"Theme = {Theme}\n";
+                 + $"Theme = {Theme}\n"
+                 + $"VimMode = {VimMode}\n";
             foreach (var file in RecentFile)
             {
                 result += $"RecentFile = {file}\n";
@@ -192,6 +195,9 @@ namespace TerseNotepad
                             break;
                         case "Theme":
                             Theme = parts[1];
+                            break;
+                        case "VimMode":
+                            VimMode = parts[1] == "True";
                             break;
                     }
                 }

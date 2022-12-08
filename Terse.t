@@ -1,4 +1,4 @@
-Welcome to the Terse
+Welcome to the Terse
 --------------------
 
 Terse Notepad provides a reference implementation of multi-dimensional text using Lower ASCII dimension breaks. The format was created by Will Bickford, and is intended to assist humans with leaning into the Singularity.
@@ -34,6 +34,7 @@ File
 
 Edit
 ----
+ * Vim Mode: Toggles Scroll Editor in an External gVim Editor
  * Preferences: Open Terse.ini (Ctrl-,)
 
 View
@@ -42,10 +43,14 @@ View
 
 Help
 ----
- * About: Display Program VersionBugs
+ * About: Display Program VersionBugs as of v0.1.3
+-----------------
 
+ * Extra Chapter sometimes?
  * volumeID is blank
- * rich text paste is wonkyRoadmap
+ * rich text paste is wonky
+ * Page Up / Page Down are glitchy
+Roadmap
 
 v0.2.0
 ------
@@ -64,6 +69,14 @@ v0.4.0
 ---------------------------
 (c) 2022 Will Bickford
 MIT License
+
+v0.1.3 (2022-12-08)
+-------------------
+* 💿 Settings Version 5
+  * Added the Preferences Overview Scroll
+  * Added VimMode - Edits Locked While Active
+  * Fixed Preferences Edit Bug
+* 🗒️ Added Vim Mode (OLE Integration)
 
 v0.1.2 (2022-12-07)
 -------------------
@@ -160,4 +173,35 @@ Extension  Status       Description
 .tweb      Proposed     HTML + Resources in One Byte Stream
 .todb      Proposed     Text-Only Database
 .tfl       Proposed     Text Flow Notes
-.tjur      Proposed     Jurassic Park Style Viewer
+.tjur      Proposed     Jurassic Park Style ViewerPreferences Overview
+--------------------
+Terse configuration files are simple key-value .ini files.
+The main terse configuration block is denoted by "[TerseConfig]".
+
+Supported fields and hints for configuration are listed below.
+No fields require quotation marks - values are taken verbatim.
+
+* Format      'TerseConfig' is the only valid value
+* Version     '5' is the latest config format version
+* Filename    The editor's current file path
+* TreeView    Boolean: Controls visibility for the tree view
+* Coords      Current coordinates in {scroll}-{section}-{chapter} format
+              Note: This will expand to the right as new dimensions are added.
+* Font        Font family such as 'Cascadia Code' or 'Courier New'
+* FontSize    Sets the font size in points, such as '11' or '14'
+* LastError   Diagnostic message from Terse
+* Dimension1  Custom label for the Column dimension
+* Dimension2  Custom label for the Line dimension
+* Dimension3  Custom label for the Scroll dimension
+* Dimension4  Custom label for the Section dimension
+* Dimension5  Custom label for the Chapter dimension
+* Dimension6  Custom label for the Book dimension
+* Dimension7  Custom label for the Volume dimension
+* Dimension8  Custom label for the Collection dimension
+* Dimension9  Custom label for the Series dimension
+* Dimension10 Custom label for the Shelf dimension
+* Dimension11 Custom label for the Library dimension
+* WordWrap    Boolean: Controls editor word wrap
+* ZoomFactor  Scale factor for text size - 1.0 is normal
+* Theme       'Light' or 'Dark' currently
+* VimMode     Boolean: 'True' for Vim as your editor ('False' is default)
