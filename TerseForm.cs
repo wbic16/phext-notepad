@@ -116,6 +116,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void collectScroll()
         {
+            reloadMenuItem.Enabled = true;
             if (vimEditor != null)
             {
                 var scratchpad = _settings.Filename + $".scroll-{_model.Coords}";
@@ -244,7 +245,7 @@ Use F2 - F11 to access additional dimensions.
             sectionLabel.Enabled = true;
             scrollID.Enabled = true;
             scrollLabel.Enabled = true;
-            UpdateStatusBar($"Loaded {_settings.Filename}");
+            UpdateUI($"Loaded {_settings.Filename}");
 
             if (treeView.Visible)
             {
@@ -349,11 +350,11 @@ Use F2 - F11 to access additional dimensions.
                 var data = File.ReadAllText(filename);
                 _settings.Filename = filename;
                 LoadData(data);
-                UpdateStatusBar($"{filename}");
+                UpdateUI($"{filename}");
             }
             else
             {
-                UpdateStatusBar($"!{filename}");
+                UpdateUI($"!{filename}");
             }
         }
 
@@ -366,8 +367,7 @@ Use F2 - F11 to access additional dimensions.
             treeView.ExpandAll();
             treeView.EndUpdate();
             lockToScrollMenuItem.Checked = false;
-            loadScroll();
-            coordinateJump(_settings.Coords);
+            coordinateJump(_settings.Coords, false);            
         }
 
         private void jumpToOrigin()
@@ -430,7 +430,7 @@ Use F2 - F11 to access additional dimensions.
             {                
                 LoadFile(_settings.Filename);
             }
-            UpdateStatusBar($"Saved ${_settings.Filename}");
+            UpdateUI($"Saved ${_settings.Filename}");
         }
 
         private void textBox_SelectionChanged(object sender, EventArgs e)
@@ -458,10 +458,10 @@ Use F2 - F11 to access additional dimensions.
                     break;
                 }
             }
-            UpdateStatusBar();
+            UpdateUI();
         }
 
-        private void UpdateStatusBar(string action = "")
+        private void UpdateUI(string action = "")
         {
             libraryID.Text = _model.Terse.Coords.Library.ToString();
             shelfID.Text = _model.Terse.Coords.Shelf.ToString();
@@ -622,7 +622,6 @@ Use F2 - F11 to access additional dimensions.
                         textBox.SelectionStart = 0;
                     }
                 }
-                UpdateStatusBar();
             }
         }
 
@@ -713,27 +712,51 @@ Use F2 - F11 to access additional dimensions.
             
         }
 
-        private void deleteNode(string coordinates)
+        private void deleteNode(string coordinates, bool requestConfirmation = true)
         {
             var priorCoords = _model.Terse.Coords;
             collectScroll();
             if (!coordinates.Contains('-'))
             {
                 return;
-            }           
+            }
             _model.Terse.Coords.Load(coordinates);
+            var node = getTreeNode(coordinates);
+            if (node == null) { return; }
+            if (requestConfirmation)
+            {
+                var count = 1 + node.GetNodeCount(true);
+                var confirm = MessageBox.Show($"Are you sure you want to delete {count} nodes?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
+                if (confirm == DialogResult.No)
+                {
+                    return;
+                }
+            }
+
+            var deleteList = new List<string>();
+            foreach (TreeNode child in node.Nodes)
+            {
+                deleteList.Add(child.Name);
+            }
+            foreach (var childCoordinates in deleteList)
+            {
+                deleteNode(childCoordinates, false);
+            }
+            node.Remove();
             textBox.Text = "";
-            getTreeNode(coordinates)?.Remove();
-            coordinateJump(priorCoords.ToString());
+            coordinateJump(priorCoords.ToString(), false);
         }
 
-        private void coordinateJump(string coordinates)
+        private void coordinateJump(string coordinates, bool storeFirst)
         {
             if (!coordinates.Contains('-'))
             {
                 return;
             }
-            collectScroll();
+            if (storeFirst)
+            {
+                collectScroll();
+            }
             _model.Terse.Coords.Load(coordinates);
             chapterID.Text = _model.Terse.Coords.Chapter.ToString();
             sectionID.Text = _model.Terse.Coords.Section.ToString();
@@ -921,8 +944,7 @@ Use F2 - F11 to access additional dimensions.
             {
                 return;
             }
-            collectScroll();
-            coordinateJump(coordinates);
+            coordinateJump(coordinates, true);
         }
 
         private void wordWrapToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1046,6 +1068,12 @@ Use F2 - F11 to access additional dimensions.
                 textBox.Left = treeView.Right;
                 textBox.Width = Width - treeView.Width - 100;
             }
+        }
+
+        private void reloadMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadFile(_settings.Filename);
+            reloadMenuItem.Enabled = false;
         }
     }
 }

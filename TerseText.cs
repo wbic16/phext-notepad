@@ -117,15 +117,41 @@
 
         public void processDelta(int chapter_delta, int section_delta, int scroll_delta)
         {
-            if (scroll_delta > 0) { ++Coords.Scroll; }
-            if (scroll_delta < 0) { --Coords.Scroll; }
-            if (section_delta > 0) { ++Coords.Section; }
-            if (section_delta < 0) { --Coords.Section; }
-            if (chapter_delta > 0) { ++Coords.Chapter; }
-            if (chapter_delta < 0) { --Coords.Chapter; }
-            if (Coords.Scroll < 1) { Coords.Scroll = 1; }
-            if (Coords.Section < 1) { Coords.Section = 1; }
-            if (Coords.Chapter < 1) { Coords.Chapter = 1; }
+            var haveDelta = false;
+
+            if (chapter_delta != 0)
+            {
+                if (chapter_delta > 0)
+                {
+                    ++Coords.Chapter;
+                }
+                if (chapter_delta < 0) { --Coords.Chapter; }
+                Coords.Section = 1;
+                Coords.Scroll = 1;
+                haveDelta = true;
+            }
+
+            if (!haveDelta && section_delta != 0)
+            {
+                if (section_delta > 0) { ++Coords.Section; }
+                if (section_delta < 0) { --Coords.Section; }
+                Coords.Scroll = 1;
+                haveDelta = true;
+            }
+
+            if (!haveDelta && scroll_delta != 0)
+            {
+                if (scroll_delta > 0) { ++Coords.Scroll; }
+                if (scroll_delta < 0) { --Coords.Scroll; }
+                haveDelta = true;
+            }
+
+            if (haveDelta)
+            {
+                if (Coords.Scroll < 1) { Coords.Scroll = 1; }
+                if (Coords.Section < 1) { Coords.Section = 1; }
+                if (Coords.Chapter < 1) { Coords.Chapter = 1; }
+            }
         }
 
         public string getScroll()

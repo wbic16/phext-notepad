@@ -1,4 +1,244 @@
-Terse Notepad
+Release Notes
+-------------
+(c) 2022 Will Bickford
+MIT License
+
+v0.1.5 (2022-12-08)
+-------------------
+➕ Font settings now apply to the tree view for improved readability
+🥼 Experimenting with non-selectable parent nodes
+ 🥼 When you select a chapter or section node, the first scroll node descendent is shown
+🥼 F3 and Shift-F3 now reset Scroll ID to 1
+🥼 F4 and Shift-F4 now reset both Scroll ID and Section ID to 1
+👏 Delete Node now prompts the user to confirm
+
+v0.1.4 (2022-12-08)
+-------------------
+👏 Fixed volumeID is blank bug
+👏 Fixed wonky text paste
+👏 Terse.t: Revised Scroll Names
+👏 Fixed Text Box Width with Tree View Disabled
+👏 Improved current page visibility
+➕ Release Notes: Started using emojii bullet points
+➕ Added SCROLL LOCK Support \o/
+ ➕ Renamed "Tree View" Checkbox on the View menu to "Lock to Scroll"
+ ➕ Scroll lock now controls tree view visibility
+ ➕ The editor no longer responds to dimension switch events when the tree view is hidden
+
+v0.1.3 (2022-12-08)
+-------------------
+💿 Settings Version 5
+ ➕ Added the Preferences Overview Scroll
+ ➕ Added VimMode - Edits Locked While Active
+ 👏 Fixed Preferences Edit Bug
+🗒️ Added Vim Mode (OLE Integration)
+
+v0.1.2 (2022-12-07)
+-------------------
+🧪 Added full test coverage for chapters, word count, and node count
+📜  Added Automatic Word Counters for Current Page and Terse Doc
+🏎️ Improved Terse File Parsing Performance
+🌲  Reduced tree View Flicker
+🎡 Added Dark and Light Themes
+
+v0.1.1 (2022-12-05)
+-------------------
+🧪 Added unit test coverage for scrolls and sections
+
+v0.1.0 (2022-12-04)
+-------------------
+🛣️ Renamed Requests to Roadmap
+📜  Witness Operational Scrollbars!
+
+v0.0.9 (2022-12-04)
+-------------------
+🌲 Tree view now updates in real-time
+
+v0.0.8 (2022-12-04)
+-------------------
+🌲 Tree view is now instant! \o/
+ 📃 New pages appear in the tree view once a line break occurs
+ 🫗Empty pages are cleared on save
+
+v0.0.7 (2022-12-04)
+-------------------
+💿 Settings Version 3
+ 🔍 Added ZoomFactor to preserve text resizing (separate from font size) - 1.0 = 100%
+ 📂 Added Recent File List (Sorted)
+👏 User Requests
+ 🆕 Selecting the end of the row no longer selects the newline \o/
+
+v0.0.6 (2022-12-03)
+-------------------
+📃 Editor Improvements
+ ➕ 🚄 Editor State is now synchronized across sessions
+ ➕ 💡 Added Save As Menu Item
+💿 Settings Version 2
+ 🏷️ Added Dimension Labels (Dimension1 through Dimension11)
+ 🎁 Added WordWrap boolean - controls text box word wrapping
+ 🗨️ Added Font and FontSize
+🍰 Program Enhancements
+ 👏 Renamed executable to trs.exe
+ 👏 Renamed TODO.t to Terse.t
+ ➕ Added Release Notes to Terse.t
+ ➕ Added File Formats to Terse.t
+ ➕ Added Terse Notepad Documentation to Terse.t
+ ➕ Added "Welcome to the Terse" Summary
+ ➕ Embedded a copy of Terse.t on Build
+ ➕ Added License.md
+👏 User Requests
+ 🦘 Removed the Jump button - pages load as you type now!
+ 🌲 Tree view updates on save and delete - more to come🎉
+ 🎄 Tree view selection is now single-click \o/
+
+v0.0.5 (2022-12-02)
+-------------------
+➕ Switched to TODO.t
+➕ First Version with .ini support
+➕ Added Tree View
+👏 Revised Coordinates: Library, Shelf, Series, Collection, Volume, Book, Chapter, Section, and Scroll
+➕ Implemented Direct Page Jumps
+
+v0.0.4 (2022-12-01)
+-------------------
+👏 Performance Tweaks and Bug fixes
+👏 Limited Dimension Inputs to 4 digits
+
+v0.0.3 (2022-11-30)
+------
+➕ Added TODO.md
+👏 Fixed Bugs with 5D Editing
+
+v0.0.2 (2022-11-30)
+-------------------
+➕ Added Dimension Report to Assist with Sparse Page Views
+➕ Added README.md
+➕ Added Dimension Input Boxes
+
+v0.0.1 (2022-11-30)
+-------------------
+➕ Proof of Concept with 5 of 11 dimensions
+➕ Multiverse, Galaxy, World, Language, Branch, Volume, Set, Group, and PageRelease Notes
+-------------
+(c) 2022 Will Bickford
+MIT License
+
+v0.1.5 (2022-12-08)
+-------------------
+➕ Font settings now apply to the tree view for improved readability
+🥼 Experimenting with non-selectable parent nodes
+ 🥼 When you select a chapter or section node, the first scroll node descendent is shown
+🥼 F3 and Shift-F3 now reset Scroll ID to 1
+🥼 F4 and Shift-F4 now reset both Scroll ID and Section ID to 1
+👏 Delete Node now prompts the user to confirm
+
+v0.1.4 (2022-12-08)
+-------------------
+👏 Fixed volumeID is blank bug
+👏 Fixed wonky text paste
+👏 Terse.t: Revised Scroll Names
+👏 Fixed Text Box Width with Tree View Disabled
+👏 Improved current page visibility
+➕ Release Notes: Started using emojii bullet points
+➕ Added SCROLL LOCK Support \o/
+ ➕ Renamed "Tree View" Checkbox on the View menu to "Lock to Scroll"
+ ➕ Scroll lock now controls tree view visibility
+ ➕ The editor no longer responds to dimension switch events when the tree view is hidden
+
+v0.1.3 (2022-12-08)
+-------------------
+💿 Settings Version 5
+ ➕ Added the Preferences Overview Scroll
+ ➕ Added VimMode - Edits Locked While Active
+ 👏 Fixed Preferences Edit Bug
+🗒️ Added Vim Mode (OLE Integration)
+
+v0.1.2 (2022-12-07)
+-------------------
+🧪 Added full test coverage for chapters, word count, and node count
+📜  Added Automatic Word Counters for Current Page and Terse Doc
+🏎️ Improved Terse File Parsing Performance
+🌲  Reduced tree View Flicker
+🎡 Added Dark and Light Themes
+
+v0.1.1 (2022-12-05)
+-------------------
+🧪 Added unit test coverage for scrolls and sections
+
+v0.1.0 (2022-12-04)
+-------------------
+🛣️ Renamed Requests to Roadmap
+📜  Witness Operational Scrollbars!
+
+v0.0.9 (2022-12-04)
+-------------------
+🌲 Tree view now updates in real-time
+
+v0.0.8 (2022-12-04)
+-------------------
+🌲 Tree view is now instant! \o/
+ 📃 New pages appear in the tree view once a line break occurs
+ 🫗Empty pages are cleared on save
+
+v0.0.7 (2022-12-04)
+-------------------
+💿 Settings Version 3
+ 🔍 Added ZoomFactor to preserve text resizing (separate from font size) - 1.0 = 100%
+ 📂 Added Recent File List (Sorted)
+👏 User Requests
+ 🆕 Selecting the end of the row no longer selects the newline \o/
+
+v0.0.6 (2022-12-03)
+-------------------
+📃 Editor Improvements
+ ➕ 🚄 Editor State is now synchronized across sessions
+ ➕ 💡 Added Save As Menu Item
+💿 Settings Version 2
+ 🏷️ Added Dimension Labels (Dimension1 through Dimension11)
+ 🎁 Added WordWrap boolean - controls text box word wrapping
+ 🗨️ Added Font and FontSize
+🍰 Program Enhancements
+ 👏 Renamed executable to trs.exe
+ 👏 Renamed TODO.t to Terse.t
+ ➕ Added Release Notes to Terse.t
+ ➕ Added File Formats to Terse.t
+ ➕ Added Terse Notepad Documentation to Terse.t
+ ➕ Added "Welcome to the Terse" Summary
+ ➕ Embedded a copy of Terse.t on Build
+ ➕ Added License.md
+👏 User Requests
+ 🦘 Removed the Jump button - pages load as you type now!
+ 🌲 Tree view updates on save and delete - more to come🎉
+ 🎄 Tree view selection is now single-click \o/
+
+v0.0.5 (2022-12-02)
+-------------------
+➕ Switched to TODO.t
+➕ First Version with .ini support
+➕ Added Tree View
+👏 Revised Coordinates: Library, Shelf, Series, Collection, Volume, Book, Chapter, Section, and Scroll
+➕ Implemented Direct Page Jumps
+
+v0.0.4 (2022-12-01)
+-------------------
+👏 Performance Tweaks and Bug fixes
+👏 Limited Dimension Inputs to 4 digits
+
+v0.0.3 (2022-11-30)
+------
+➕ Added TODO.md
+👏 Fixed Bugs with 5D Editing
+
+v0.0.2 (2022-11-30)
+-------------------
+➕ Added Dimension Report to Assist with Sparse Page Views
+➕ Added README.md
+➕ Added Dimension Input Boxes
+
+v0.0.1 (2022-11-30)
+-------------------
+➕ Proof of Concept with 5 of 11 dimensions
+➕ Multiverse, Galaxy, World, Language, Branch, Volume, Set, Group, and PageTerse Notepad
 -------------
 
 Terse Notepad provides a reference implementation of multi-dimensional text using Lower ASCII dimension breaks. The format was created by Will Bickford, and is intended to assist humans with leaning into the Singularity.
@@ -70,6 +310,11 @@ MIT License
 v0.1.5 (2022-12-08)
 -------------------
 ➕ Font settings now apply to the tree view for improved readability
+🥼 Experimenting with non-selectable parent nodes
+ 🥼 When you select a chapter or section node, the first scroll node descendent is shown
+🥼 F3 and Shift-F3 now reset Scroll ID to 1
+🥼 F4 and Shift-F4 now reset both Scroll ID and Section ID to 1
+👏 Delete Node now prompts the user to confirm
 
 v0.1.4 (2022-12-08)
 -------------------
