@@ -1,4 +1,4 @@
-Terse Notepad
+Terse Notepad
 -------------
 
 Terse Notepad provides a reference implementation of multi-dimensional text using Lower ASCII dimension breaks. The format was created by Will Bickford, and is intended to assist humans with leaning into the Singularity.
@@ -66,6 +66,10 @@ v0.4.0
 -------------
 (c) 2022 Will Bickford
 MIT License
+
+v0.1.5 (2022-12-08)
+-------------------
+➕ Font settings now apply to the tree view for improved readability
 
 v0.1.4 (2022-12-08)
 -------------------

@@ -18,6 +18,7 @@ namespace TerseNotepad
         private uint _priorLine = 1;
         private uint _priorColumn = 1;
         private TerseConfig _settings = new();
+        private Font SCROLL_NODE_FONT = new("Cascadia Code", 11);
 
         private Vim.Vim? vimEditor { get; set; } = null;
 
@@ -27,6 +28,7 @@ namespace TerseNotepad
             InitializeExternalEditor();
 
             lockToScrollMenuItem.Checked = !_settings.TreeView;
+            LoadFonts();
             scrollLockUIUpdate();
             if (args.Length > 0)
             {
@@ -158,7 +160,8 @@ Use F2 - F11 to access additional dimensions.
 
                     var key = _model.Terse.Coords.ToString();
                     var line = TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Text);
-                    sectionNode.Nodes.Add(key, line);
+                    var scrollNode = sectionNode.Nodes.Add(key, line);
+                    scrollNode.NodeFont = SCROLL_NODE_FONT;
                 }
             }
         }
@@ -273,18 +276,24 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
-        private void RefreshSettings()
+        private void LoadFonts()
         {
-            _settings.Reload();
             try
             {
-                var font = new Font(_settings.Font, _settings.FontSize);
-                textBox.Font = font;
+                SCROLL_NODE_FONT = new Font(_settings.Font, _settings.FontSize);
+                textBox.Font = SCROLL_NODE_FONT;
+                treeView.Font = SCROLL_NODE_FONT;
             }
             catch (Exception)
             {
                 _settings.LastError = "Invalid Font Settings";
             }
+        }
+
+        private void RefreshSettings()
+        {
+            _settings.Reload();
+            LoadFonts();
             treeView.Visible = _settings.TreeView;
             textBox.WordWrap = _settings.WordWrap;
             textBox.ZoomFactor = _settings.ZoomFactor;
@@ -300,10 +309,7 @@ Use F2 - F11 to access additional dimensions.
             chapterLabel.Text = _settings.Dimension5;
             sectionLabel.Text = _settings.Dimension4;
             scrollLabel.Text = _settings.Dimension3;
-            treeView.BackColor = _settings.DarkMode ? Color.Black : Color.White;
-            treeView.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
-            textBox.BackColor = _settings.DarkMode ? Color.Black : Color.White;
-            textBox.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
+            SetEditorTheme();
 
             if (!File.Exists(_settings.IniFilePath))
             {
@@ -338,10 +344,17 @@ Use F2 - F11 to access additional dimensions.
         private void LoadFile(string filename)
         {
             RefreshSettings();
-            var data = File.ReadAllText(filename);
-            _settings.Filename = filename;
-            LoadData(data);
-            UpdateStatusBar($"{filename}");
+            if (File.Exists(filename))
+            {
+                var data = File.ReadAllText(filename);
+                _settings.Filename = filename;
+                LoadData(data);
+                UpdateStatusBar($"{filename}");
+            }
+            else
+            {
+                UpdateStatusBar($"!{filename}");
+            }
         }
 
         private void LoadData(string data)
@@ -966,13 +979,21 @@ Use F2 - F11 to access additional dimensions.
             UpdateScrollbarMaximum(chapterID, chapterScrollbar);
         }
 
+        private void SetEditorTheme()
+        {
+            bool mode = _settings.DarkMode;
+            treeView.BackColor = mode ? Color.Black : Color.White;
+            treeView.ForeColor = mode ? Color.White : Color.Black;
+            textBox.BackColor = mode ? Color.Black : Color.White;
+            textBox.ForeColor = mode ? Color.White : Color.Black;
+            BackColor = mode ? Color.DeepSkyBlue : Color.DarkGray;
+        }
+
         private void darkModeMenuItem_Click(object sender, EventArgs e)
         {
             _settings.Theme = darkModeMenuItem.Checked ? "Dark" : "Light";
-            treeView.BackColor = _settings.DarkMode ? Color.Black : Color.White;
-            treeView.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
-            textBox.BackColor = _settings.DarkMode ? Color.Black : Color.White;
-            textBox.ForeColor = _settings.DarkMode ? Color.White : Color.Black;
+            _settings.Save();
+            SetEditorTheme();
         }
 
         private void vimModeToolStripMenuItem_Click(object sender, EventArgs e)
