@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TerseForm));
             this.textBox = new System.Windows.Forms.RichTextBox();
             this.libraryLabel = new System.Windows.Forms.Label();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
@@ -47,7 +46,7 @@
             this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dimensionReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.treeViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lockToScrollMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.wordWrapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.darkModeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -238,19 +237,19 @@
             // 
             this.vimModeToolStripMenuItem.CheckOnClick = true;
             this.vimModeToolStripMenuItem.Name = "vimModeToolStripMenuItem";
-            this.vimModeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.vimModeToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
             this.vimModeToolStripMenuItem.Text = "&Vim Mode";
             this.vimModeToolStripMenuItem.Click += new System.EventHandler(this.vimModeToolStripMenuItem_Click);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(141, 6);
             // 
             // preferencesToolStripMenuItem
             // 
             this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
             this.preferencesToolStripMenuItem.Text = "&Preferences...";
             this.preferencesToolStripMenuItem.Click += new System.EventHandler(this.preferencesToolStripMenuItem_Click);
             // 
@@ -258,7 +257,7 @@
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.dimensionReportToolStripMenuItem,
-            this.treeViewToolStripMenuItem,
+            this.lockToScrollMenuItem,
             this.wordWrapToolStripMenuItem,
             this.darkModeMenuItem});
             this.viewToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
@@ -273,15 +272,13 @@
             this.dimensionReportToolStripMenuItem.Text = "&Dimension Report";
             this.dimensionReportToolStripMenuItem.Click += new System.EventHandler(this.dimensionReportToolStripMenuItem_Click);
             // 
-            // treeViewToolStripMenuItem
+            // lockToScrollMenuItem
             // 
-            this.treeViewToolStripMenuItem.Checked = true;
-            this.treeViewToolStripMenuItem.CheckOnClick = true;
-            this.treeViewToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.treeViewToolStripMenuItem.Name = "treeViewToolStripMenuItem";
-            this.treeViewToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.treeViewToolStripMenuItem.Text = "Tree View";
-            this.treeViewToolStripMenuItem.Click += new System.EventHandler(this.treeViewToolStripMenuItem_Click);
+            this.lockToScrollMenuItem.CheckOnClick = true;
+            this.lockToScrollMenuItem.Name = "lockToScrollMenuItem";
+            this.lockToScrollMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.lockToScrollMenuItem.Text = "&Lock to Scroll";
+            this.lockToScrollMenuItem.CheckedChanged += new System.EventHandler(this.lockToScrollMenuItem_CheckedChanged);
             // 
             // wordWrapToolStripMenuItem
             // 
@@ -668,6 +665,7 @@
             this.treeView.BackColor = System.Drawing.Color.Black;
             this.treeView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.treeView.ForeColor = System.Drawing.Color.White;
+            this.treeView.HideSelection = false;
             this.treeView.Location = new System.Drawing.Point(3, 5);
             this.treeView.Name = "treeView";
             this.treeView.Size = new System.Drawing.Size(250, 547);
@@ -730,7 +728,6 @@
             this.Controls.Add(this.libraryScrollbar);
             this.Controls.Add(this.menuStrip);
             this.ForeColor = System.Drawing.Color.White;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
             this.MinimumSize = new System.Drawing.Size(850, 400);
             this.Name = "TerseForm";
@@ -788,7 +785,7 @@
         private VScrollBar chapterScrollbar;
         private TreeView treeView;
         private FlowLayoutPanel flowLayoutPanel;
-        private ToolStripMenuItem treeViewToolStripMenuItem;
+        private ToolStripMenuItem lockToScrollMenuItem;
         private ToolStripMenuItem editToolStripMenuItem;
         private ToolStripMenuItem preferencesToolStripMenuItem;
         private ToolStripMenuItem defaultTerseToolStripMenuItem;

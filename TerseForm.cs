@@ -26,8 +26,8 @@ namespace TerseNotepad
             InitializeComponent();
             InitializeExternalEditor();
 
-            treeViewToolStripMenuItem.Checked = _settings.TreeView;
-            treeView.Visible = _settings.TreeView;
+            lockToScrollMenuItem.Checked = !_settings.TreeView;
+            scrollLockUIUpdate();
             if (args.Length > 0)
             {
                 var filename = args[0];
@@ -242,6 +242,16 @@ Use F2 - F11 to access additional dimensions.
             scrollID.Enabled = true;
             scrollLabel.Enabled = true;
             UpdateStatusBar($"Loaded {_settings.Filename}");
+
+            if (treeView.Visible)
+            {
+                var id = $"{_model.Coords}";
+                var node = treeView.Nodes.Find(id, true);
+                if (node != null && node.Length >= 1)
+                {
+                    treeView.SelectedNode = node[0];
+                }
+            }
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -342,6 +352,7 @@ Use F2 - F11 to access additional dimensions.
             wordCountLabel.Text = $"Doc: {_model.WordCount}, Scroll: {_model.ScrollWordCount}";
             treeView.ExpandAll();
             treeView.EndUpdate();
+            lockToScrollMenuItem.Checked = false;
             loadScroll();
             coordinateJump(_settings.Coords);
         }
@@ -481,6 +492,13 @@ Use F2 - F11 to access additional dimensions.
                 return;
             }
 
+            if (treeView.Visible == false)
+            {
+                // Scroll Lock
+                // Do not allow dimension shifts when the treeView is invisible
+                return;
+            }
+
             // Set Shifts
             if (!e.Shift && e.KeyCode == Keys.F4)
             {
@@ -605,6 +623,14 @@ Use F2 - F11 to access additional dimensions.
             {
                 _priorColumn = _model.Terse.Coords.Column;
             }
+
+            // Ctrl-V: Paste plain-text only
+            if (e.Control && e.KeyCode == Keys.V)
+            {
+                textBox.SelectedText = Clipboard.GetText();
+                e.Handled = true;
+                return;
+            }
         }
 
         private void dimensionReportToolStripMenuItem_Click(object sender, EventArgs e)
@@ -646,12 +672,6 @@ Use F2 - F11 to access additional dimensions.
                 sectionID.Text = _model.Terse.Coords.Section.ToString();
                 scrollID.Text = _model.Terse.Coords.Scroll.ToString();
             }
-        }
-
-        private void treeViewToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            treeView.Visible = treeViewToolStripMenuItem.Checked;
-            _settings.TreeView = treeView.Visible;
         }
 
         private TreeNode? getTreeNode(string coordinates)
@@ -783,6 +803,13 @@ Use F2 - F11 to access additional dimensions.
             if (e.Control && e.KeyCode == Keys.Oemcomma)
             {
                 preferencesToolStripMenuItem_Click(sender, e);
+                e.Handled = true;
+                return;
+            }
+            // Scroll Lock
+            if (e.KeyCode == Keys.Scroll)
+            {
+                lockToScrollMenuItem.Checked = !lockToScrollMenuItem.Checked;
                 e.Handled = true;
                 return;
             }
@@ -975,6 +1002,28 @@ Use F2 - F11 to access additional dimensions.
                     vimEditor.SendKeys(":q!\n");
                     vimEditor = null;
                 }
+            }
+        }
+
+        private void lockToScrollMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            scrollLockUIUpdate();
+        }
+
+        private void scrollLockUIUpdate()
+        {
+            treeView.Visible = !lockToScrollMenuItem.Checked;
+            _settings.TreeView = treeView.Visible;
+
+            if (lockToScrollMenuItem.Checked)
+            {
+                textBox.Left = 0;
+                textBox.Width = Width - 100;
+            }
+            else
+            {
+                textBox.Left = treeView.Right;
+                textBox.Width = Width - treeView.Width - 100;
             }
         }
     }
