@@ -443,7 +443,7 @@ Use F2 - F11 to access additional dimensions.
             shelfID.Text = _model.Terse.Coords.Shelf.ToString();
             seriesID.Text = _model.Terse.Coords.Series.ToString();
             collectionID.Text = _model.Terse.Coords.Collection.ToString();
-            bookID.Text = _model.Terse.Coords.Volume.ToString();
+            volumeID.Text = _model.Terse.Coords.Volume.ToString();
             bookID.Text = _model.Terse.Coords.Book.ToString();
             chapterID.Text = _model.Terse.Coords.Chapter.ToString();
             sectionID.Text = _model.Terse.Coords.Section.ToString();

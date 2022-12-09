@@ -47,10 +47,8 @@ Help
 -----------------
 
  * Extra Chapter sometimes?
- * volumeID is blank
  * rich text paste is wonky
- * Page Up / Page Down are glitchy
-Roadmap
+ * Page Up / Page Down are glitchyRoadmap
 
 v0.2.0
 ------
@@ -69,6 +67,9 @@ v0.4.0
 ---------------------------
 (c) 2022 Will Bickford
 MIT License
+
+v0.1.4 (2022-12-08)
+* Fixed volumeID is blank bug
 
 v0.1.3 (2022-12-08)
 -------------------
