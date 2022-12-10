@@ -42,6 +42,8 @@ namespace TerseNotepad
             }
         }
 
+        public static readonly char WORD_BREAK = '\x20';
+        public static readonly char LINE_BREAK = '\n';
         public static readonly char SCROLL_BREAK = '\x17';
         public static readonly char SECTION_BREAK = '\x18';
         public static readonly char CHAPTER_BREAK = '\x19';
@@ -74,13 +76,17 @@ namespace TerseNotepad
 
                 if (next == CHAPTER_BREAK)
                 {
-                    ++chapter_index;
-                    section_index = 1;
-                    scroll_index = 1;
                     if (chapterNode.Nodes.Count > 0)
                     {
                         treeView?.Nodes.Add(chapterNode);
                         Terse.SetChapterNode(chapterNode, chapter_index);
+                        chapterNode = null;
+                    }
+                    ++chapter_index;
+                    section_index = 1;
+                    scroll_index = 1;
+                    if (chapterNode == null)
+                    {
                         chapterNode = new TreeNode($"Chapter {chapter_index}")
                         {
                             Name = $"{chapter_index}-0-0"
@@ -93,13 +99,17 @@ namespace TerseNotepad
                     continue;
                 }
                 if (next == SECTION_BREAK)
-                {
-                    ++section_index;
-                    scroll_index = 1;
+                {                    
                     if (sectionNode.Nodes.Count > 0)
                     {
                         chapterNode.Nodes.Add(sectionNode);
                         Terse.SetSectionNode(sectionNode, chapter_index, section_index);
+                        sectionNode = null;
+                    }
+                    ++section_index;
+                    scroll_index = 1;
+                    if (sectionNode == null)
+                    {
                         sectionNode = new TreeNode($"Section {section_index}")
                         {
                             Name = $"{chapter_index}-{section_index}-0"
@@ -139,7 +149,7 @@ namespace TerseNotepad
         private void insertScroll(StringBuilder stage, uint scroll_index, uint section_index, uint chapter_index, TreeNode? node)
         {
             if (stage.Length == 0) { return; }
-            var scroll = stage.ToString().Trim();
+            var scroll = stage.ToString();
             if (scroll.Length > 0)
             {
                 Terse.Coords.Scroll = scroll_index;
@@ -147,7 +157,7 @@ namespace TerseNotepad
                 Terse.Coords.Chapter = chapter_index;
                 var key = Terse.Coords.ToString();
                 var line = GetScrollSummary(Terse.Coords, scroll);
-                var scrollNode = node?.Nodes.Add(key, line);
+                var scrollNode = node?.Nodes.Add(key, key + "! " + line);
                 Terse.setScroll(scroll, scrollNode);
             }
         }
@@ -196,6 +206,17 @@ namespace TerseNotepad
             }
 
             return collector.ToString();
+        }
+
+        public static bool IsBreakCharacter(char ch)
+        {
+            return ch == WORD_BREAK || ch == LINE_BREAK ||
+                   ch == SCROLL_BREAK || ch == SECTION_BREAK || ch == CHAPTER_BREAK;
+        }
+
+        public static bool IsTextCharacter(char ch)
+        {
+            return ch >= WORD_BREAK;
         }
     }
 }

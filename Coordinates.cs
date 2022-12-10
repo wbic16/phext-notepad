@@ -2,6 +2,29 @@
 {
     public class Coordinates
     {
+        public Coordinates()
+        {
+
+        }
+
+        public Coordinates(string coordinates)
+        {
+            Load(coordinates);
+        }
+        public Coordinates(Coordinates other)
+        {
+            Column = other.Column;
+            Line = other.Line;
+            Scroll = other.Scroll;
+            Section = other.Section;
+            Chapter = other.Chapter;
+            Book = other.Book;
+            Volume = other.Volume;
+            Collection = other.Collection;
+            Series = other.Series;
+            Shelf = other.Shelf;
+            Library = other.Library;
+        }
         public uint Column { get; set; } = 1;
         public uint Line { get; set; } = 1;
         public uint Scroll { get; set; } = 1;
@@ -60,6 +83,11 @@
             Scroll = uint.Parse(parts[0]);
             Section = uint.Parse(parts[1]);
             Chapter = uint.Parse(parts[2]);
+        }
+
+        public bool IsValid()
+        {
+            return Chapter >= 1 && Section >= 1 && Scroll >= 1;
         }
     }
 }

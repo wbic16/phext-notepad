@@ -72,11 +72,11 @@
             for (int i = 0; i < array.Length; ++i)
             {
                 var ch = array[i];
-                if (ch == ' ' || ch == '\n' || ch == '\x17' || ch == '\x18' || ch == '\x19')
+                if (TerseModel.IsBreakCharacter(ch))
                 {
                     breaking = true;
                 }
-                if (ch >= 0x20 && breaking)
+                if (TerseModel.IsTextCharacter(ch) && breaking)
                 {
                     breaking = false;
                     ++words;

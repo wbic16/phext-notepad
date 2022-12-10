@@ -17,6 +17,7 @@ namespace TerseNotepad
         // Editor State
         private uint _priorLine = 1;
         private uint _priorColumn = 1;
+        private Coordinates _checkout = new();
         private TerseConfig _settings = new();
         private Font SCROLL_NODE_FONT = new("Cascadia Code", 11);
 
@@ -27,7 +28,7 @@ namespace TerseNotepad
             InitializeComponent();
             InitializeExternalEditor();
 
-            lockToScrollMenuItem.Checked = !_settings.TreeView;
+            lockToScrollMenuItem.Checked = Control.IsKeyLocked(Keys.Scroll);
             LoadFonts();
             scrollLockUIUpdate();
             if (args.Length > 0)
@@ -47,7 +48,7 @@ namespace TerseNotepad
             
             if (_settings.Filename.Length > 0 && File.Exists(_settings.Filename))
             {
-                LoadFile(_settings.Filename);
+                LoadFile(_settings.Filename, true);
             }
 
             vimModeToolStripMenuItem.Checked = _settings.VimMode;
@@ -86,7 +87,7 @@ namespace TerseNotepad
                 var buffer = reader.ReadToEnd();
                 if (buffer != null)
                 {
-                    LoadData(buffer);
+                    LoadData(buffer, true);
                 }
             }
         }
@@ -116,6 +117,11 @@ Use F2 - F11 to access additional dimensions.
 
         private void collectScroll()
         {
+            if (!_checkout.IsValid())
+            {
+                return;
+            }
+            _model.Coords = _checkout;
             reloadMenuItem.Enabled = true;
             if (vimEditor != null)
             {
@@ -136,12 +142,14 @@ Use F2 - F11 to access additional dimensions.
             {
                 return;
             }
+            treeView.BeginUpdate();
+            treeView.SuspendLayout();
             var node = getTreeNode(_model.Terse.Coords.ToString());
             if (node != null)
             {
                 if (textBox.Lines != null && textBox.Lines.Length >= 1)
                 {
-                    node.Text = TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Lines.First());
+                    node.Text = node.Name + "? " + TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Lines.First());
                 }
             }
             else
@@ -161,10 +169,16 @@ Use F2 - F11 to access additional dimensions.
 
                     var key = _model.Terse.Coords.ToString();
                     var line = TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Text);
-                    var scrollNode = sectionNode.Nodes.Add(key, line);
+                    var scrollNode = sectionNode.Nodes.Add(key, key + ": " + line);
                     scrollNode.NodeFont = SCROLL_NODE_FONT;
+                    treeView.SelectedNode = scrollNode;
+                    textBox.SelectionStart = textBox.Text.Length;
                 }
             }
+
+            treeView.ExpandAll();
+            treeView.ResumeLayout();
+            treeView.EndUpdate();
         }
 
         private void updateScrollbarValue(ScrollBar bar, uint value)
@@ -210,6 +224,8 @@ Use F2 - F11 to access additional dimensions.
 
         private void loadScroll()
         {
+            textBox.SuspendLayout();
+            _checkout = new Coordinates(_model.Coords);
             textBox.Text = _model.Terse.getScroll();
             if (_settings.VimMode && vimEditor != null)
             {
@@ -221,10 +237,6 @@ Use F2 - F11 to access additional dimensions.
             _model.Terse.Coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
-            updateScrollbarValue(scrollScrollbar, _model.Terse.Coords.Scroll);
-            updateScrollbarValue(sectionScrollbar, _model.Terse.Coords.Section);
-            updateScrollbarValue(chapterScrollbar, _model.Terse.Coords.Chapter);           
-            // todo: enable the remaining dimensions
             // libraryID.Enabled = true;
             // libraryLabel.Enabled = true;
             // shelfID.Enabled = true;
@@ -256,6 +268,8 @@ Use F2 - F11 to access additional dimensions.
                     treeView.SelectedNode = node[0];
                 }
             }
+
+            textBox.ResumeLayout();
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -273,7 +287,7 @@ Use F2 - F11 to access additional dimensions.
             var result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
-                LoadFile(dialog.FileName);
+                LoadFile(dialog.FileName, true);
             }
         }
 
@@ -338,18 +352,18 @@ Use F2 - F11 to access additional dimensions.
             if (sender != null)
             {
                 ToolStripMenuItem clickedItem = (ToolStripMenuItem)sender;
-                LoadFile(clickedItem.Text);
+                LoadFile(clickedItem.Text, true);
             }
         }
 
-        private void LoadFile(string filename)
+        private void LoadFile(string filename, bool resetView)
         {
             RefreshSettings();
             if (File.Exists(filename))
             {
                 var data = File.ReadAllText(filename);
                 _settings.Filename = filename;
-                LoadData(data);
+                LoadData(data, resetView);
                 UpdateUI($"{filename}");
             }
             else
@@ -358,28 +372,38 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
-        private void LoadData(string data)
+        private void LoadData(string data, bool resetView)
         {
+            treeView.SuspendLayout();
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
             _model.Load(data, treeView, sectionScrollbar, chapterScrollbar);
             wordCountLabel.Text = $"Doc: {_model.WordCount}, Scroll: {_model.ScrollWordCount}";
             treeView.ExpandAll();
             treeView.EndUpdate();
-            lockToScrollMenuItem.Checked = false;
-            coordinateJump(_settings.Coords, false);            
+            treeView.ResumeLayout();
+            if (resetView)
+            {
+                jumpToOrigin();
+            }
+            else
+            {
+                coordinateJump(_settings.Coords, false);
+            }
         }
 
         private void jumpToOrigin()
         {
-            _model.Terse.Coords.Reset();
+            _model.Coords.Reset();
+            coordinateJump(_settings.Coords, false);
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _settings.Filename = "";
-            jumpToOrigin();
-            LoadData("");
+            _model.Terse.Coords.Reset();
+            _settings.Coords = _model.Terse.Coords.ToString();
+            LoadData("", true);
         }
 
         private void CloseExternalEditor()
@@ -427,8 +451,8 @@ Use F2 - F11 to access additional dimensions.
                 _settings.Save();
             }
             if (reload)
-            {                
-                LoadFile(_settings.Filename);
+            {
+                LoadFile(_settings.Filename, false);
             }
             UpdateUI($"Saved ${_settings.Filename}");
         }
@@ -472,6 +496,11 @@ Use F2 - F11 to access additional dimensions.
             chapterID.Text = _model.Terse.Coords.Chapter.ToString();
             sectionID.Text = _model.Terse.Coords.Section.ToString();
             scrollID.Text = _model.Terse.Coords.Scroll.ToString();
+
+            updateScrollbarValue(scrollScrollbar, _model.Terse.Coords.Scroll);
+            updateScrollbarValue(sectionScrollbar, _model.Terse.Coords.Section);
+            updateScrollbarValue(chapterScrollbar, _model.Terse.Coords.Chapter);
+
             status.Text = _model.Terse.EditorSummary(action);
         }
 
@@ -712,24 +741,28 @@ Use F2 - F11 to access additional dimensions.
             
         }
 
+        // pre: the UI always shows the selected node...
         private void deleteNode(string coordinates, bool requestConfirmation = true)
         {
-            var priorCoords = _model.Terse.Coords;
-            collectScroll();
             if (!coordinates.Contains('-'))
             {
                 return;
             }
+            _checkout = new Coordinates(coordinates);
             _model.Terse.Coords.Load(coordinates);
+            UpdateUI("Delete");
             var node = getTreeNode(coordinates);
             if (node == null) { return; }
             if (requestConfirmation)
             {
                 var count = 1 + node.GetNodeCount(true);
-                var confirm = MessageBox.Show($"Are you sure you want to delete {count} nodes?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
-                if (confirm == DialogResult.No)
+                if (count > 1)
                 {
-                    return;
+                    var confirm = MessageBox.Show($"Are you sure you want to delete {count} nodes?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
+                    if (confirm == DialogResult.No)
+                    {
+                        return;
+                    }
                 }
             }
 
@@ -744,7 +777,7 @@ Use F2 - F11 to access additional dimensions.
             }
             node.Remove();
             textBox.Text = "";
-            coordinateJump(priorCoords.ToString(), false);
+            collectScroll();
         }
 
         private void coordinateJump(string coordinates, bool storeFirst)
@@ -783,8 +816,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void preferencesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            LoadFile(_settings.IniFilePath);
-            jumpToOrigin();
+            LoadFile(_settings.IniFilePath, true);
         }
 
         private void defaultTerseToolStripMenuItem_Click(object sender, EventArgs e)
@@ -845,7 +877,7 @@ Use F2 - F11 to access additional dimensions.
             // Scroll Lock
             if (e.KeyCode == Keys.Scroll)
             {
-                lockToScrollMenuItem.Checked = !lockToScrollMenuItem.Checked;
+                lockToScrollMenuItem.Checked = Control.IsKeyLocked(Keys.Scroll);
                 e.Handled = true;
                 return;
             }
@@ -1072,8 +1104,14 @@ Use F2 - F11 to access additional dimensions.
 
         private void reloadMenuItem_Click(object sender, EventArgs e)
         {
-            LoadFile(_settings.Filename);
+            LoadFile(_settings.Filename, false);
             reloadMenuItem.Enabled = false;
+        }
+
+        private void treeView_DoubleClick(object sender, EventArgs e)
+        {
+            textBox.Focus();
+            textBox.SelectionStart = textBox.Text.Length;
         }
     }
 }
