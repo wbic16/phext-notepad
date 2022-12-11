@@ -44,10 +44,21 @@ namespace TerseNotepad
             }
             set
             {
-                if (!RecentFile.Contains(_filename) && _filename.Length > 0)
+                var index = -1;
+                foreach (var ii in RecentFile.Keys)
                 {
-                    RecentFile.Add(_filename);
+                    if (RecentFile[ii] == value)
+                    {
+                        index = ii;
+                        break;
+                    }
                 }
+                if (index > 0)
+                {
+                    RecentFile.Remove(index);
+                }
+                index = RecentFile.Keys.Count > 0 ? RecentFile.Keys.Max() : -1;
+                RecentFile[index + 1] = value;
                 _filename = value;
             }
         }
@@ -69,7 +80,7 @@ namespace TerseNotepad
         public string Dimension11 { get; set; } = "Library";
         public bool WordWrap { get; set; } = true;
         public float ZoomFactor { get; set; } = 1.0f;
-        public SortedSet<string> RecentFile { get; set; } = new();
+        public SortedDictionary<int, string> RecentFile { get; set; } = new();
         public string Theme { get; set; } = "Dark";
         public bool DarkMode { get { return Theme == "Dark"; } }
         public bool LightMode { get { return Theme == "Light"; } }
@@ -102,8 +113,9 @@ namespace TerseNotepad
                  + $"ZoomFactor = {ZoomFactor}\n"
                  + $"Theme = {Theme}\n"
                  + $"VimMode = {VimMode}\n";
-            foreach (var file in RecentFile)
+            foreach (var key in RecentFile.Keys.OrderByDescending(q => q))
             {
+                var file = RecentFile[key];
                 result += $"RecentFile = {file}\n";
             }
             return result;
@@ -112,6 +124,7 @@ namespace TerseNotepad
         public void Deserialize(string ini)
         {
             var lines = ini.Split('\n');
+            var fileOrdering = 0;
             if (lines[0] == "[TerseConfig]")
             {
                 foreach (var line in lines)
@@ -191,7 +204,10 @@ namespace TerseNotepad
                             catch { }
                             break;
                         case "RecentFile":
-                            RecentFile.Add(parts[1]);
+                            if (!RecentFile.ContainsValue(parts[1]))
+                            {
+                                RecentFile[fileOrdering++] = parts[1];
+                            }
                             break;
                         case "Theme":
                             Theme = parts[1];

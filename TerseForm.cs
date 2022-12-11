@@ -331,20 +331,30 @@ Use F2 - F11 to access additional dimensions.
                 _settings.Save();
             }
         }
-        private ToolStripMenuItem[] CreateRecentFilesMenu(SortedSet<string> files)
+        private ToolStripMenuItem[] CreateRecentFilesMenu(SortedDictionary<int, string> files)
         {
-            var items = new ToolStripMenuItem[files.Count];
-            for (int i = 0; i < files.Count; ++i)
+            var items = new List<ToolStripMenuItem>();
+            var i = 0;
+            var used = new HashSet<string>();
+            foreach (var key in files.Keys.OrderByDescending(q => q))
             {
-                items[i] = new ToolStripMenuItem
+                var filename = files[key];
+                if (used.Contains(filename)) { continue; }
+                used.Add(filename);
+                if (!File.Exists(filename))
                 {
-                    Name = $"RecentMenuItem{i}",
-                    Text = files.ElementAt(i)
+                    continue;
+                }
+                var next = new ToolStripMenuItem
+                {
+                    Name = $"RecentMenuItem{++i}",
+                    Text = filename
                 };
-                items[i].Click += new EventHandler(MenuItemClickHandler);
+                next.Click += new EventHandler(MenuItemClickHandler);
+                items.Add(next);
             }
 
-            return items;
+            return items.ToArray();
         }
 
         public void MenuItemClickHandler(object? sender, EventArgs e)

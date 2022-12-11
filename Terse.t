@@ -1,4 +1,4 @@
-Terse Notepad
+Terse Notepad
 -------------
 
 Terse Notepad provides a reference implementation of multi-dimensional text using Lower ASCII dimension breaks. The format was created by Will Bickford, and is intended to assist humans with leaning into the Singularity.
@@ -28,6 +28,7 @@ File
 ----
  * New: Create a Blank Terse File (Ctrl-N)
  * Open: Open an Existing Terse File (Ctrl-O)
+ * Reload: Reloads the current Terse File (No Hotkey Yet)
  * Save: Write all scrolls to the current file (Ctrl-S)
  * Save As: Write all scrolls to a new file (Ctrl-Shift-S)
  * Recent: Provides a list of files worked with in sorted order
@@ -44,10 +45,20 @@ View
 
 Help
 ----
- * About: Display Program VersionBugs List v0.1.4
-----------------
+ * About: Display Program VersionBug List v0.1.6
+---------------
 
- * Extra Chapter sometimes?Roadmap
+Bugs
+----
+🪲 Extra Chapter sometimes?
+🪲 Delete Node is not reliable - scrolls resurrect at random...
+🐛 Unicode glyphs aren't fixed width with Font = Cascadia Code
+
+Key
+---
+🪲: Major Flaw
+🐜: Minor Flaw
+🐛: CuriosityRoadmap
 
 v0.2.0
 ------
@@ -56,19 +67,34 @@ v0.2.0
 v0.3.0
 ------
   * add multiple viewports
-  * add dark mode
   * add tabs
 
 v0.4.0
 ------
-  * add zoomed UI  
-  * add Series, Shelf, and Library DimensionsRelease Notes
+  * add zoomed UI
+  * add Series, Shelf, and Library Dimensions
+
+Editor List
+-----------
+* TRSH: The Terse-Native Shell [C]
+* Terse Notepad: Reference Editor [C#]
+* Web Terse: Web-based single .html file editor [JS]
+* Flownote: One infinite scroll [C++]
+* Dreamnote: A place for all of your notes [Rust]
+
+Release Notes
 -------------
 (c) 2022 Will Bickford
 MIT License
 
+v0.1.6 (2022-12-10)
+-------------------
+🐜 Recent files is now sorted by recent use \o/
+🐛 Recent files no longer shows dead files
+
 v0.1.5 (2022-12-09)
-🧪 Improved Diagnostics (Coordinates are now visible)
+-------------------
+🧪 Improved Diagnostics (Coordinates are now visible in the Tree View)
 🧪 Added "scroll checkout" tracking
 🧪 7/7 unit tests passing
 ➕ Font settings now apply to the tree view for improved readability
