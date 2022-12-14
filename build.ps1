@@ -16,7 +16,7 @@ if (-not $force -and ($known -match $version)) {
 $csproj = Get-Content -raw "$app.csproj"
 if (-not ($csproj -match "$version")) {
    $csproj = $csproj -replace "<VersionPrefix>[^<]*</VersionPrefix>","<VersionPrefix>$version</VersionPrefix>"
-   Write-Host "Patching $app.csproj..."  
+   Write-Host "Patching $app.csproj..."
    $csproj | Out-File -Encoding utf8 "$app.csproj"
 }
 $terse = Get-Content -raw "Terse.t"

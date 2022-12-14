@@ -382,13 +382,23 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
+        public static string FormatNumber(int num)
+        {
+            if (num >= 100000)
+                return FormatNumber(num / 1000) + "K";
+
+            if (num >= 10000)
+                return (num / 1000D).ToString("0.#") + "K";
+
+            return num.ToString("#,0");
+        }
+
         private void LoadData(string data, bool resetView)
         {
             treeView.SuspendLayout();
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
-            _model.Load(data, treeView, sectionScrollbar, chapterScrollbar);
-            wordCountLabel.Text = $"Doc: {_model.WordCount}, Scroll: {_model.ScrollWordCount}";
+            _model.Load(data, treeView, sectionScrollbar, chapterScrollbar);            
             treeView.ExpandAll();
             treeView.EndUpdate();
             treeView.ResumeLayout();
@@ -512,6 +522,7 @@ Use F2 - F11 to access additional dimensions.
             updateScrollbarValue(chapterScrollbar, _model.Terse.Coords.Chapter);
 
             status.Text = _model.Terse.EditorSummary(action);
+            wordCountLabel.Text = $"Doc: {FormatNumber(_model.WordCount)}, Scroll: {FormatNumber(_model.ScrollWordCount)}";
         }
 
         private bool ChooseSaveFilename()
@@ -695,8 +706,7 @@ Use F2 - F11 to access additional dimensions.
                     {
                         var content = _model.Terse.Chapter[chapter_index].Children[section_index].Children[scroll_index];
                         var count = content.Text.Length;
-                        var summary = content.Text.Split("\n")[0];
-                        if (summary.Length > 40) { summary = summary[..40]; }
+                        var summary = TerseModel.GetScrollSummary(_model.Coords, content.Text);
                         result.AppendLine($"Chapter: {chapter_index}, Section: {section_index}, Scroll: {scroll_index} => {summary} ({count})");
                     }
                 }

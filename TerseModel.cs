@@ -99,7 +99,7 @@ namespace TerseNotepad
                     continue;
                 }
                 if (next == SECTION_BREAK)
-                {                    
+                {
                     if (sectionNode.Nodes.Count > 0)
                     {
                         chapterNode.Nodes.Add(sectionNode);
@@ -133,16 +133,16 @@ namespace TerseNotepad
             {
                 insertScroll(stage, scroll_index, section_index, chapter_index, sectionNode);
                 stage.Clear();
-                if (sectionNode.Nodes.Count > 0)
-                {
-                    chapterNode.Nodes.Add(sectionNode);
-                    Terse.SetSectionNode(sectionNode, chapter_index, section_index);                   
-                }
-                if (chapterNode.Nodes.Count > 0)
-                {
-                    treeView?.Nodes.Add(chapterNode);
-                    Terse.SetChapterNode(chapterNode, chapter_index);
-                }
+            }
+            if (sectionNode.Nodes.Count > 0)
+            {
+                chapterNode.Nodes.Add(sectionNode);
+                Terse.SetSectionNode(sectionNode, chapter_index, section_index);
+            }
+            if (chapterNode.Nodes.Count > 0)
+            {
+                treeView?.Nodes.Add(chapterNode);
+                Terse.SetChapterNode(chapterNode, chapter_index);
             }
         }
 
@@ -164,7 +164,7 @@ namespace TerseNotepad
 
         public static string GetScrollSummary(Coordinates coords, string scroll)
         {
-            var firstLine = scroll.Split("\n")[0];
+            var firstLine = scroll.TrimStart().Split("\n")[0];
             var line = firstLine.Length > 40 ? firstLine[..40] : firstLine;
             if (line.Length > 0)
             {

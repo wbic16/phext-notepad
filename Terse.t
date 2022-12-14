@@ -45,7 +45,7 @@ View
 
 Help
 ----
- * About: Display Program VersionBug List v0.1.6
+ * About: Display Program VersionBug List v0.1.7
 ---------------
 
 Bugs
@@ -86,6 +86,12 @@ Editor List
 -------------
 (c) 2022 Will Bickford
 MIT License
+
+v0.1.7 (2022-12-13)
+-------------------
+🐛 Fixed a loading bug from Tersify-produced files that did not include section or chapter breaks
+🐛 Improved scroll summaries to strip leading blank space
+🐛 Improved readability for word counts (styled with commas and 10.1K/100K styling)
 
 v0.1.6 (2022-12-10)
 -------------------
