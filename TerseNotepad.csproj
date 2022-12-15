@@ -7,7 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <PlatformTarget>x64</PlatformTarget>
-    <VersionPrefix>0.1.7</VersionPrefix>
+    <VersionPrefix>0.1.8</VersionPrefix>
     <PackageIcon>Terse.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <StartupObject>TerseNotepad.Program</StartupObject>

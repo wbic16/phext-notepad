@@ -28,10 +28,10 @@ File
 ----
  * New: Create a Blank Terse File (Ctrl-N)
  * Open: Open an Existing Terse File (Ctrl-O)
- * Reload: Reloads the current Terse File (No Hotkey Yet)
+ * Reload: Reloads the current Terse File (Ctrl-/)
  * Save: Write all scrolls to the current file (Ctrl-S)
  * Save As: Write all scrolls to a new file (Ctrl-Shift-S)
- * Recent: Provides a list of files worked with in sorted order
+ * Recent: Provides a list of files in recently-used order
  * Exit: Leave the Terse?
 
 Edit
@@ -45,13 +45,12 @@ View
 
 Help
 ----
- * About: Display Program VersionBug List v0.1.7
+ * About: Display Program VersionBug List v0.1.8
 ---------------
 
 Bugs
 ----
-🪲 Extra Chapter sometimes?
-🪲 Delete Node is not reliable - scrolls resurrect at random...
+🪲 Chapter 1 becomes Chapter 2 somehow
 🐛 Unicode glyphs aren't fixed width with Font = Cascadia Code
 
 Key
@@ -86,6 +85,11 @@ Editor List
 -------------
 (c) 2022 Will Bickford
 MIT License
+
+v0.1.8 (2022-12-14)
+-------------------
+🪲 Delete Node now reliably destroys only the selected node
+➕ Ctrl-/ now reloads from disk
 
 v0.1.7 (2022-12-13)
 -------------------

@@ -13,7 +13,7 @@ namespace TerseNotepad
         // Vim Integration
         [DllImport("USER32.DLL")]
         public static extern bool SetWindowPos(IntPtr hWnd, IntPtr insertAfter, int X, int Y, int cx, int cy, uint flags);
-  
+
         // Editor State
         private uint _priorLine = 1;
         private uint _priorColumn = 1;
@@ -39,13 +39,13 @@ namespace TerseNotepad
                     _settings.Filename = filename;
                     _settings.Coords = args.Length > 1 ? args[1] : _settings.Coords;
                 }
-            }            
+            }
 
             if (_settings.Filename.Length == 0)
             {
                 LoadDefaultTerse();
             }
-            
+
             if (_settings.Filename.Length > 0 && File.Exists(_settings.Filename))
             {
                 LoadFile(_settings.Filename, true);
@@ -53,7 +53,7 @@ namespace TerseNotepad
 
             vimModeToolStripMenuItem.Checked = _settings.VimMode;
             if (_settings.VimMode)
-            {                
+            {
                 vimEditor?.SetForeground();
                 SendToBack();
             }
@@ -398,7 +398,7 @@ Use F2 - F11 to access additional dimensions.
             treeView.SuspendLayout();
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
-            _model.Load(data, treeView, sectionScrollbar, chapterScrollbar);            
+            _model.Load(data, treeView, sectionScrollbar, chapterScrollbar);
             treeView.ExpandAll();
             treeView.EndUpdate();
             treeView.ResumeLayout();
@@ -747,18 +747,37 @@ Use F2 - F11 to access additional dimensions.
 
         private TreeNode? getParentTreeNode(Coordinates coords)
         {
-            TreeNode? node;
-
-            var sectionNodeID = $"{coords.Chapter}-{coords.Section}-0";
-            node = getTreeNode(sectionNodeID);
-            if (node != null)
+            if (coords.Chapter == 0 || coords.Section == 0)
             {
-                return node;
+                return null;
             }
 
-            var chapterNodeID = $"{coords.Chapter}-0-0";
-            return getTreeNode(chapterNodeID);
-            
+            if (!_model.Terse.Chapter.ContainsKey(coords.Chapter))
+            {
+                _model.Terse.Chapter.Add(coords.Chapter, new());
+            }
+            var chapter = _model.Terse.Chapter[coords.Chapter];
+            var lookup = treeView.Nodes.Find(coords.ToChapterParentID(), true);
+            if (lookup != null && lookup.Length > 0)
+            {
+                chapter.Node = lookup[0];
+            }
+            else
+            {
+                chapter.Node = treeView.Nodes.Add(coords.ToChapterParentID(), $"Chapter {coords.Chapter}");
+            }
+
+            if (!_model.Terse.Chapter[coords.Chapter].Children.ContainsKey(coords.Section))
+            {
+                _model.Terse.Chapter[coords.Chapter].Children.Add(coords.Section, new());
+            }
+            var section = _model.Terse.Chapter[coords.Chapter].Children[coords.Section];
+            if (section.Node == null || section.Node.Parent == null)
+            {
+                section.Node = chapter.Node.Nodes.Add(coords.ToSectionParentID(), $"Section {coords.Section}");
+            }
+
+            return section.Node;
         }
 
         // pre: the UI always shows the selected node...
@@ -786,6 +805,9 @@ Use F2 - F11 to access additional dimensions.
                 }
             }
 
+            textBox.Text = "";
+            collectScroll();
+
             var deleteList = new List<string>();
             foreach (TreeNode child in node.Nodes)
             {
@@ -796,8 +818,6 @@ Use F2 - F11 to access additional dimensions.
                 deleteNode(childCoordinates, false);
             }
             node.Remove();
-            textBox.Text = "";
-            collectScroll();
         }
 
         private void coordinateJump(string coordinates, bool storeFirst)
@@ -891,6 +911,13 @@ Use F2 - F11 to access additional dimensions.
             if (e.Control && e.KeyCode == Keys.Oemcomma)
             {
                 preferencesToolStripMenuItem_Click(sender, e);
+                e.Handled = true;
+                return;
+            }
+            // Ctrl-/: Reload
+            if (e.Control && e.KeyCode == Keys.OemQuestion)
+            {
+                reloadMenuItem_Click(sender, e);
                 e.Handled = true;
                 return;
             }
@@ -1021,7 +1048,7 @@ Use F2 - F11 to access additional dimensions.
         {
             chapterID.Text = chapterScrollbar.Value.ToString();
             jumpButton_Click(sender, e);
-        }        
+        }
 
         private void UpdateScrollbarMaximum(System.Windows.Forms.TextBox box, System.Windows.Forms.ScrollBar bar)
         {

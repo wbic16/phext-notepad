@@ -41,6 +41,14 @@
         {
             return $"{Scroll}-{Section}-{Chapter}";
         }
+        public string ToSectionParentID()
+        {
+            return $"{Chapter}-{Section}-0";
+        }
+        public string ToChapterParentID()
+        {
+            return $"{Chapter}-0-0";
+        }
 
         public string GetNodeSummary()
         {
