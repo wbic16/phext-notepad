@@ -1,4 +1,4 @@
-Terse Notepad
+Terse Notepad
 -------------
 
 Terse Notepad provides a reference implementation of multi-dimensional text using Lower ASCII dimension breaks. The format was created by Will Bickford, and is intended to assist humans with leaning into the Singularity.
@@ -45,19 +45,22 @@ View
 
 Help
 ----
- * About: Display Program VersionBug List v0.1.8
+ * About: Display Program Version
+Bug List v0.1.9
 ---------------
 
 Bugs
 ----
 🪲 Chapter 1 becomes Chapter 2 somehow
+🐛 Keyboard navigation on scrolls is glitchy - jumps pages unexpectedly
 🐛 Unicode glyphs aren't fixed width with Font = Cascadia Code
 
 Key
 ---
 🪲: Major Flaw
 🐜: Minor Flaw
-🐛: CuriosityRoadmap
+🐛: Curiosity
+Roadmap
 
 v0.2.0
 ------
@@ -79,12 +82,15 @@ Editor List
 * Terse Notepad: Reference Editor [C#]
 * Web Terse: Web-based single .html file editor [JS]
 * Flownote: One infinite scroll [C++]
-* Dreamnote: A place for all of your notes [Rust]
-
-Release Notes
+* Dreamnote: A place for all of your notes [Rust]Release Notes
 -------------
 (c) 2022 Will Bickford
 MIT License
+
+v0.1.9 (2022-12-14)
+-------------------
+🪲 Fixed page checkout mechanism - scroll collect depends upon prior checkout now
+🏎️ Added node cache and moved tree node creation to TerseModel
 
 v0.1.8 (2022-12-14)
 -------------------
@@ -220,7 +226,8 @@ v0.0.2 (2022-11-30)
 v0.0.1 (2022-11-30)
 -------------------
 ➕ Proof of Concept with 5 of 11 dimensions
-➕ Multiverse, Galaxy, World, Language, Branch, Volume, Set, Group, and PageFile Formats
+➕ Multiverse, Galaxy, World, Language, Branch, Volume, Set, Group, and Page
+File Formats
 This is a list of Terse-based file formats.
 
 Extension  Status       Description
@@ -229,8 +236,9 @@ Extension  Status       Description
 .tweb      Proposed     HTML + Resources in One Byte Stream
 .todb      Proposed     Text-Only Database
 .tfl       Proposed     Text Flow Notes
-.tjur      Proposed     Jurassic Park Style ViewerPreferences
------------
+.tjur      Proposed     Jurassic Park Style Viewer
+Preferences
+------------
 Terse configuration files are simple key-value .ini files.
 The main terse configuration block is denoted by "[TerseConfig]".
 

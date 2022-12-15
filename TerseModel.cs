@@ -1,11 +1,11 @@
 ﻿using System.Text;
-using System.Windows.Forms;
 
 namespace TerseNotepad
 {
     public class TerseModel
     {
         public TerseText Terse = new();
+        private Dictionary<string, TreeNode> _nodeCache = new();
         public Coordinates Coords
         {
             get
@@ -76,10 +76,11 @@ namespace TerseNotepad
 
                 if (next == CHAPTER_BREAK)
                 {
-                    if (chapterNode.Nodes.Count > 0)
+                    if (chapterNode != null && chapterNode.Nodes.Count > 0)
                     {
                         treeView?.Nodes.Add(chapterNode);
                         Terse.SetChapterNode(chapterNode, chapter_index);
+                        _nodeCache[chapterNode.Name] = chapterNode;
                         chapterNode = null;
                     }
                     ++chapter_index;
@@ -91,10 +92,12 @@ namespace TerseNotepad
                         {
                             Name = $"{chapter_index}-0-0"
                         };
+                        _nodeCache[chapterNode.Name] = chapterNode;
                     }
                     if (chapterScrollbar != null)
                     {
-                        chapterScrollbar.Maximum = (int)chapter_index;
+                        chapterScrollbar.Value = chapterScrollbar.Minimum;
+                        chapterScrollbar.Maximum = (int)chapter_index + 1;
                     }
                     continue;
                 }
@@ -104,6 +107,7 @@ namespace TerseNotepad
                     {
                         chapterNode.Nodes.Add(sectionNode);
                         Terse.SetSectionNode(sectionNode, chapter_index, section_index);
+                        _nodeCache[sectionNode.Name] = sectionNode;
                         sectionNode = null;
                     }
                     ++section_index;
@@ -114,11 +118,13 @@ namespace TerseNotepad
                         {
                             Name = $"{chapter_index}-{section_index}-0"
                         };
+                        _nodeCache[sectionNode.Name] = sectionNode;
                     }
 
                     if (sectionScrollbar != null)
                     {
-                        sectionScrollbar.Maximum = (int)section_index;
+                        sectionScrollbar.Value = sectionScrollbar.Minimum;
+                        sectionScrollbar.Maximum = (int)section_index + 1;
                     }
                     continue;
                 }
@@ -138,11 +144,13 @@ namespace TerseNotepad
             {
                 chapterNode.Nodes.Add(sectionNode);
                 Terse.SetSectionNode(sectionNode, chapter_index, section_index);
+                _nodeCache[sectionNode.Name] = sectionNode;
             }
             if (chapterNode.Nodes.Count > 0)
             {
                 treeView?.Nodes.Add(chapterNode);
                 Terse.SetChapterNode(chapterNode, chapter_index);
+                _nodeCache[chapterNode.Name] = chapterNode;
             }
         }
 
@@ -158,6 +166,10 @@ namespace TerseNotepad
                 var key = Terse.Coords.ToString();
                 var line = GetScrollSummary(Terse.Coords, scroll);
                 var scrollNode = node?.Nodes.Add(key, key + "! " + line);
+                if (scrollNode != null)
+                {
+                    _nodeCache[Terse.Coords.ToString()] = scrollNode;
+                }
                 Terse.setScroll(scroll, scrollNode);
             }
         }
@@ -217,6 +229,26 @@ namespace TerseNotepad
         public static bool IsTextCharacter(char ch)
         {
             return ch >= WORD_BREAK;
+        }
+
+        public TreeNode? Find(Coordinates coordinates)
+        {
+            string test = coordinates.ToString();
+            if (_nodeCache.ContainsKey(test))
+            {
+                return _nodeCache[test];
+            }
+
+            return null;
+        }
+
+        public TreeNode CreateNode(TreeNode sectionNode, string line)
+        {
+            var key = Coords.ToString();
+            var scrollNode = sectionNode.Nodes.Add(key, key + ": " + line);
+            Terse.Chapter[Coords.Chapter].Children[Coords.Section].Children[Coords.Scroll].Node = scrollNode;
+            _nodeCache[key] = scrollNode;
+            return scrollNode;
         }
     }
 }

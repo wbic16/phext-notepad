@@ -107,7 +107,6 @@
             this.textBox.Size = new System.Drawing.Size(888, 547);
             this.textBox.TabIndex = 0;
             this.textBox.Text = "";
-            this.textBox.ZoomFactor = 2F;
             this.textBox.SelectionChanged += new System.EventHandler(this.textBox_SelectionChanged);
             this.textBox.TextChanged += new System.EventHandler(this.textBox_TextChanged);
             this.textBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);

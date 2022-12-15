@@ -117,11 +117,10 @@ Use F2 - F11 to access additional dimensions.
 
         private void collectScroll()
         {
-            if (!_checkout.IsValid())
+            if (_checkout.ToString() != _model.Coords.ToString())
             {
                 return;
             }
-            _model.Coords = _checkout;
             reloadMenuItem.Enabled = true;
             if (vimEditor != null)
             {
@@ -144,7 +143,7 @@ Use F2 - F11 to access additional dimensions.
             }
             treeView.BeginUpdate();
             treeView.SuspendLayout();
-            var node = getTreeNode(_model.Terse.Coords.ToString());
+            var node = getTreeNode(_model.Terse.Coords);
             if (node != null)
             {
                 if (textBox.Lines != null && textBox.Lines.Length >= 1)
@@ -167,9 +166,8 @@ Use F2 - F11 to access additional dimensions.
                         sectionNode = parent;
                     }
 
-                    var key = _model.Terse.Coords.ToString();
                     var line = TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Text);
-                    var scrollNode = sectionNode.Nodes.Add(key, key + ": " + line);
+                    var scrollNode = _model.CreateNode(sectionNode, line);
                     scrollNode.NodeFont = SCROLL_NODE_FONT;
                     treeView.SelectedNode = scrollNode;
                     textBox.SelectionStart = textBox.Text.Length;
@@ -371,6 +369,7 @@ Use F2 - F11 to access additional dimensions.
             RefreshSettings();
             if (File.Exists(filename))
             {
+                _checkout.Reset();
                 var data = File.ReadAllText(filename);
                 _settings.Filename = filename;
                 LoadData(data, resetView);
@@ -395,6 +394,9 @@ Use F2 - F11 to access additional dimensions.
 
         private void LoadData(string data, bool resetView)
         {
+            chapterScrollbar.SuspendLayout();
+            sectionScrollbar.SuspendLayout();
+            scrollScrollbar.SuspendLayout();
             treeView.SuspendLayout();
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
@@ -410,6 +412,9 @@ Use F2 - F11 to access additional dimensions.
             {
                 coordinateJump(_settings.Coords, false);
             }
+            scrollScrollbar.ResumeLayout();
+            sectionScrollbar.ResumeLayout();
+            chapterScrollbar.ResumeLayout();
         }
 
         private void jumpToOrigin()
@@ -463,8 +468,8 @@ Use F2 - F11 to access additional dimensions.
             }
 
             var serialized = _model.Serialize();
-
             File.WriteAllText(_settings.Filename, serialized);
+
             _settings.Coords = _model.Terse.Coords.ToString();
             if (!_settings.Filename.EndsWith("TerseNotepad\\terse.ini"))
             {
@@ -735,14 +740,9 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
-        private TreeNode? getTreeNode(string coordinates)
+        private TreeNode? getTreeNode(Coordinates coordinates)
         {
-            var node = treeView.Nodes.Find(coordinates, true);
-            if (node.Length >= 1)
-            {
-                return node[0];
-            }
-            return null;
+            return _model.Find(coordinates);
         }
 
         private TreeNode? getParentTreeNode(Coordinates coords)
@@ -790,7 +790,7 @@ Use F2 - F11 to access additional dimensions.
             _checkout = new Coordinates(coordinates);
             _model.Terse.Coords.Load(coordinates);
             UpdateUI("Delete");
-            var node = getTreeNode(coordinates);
+            var node = getTreeNode(_model.Terse.Coords);
             if (node == null) { return; }
             if (requestConfirmation)
             {
@@ -826,11 +826,15 @@ Use F2 - F11 to access additional dimensions.
             {
                 return;
             }
+            if (_model.Coords.ToString() == coordinates)
+            {
+                return;
+            }
             if (storeFirst)
             {
                 collectScroll();
             }
-            _model.Terse.Coords.Load(coordinates);
+            _model.Coords.Load(coordinates);
             chapterID.Text = _model.Terse.Coords.Chapter.ToString();
             sectionID.Text = _model.Terse.Coords.Section.ToString();
             scrollID.Text = _model.Terse.Coords.Scroll.ToString();
