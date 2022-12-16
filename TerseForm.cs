@@ -17,7 +17,7 @@ namespace TerseNotepad
         // Editor State
         private uint _priorLine = 1;
         private uint _priorColumn = 1;
-        private Coordinates _checkout = new();
+        private Coordinates? _checkout = null;
         private TerseConfig _settings = new();
         private Font SCROLL_NODE_FONT = new("Cascadia Code", 11);
 
@@ -48,7 +48,7 @@ namespace TerseNotepad
 
             if (_settings.Filename.Length > 0 && File.Exists(_settings.Filename))
             {
-                LoadFile(_settings.Filename, true);
+                LoadFile(_settings.Filename, false);
             }
 
             vimModeToolStripMenuItem.Checked = _settings.VimMode;
@@ -117,7 +117,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void collectScroll()
         {
-            if (_checkout.ToString() != _model.Coords.ToString())
+            if (_checkout == null || _checkout.ToString() != _model.Coords.ToString())
             {
                 return;
             }
@@ -369,7 +369,7 @@ Use F2 - F11 to access additional dimensions.
             RefreshSettings();
             if (File.Exists(filename))
             {
-                _checkout.Reset();
+                _checkout = null;
                 var data = File.ReadAllText(filename);
                 _settings.Filename = filename;
                 LoadData(data, resetView);

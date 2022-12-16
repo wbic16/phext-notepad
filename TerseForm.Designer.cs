@@ -101,10 +101,10 @@
             this.textBox.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.textBox.Font = new System.Drawing.Font("Cascadia Code", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.textBox.ForeColor = System.Drawing.Color.WhiteSmoke;
-            this.textBox.Location = new System.Drawing.Point(259, 5);
+            this.textBox.Location = new System.Drawing.Point(334, 5);
             this.textBox.MaxLength = 100000000;
             this.textBox.Name = "textBox";
-            this.textBox.Size = new System.Drawing.Size(888, 547);
+            this.textBox.Size = new System.Drawing.Size(813, 547);
             this.textBox.TabIndex = 0;
             this.textBox.Text = "";
             this.textBox.SelectionChanged += new System.EventHandler(this.textBox_SelectionChanged);
@@ -684,7 +684,7 @@
             this.treeView.HideSelection = false;
             this.treeView.Location = new System.Drawing.Point(3, 5);
             this.treeView.Name = "treeView";
-            this.treeView.Size = new System.Drawing.Size(250, 547);
+            this.treeView.Size = new System.Drawing.Size(325, 547);
             this.treeView.TabIndex = 29;
             this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
             this.treeView.DoubleClick += new System.EventHandler(this.treeView_DoubleClick);

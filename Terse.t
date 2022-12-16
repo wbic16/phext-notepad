@@ -51,7 +51,6 @@ Help
 
 Bugs
 ----
-🪲 Chapter 1 becomes Chapter 2 somehow
 🐛 Keyboard navigation on scrolls is glitchy - jumps pages unexpectedly
 🐛 Unicode glyphs aren't fixed width with Font = Cascadia Code
 
@@ -86,6 +85,11 @@ Editor List
 -------------
 (c) 2022 Will Bickford
 MIT License
+
+v0.2.0 (2022-12-15)
+-------------------
+🪲 Chapter 1 problems were being caused by re-use of 1-1-1 for a null state \o/
+➕ Increased Tree View width to 325 pixels
 
 v0.1.9 (2022-12-14)
 -------------------
