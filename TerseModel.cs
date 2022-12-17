@@ -47,130 +47,127 @@ namespace TerseNotepad
         public static readonly char SCROLL_BREAK = '\x17';
         public static readonly char SECTION_BREAK = '\x18';
         public static readonly char CHAPTER_BREAK = '\x19';
+        public static readonly char BOOK_BREAK = '\x1A';
+        public static readonly char VOLUME_BREAK = '\x1C';
+        public static readonly char COLLECTION_BREAK = '\x1D';
+        public static readonly char SERIES_BREAK = '\x1E';
+        public static readonly char SHELF_BREAK = '\x1F';
+        public static readonly char LIBRARY_BREAK = '\x01';
 
         public void Load(string data, TreeView? treeView = null, ScrollBar? sectionScrollbar = null, ScrollBar? chapterScrollbar = null)
         {
             var charStream = data.ToCharArray();
             Terse = new();
-            uint chapter_index = 1;
-            uint section_index = 1;
-            uint scroll_index = 1;
+            Coordinates local = new();
             var stage = new StringBuilder();
-            var chapterNode = new TreeNode($"Chapter {chapter_index}")
+            /*var chapterNode = new TreeNode($"Chapter {local.Chapter}")
             {
-                Name = $"{chapter_index}-0-0"
+                Name = $"{local.Chapter}-0-0"
             };
-            var sectionNode = new TreeNode($"Section {section_index}")
+            var sectionNode = new TreeNode($"Section {local.Section}")
             {
-                Name = $"{chapter_index}-{section_index}-0"
-            };
+                Name = $"{local.Chapter}-{local.Section}-0"
+            };*/
             for (int i = 0; i < charStream.Length; ++i)
             {
                 var next = charStream[i];
                 if (next == SCROLL_BREAK || next == SECTION_BREAK || next == CHAPTER_BREAK)
                 {
-                    insertScroll(stage, scroll_index, section_index, chapter_index, sectionNode);
+                    insertScroll(stage, local, null); // sectionNode);
                     stage.Clear();
-                    ++scroll_index;
                 }
 
-                if (next == CHAPTER_BREAK)
+                if (next == SCROLL_BREAK)
                 {
-                    if (chapterNode != null && chapterNode.Nodes.Count > 0)
-                    {
-                        treeView?.Nodes.Add(chapterNode);
-                        Terse.SetChapterNode(chapterNode, chapter_index);
-                        _nodeCache[chapterNode.Name] = chapterNode;
-                        chapterNode = null;
-                    }
-                    ++chapter_index;
-                    section_index = 1;
-                    scroll_index = 1;
-                    if (chapterNode == null)
-                    {
-                        chapterNode = new TreeNode($"Chapter {chapter_index}")
-                        {
-                            Name = $"{chapter_index}-0-0"
-                        };
-                        _nodeCache[chapterNode.Name] = chapterNode;
-                    }
-                    if (chapterScrollbar != null)
-                    {
-                        chapterScrollbar.Value = chapterScrollbar.Minimum;
-                        chapterScrollbar.Maximum = (int)chapter_index + 1;
-                    }
+                    ++local.Scroll;
                     continue;
                 }
+
                 if (next == SECTION_BREAK)
                 {
-                    if (sectionNode.Nodes.Count > 0)
+                    ++local.Section;
+                    local.Scroll = 1;
+                    /*if (sectionNode.Nodes.Count > 0)
                     {
                         chapterNode.Nodes.Add(sectionNode);
-                        Terse.SetSectionNode(sectionNode, chapter_index, section_index);
+                        Terse.SetSectionNode(sectionNode, local.Chapter, local.Section);
                         _nodeCache[sectionNode.Name] = sectionNode;
-                        sectionNode = null;
                     }
-                    ++section_index;
-                    scroll_index = 1;
-                    if (sectionNode == null)
+                    sectionNode = new TreeNode($"Section {local.Section}")
                     {
-                        sectionNode = new TreeNode($"Section {section_index}")
-                        {
-                            Name = $"{chapter_index}-{section_index}-0"
-                        };
-                        _nodeCache[sectionNode.Name] = sectionNode;
-                    }
+                        Name = $"{local.Chapter}-{local.Section}-0"
+                    };
+                    _nodeCache[sectionNode.Name] = sectionNode;
 
                     if (sectionScrollbar != null)
                     {
                         sectionScrollbar.Value = sectionScrollbar.Minimum;
-                        sectionScrollbar.Maximum = (int)section_index + 1;
-                    }
+                        sectionScrollbar.Maximum = (int)local.Section + 1;
+                    }*/
                     continue;
                 }
 
-                if (next != CHAPTER_BREAK && next != SECTION_BREAK && next != SCROLL_BREAK)
+                if (next == CHAPTER_BREAK)
                 {
-                    stage.Append(next);
+                    ++local.Chapter;
+                    local.Section = 1;
+                    local.Scroll = 1;
+                    /*if (chapterNode != null && chapterNode.Nodes.Count > 0)
+                    {
+                        treeView?.Nodes.Add(chapterNode);
+                        Terse.SetChapterNode(chapterNode, local.Chapter);
+                        _nodeCache[chapterNode.Name] = chapterNode;
+                    }
+                    chapterNode = new TreeNode($"Chapter {local.Chapter}")
+                    {
+                        Name = $"{local.Chapter}-0-0"
+                    };
+                    _nodeCache[chapterNode.Name] = chapterNode;
+                    if (chapterScrollbar != null)
+                    {
+                        chapterScrollbar.Value = chapterScrollbar.Minimum;
+                        chapterScrollbar.Maximum = (int)local.Chapter + 1;
+                    }*/
+                    continue;
                 }
+
+                stage.Append(next);
             }
 
             if (stage.Length > 0)
             {
-                insertScroll(stage, scroll_index, section_index, chapter_index, sectionNode);
+                insertScroll(stage, local, null); // sectionNode);
                 stage.Clear();
             }
-            if (sectionNode.Nodes.Count > 0)
+            /*if (sectionNode.Nodes.Count > 0)
             {
                 chapterNode.Nodes.Add(sectionNode);
-                Terse.SetSectionNode(sectionNode, chapter_index, section_index);
+                Terse.SetSectionNode(sectionNode, local.Chapter, local.Section);
                 _nodeCache[sectionNode.Name] = sectionNode;
             }
             if (chapterNode.Nodes.Count > 0)
             {
                 treeView?.Nodes.Add(chapterNode);
-                Terse.SetChapterNode(chapterNode, chapter_index);
+                Terse.SetChapterNode(chapterNode, local.Chapter);
                 _nodeCache[chapterNode.Name] = chapterNode;
-            }
+            }*/
         }
 
-        private void insertScroll(StringBuilder stage, uint scroll_index, uint section_index, uint chapter_index, TreeNode? node)
+        private void insertScroll(StringBuilder stage, Coordinates local, TreeNode? node)
         {
             if (stage.Length == 0) { return; }
             var scroll = stage.ToString();
             if (scroll.Length > 0)
             {
-                Terse.Coords.Scroll = scroll_index;
-                Terse.Coords.Section = section_index;
-                Terse.Coords.Chapter = chapter_index;
-                var key = Terse.Coords.ToString();
-                var line = GetScrollSummary(Terse.Coords, scroll);
+                var key = local.ToString();
+                var line = GetScrollSummary(local, scroll);
                 var scrollNode = node?.Nodes.Add(key, key + "! " + line);
                 if (scrollNode != null)
                 {
-                    _nodeCache[Terse.Coords.ToString()] = scrollNode;
+                    _nodeCache[local.ToString()] = scrollNode;
                 }
                 Terse.setScroll(scroll, scrollNode);
+                Terse.Coords = local;
             }
         }
 
@@ -191,33 +188,55 @@ namespace TerseNotepad
             uint chapter_break_counter = 0;
             foreach (var chapter_index in Terse.Chapter.Keys)
             {
-                while (++chapter_break_counter < chapter_index)
-                {
-                    collector.Append(CHAPTER_BREAK);
-                }
-                uint section_break_counter = 0;
-                foreach (var section_index in Terse.Chapter[chapter_index].Children.Keys)
-                {
-                    while (++section_break_counter < section_index)
-                    {
-                        collector.Append(SECTION_BREAK);
-                    }
-                    uint scroll_break_counter = 0;
-                    foreach (var scroll_index in Terse.Chapter[chapter_index].Children[section_index].Children.Keys)
-                    {
-                        while (++scroll_break_counter < scroll_index)
-                        {
-                            collector.Append(SCROLL_BREAK);
-                        }
-                        collector.Append(Terse.Chapter[chapter_index].Children[section_index].Children[scroll_index].Text);
-                        collector.Append(SCROLL_BREAK);
-                    }
-                    collector.Append(SECTION_BREAK);
-                }
-                collector.Append(CHAPTER_BREAK);
+                Coordinates local = new();
+                local.Chapter = chapter_index;
+                chapter_break_counter = Serialize_Chapters(collector, Terse.Chapter, chapter_break_counter, local);
             }
 
             return collector.ToString();
+        }
+
+        private uint Serialize_Chapters(StringBuilder collector, SortedDictionary<short, ChapterNode> chapters, uint chapter_break_counter, Coordinates local)
+        {
+            while (++chapter_break_counter < local.Chapter)
+            {
+                collector.Append(CHAPTER_BREAK);
+            }
+            uint section_break_counter = 0;
+            foreach (var section_index in chapters[local.Chapter].Children.Keys)
+            {
+                local.Section = section_index;
+                section_break_counter = Serialize_Sections(collector, chapters[local.Chapter].Children, section_break_counter, local);
+            }
+
+            return chapter_break_counter;
+        }
+
+        private uint Serialize_Sections(StringBuilder collector, SortedDictionary<short, SectionNode> sections, uint section_break_counter, Coordinates local)
+        {
+            while (++section_break_counter < local.Section)
+            {
+                collector.Append(SECTION_BREAK);
+            }
+            uint scroll_break_counter = 0;
+            foreach (var scroll_index in sections[local.Section].Children.Keys)
+            {
+                local.Scroll = scroll_index;
+                scroll_break_counter = Serialize_Scrolls(collector, sections[local.Section].Children, scroll_break_counter, local);
+            }
+
+            return section_break_counter;
+        }
+
+        private uint Serialize_Scrolls(StringBuilder collector, SortedDictionary<short, ScrollNode> scrolls, uint scroll_break_counter, Coordinates local)
+        {
+            while (++scroll_break_counter < local.Scroll)
+            {
+                collector.Append(SCROLL_BREAK);
+            }
+            collector.Append(scrolls[local.Scroll].Text);
+
+            return scroll_break_counter;
         }
 
         public static bool IsBreakCharacter(char ch)

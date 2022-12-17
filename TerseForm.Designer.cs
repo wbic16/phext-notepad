@@ -286,7 +286,6 @@
             this.dimensionReportToolStripMenuItem.Name = "dimensionReportToolStripMenuItem";
             this.dimensionReportToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.dimensionReportToolStripMenuItem.Text = "&Dimension Report";
-            this.dimensionReportToolStripMenuItem.Click += new System.EventHandler(this.dimensionReportToolStripMenuItem_Click);
             // 
             // lockToScrollMenuItem
             // 

@@ -15,8 +15,8 @@ namespace TerseNotepad
         public static extern bool SetWindowPos(IntPtr hWnd, IntPtr insertAfter, int X, int Y, int cx, int cy, uint flags);
 
         // Editor State
-        private uint _priorLine = 1;
-        private uint _priorColumn = 1;
+        private int _priorLine = 1;
+        private int _priorColumn = 1;
         private Coordinates? _checkout = null;
         private TerseConfig _settings = new();
         private Font SCROLL_NODE_FONT = new("Cascadia Code", 11);
@@ -179,13 +179,14 @@ Use F2 - F11 to access additional dimensions.
             treeView.EndUpdate();
         }
 
-        private void updateScrollbarValue(ScrollBar bar, uint value)
+        private void updateScrollbarValue(ScrollBar bar, short value)
         {
-            int translated = (int)value;
-            if (translated >= bar.Minimum && translated <= bar.Maximum)
+            int translated = value;
+            if (translated > bar.Maximum)
             {
-                bar.Value = translated;
+                bar.Maximum = translated + 1;
             }
+            bar.Value = translated;
         }
 
         private void VimSetEditMode(bool insert = true, bool retry = false)
@@ -503,7 +504,7 @@ Use F2 - F11 to access additional dimensions.
                 }
                 else
                 {
-                    _model.Terse.Coords.Column = (uint)(offset - total) + 1;
+                    _model.Terse.Coords.Column = offset - total + 1;
                     break;
                 }
             }
@@ -549,10 +550,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void textBox_KeyUp(object sender, KeyEventArgs e)
         {
-            int scroll_delta = 0;
-            int section_delta = 0;
-            int chapter_delta = 0;
-            bool arrowShifted = false;
+            Coordinates delta = new();
 
             HandleHotkeys(sender, e);
             if (e.Handled)
@@ -567,116 +565,149 @@ Use F2 - F11 to access additional dimensions.
                 return;
             }
 
-            // Set Shifts
+            // Library Shifts
+            if (!e.Shift && e.KeyCode == Keys.F10)
+            {
+                delta.Library = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.F10)
+            {
+                delta.Library = -1;
+                e.Handled = true;
+            }
+
+            // Shelf Shifts
+            if (!e.Shift && e.KeyCode == Keys.F9)
+            {
+                delta.Shelf = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.F9)
+            {
+                delta.Shelf = -1;
+                e.Handled = true;
+            }
+
+            // Series Shifts
+            if (!e.Shift && e.KeyCode == Keys.F8)
+            {
+                delta.Series = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.F8)
+            {
+                delta.Series = -1;
+                e.Handled = true;
+            }
+
+            // Collection Shifts
+            if (!e.Shift && e.KeyCode == Keys.F7)
+            {
+                delta.Collection = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.F7)
+            {
+                delta.Collection = -1;
+                e.Handled = true;
+            }
+
+            // Volume Shifts
+            if (!e.Shift && e.KeyCode == Keys.F6)
+            {
+                delta.Volume = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.F6)
+            {
+                delta.Volume = -1;
+                e.Handled = true;
+            }
+
+            // Book Shifts
+            if (!e.Shift && e.KeyCode == Keys.F5)
+            {
+                delta.Book = 1;
+                e.Handled = true;
+            }
+            if (e.Shift && e.KeyCode == Keys.F5)
+            {
+                delta.Book = -1;
+                e.Handled = true;
+            }
+
+            // Chapter Shifts
             if (!e.Shift && e.KeyCode == Keys.F4)
             {
-                chapter_delta = 1;
+                delta.Chapter = 1;
                 e.Handled = true;
             }
             if (e.Shift && e.KeyCode == Keys.F4)
             {
-                chapter_delta = -1;
+                delta.Chapter = -1;
                 e.Handled = true;
             }
             if (e.Control && e.KeyCode == Keys.PageDown)
             {
-                chapter_delta = 1;
+                delta.Chapter = 1;
                 e.Handled = true;
             }
             if (e.Control && e.KeyCode == Keys.PageUp)
             {
-                chapter_delta = -1;
+                delta.Chapter = -1;
                 e.Handled = true;
             }
 
-            // Group Shifts
+            // Section Shifts
             if (!e.Shift && e.KeyCode == Keys.F3)
             {
-                section_delta = 1;
+                delta.Section = 1;
                 e.Handled = true;
             }
             if (e.Shift && e.KeyCode == Keys.F3)
             {
-                section_delta = -1;
+                delta.Section = -1;
                 e.Handled = true;
             }
             if (e.Shift && e.KeyCode == Keys.PageDown)
             {
-                section_delta = 1;
+                delta.Section = 1;
                 e.Handled = true;
             }
             if (e.Shift && e.KeyCode == Keys.PageUp)
             {
-                section_delta = -1;
+                delta.Section = -1;
                 e.Handled = true;
             }
 
             // Scroll Shifts
             if (!e.Shift && e.KeyCode == Keys.F2)
             {
-                scroll_delta = 1;
+                delta.Scroll = 1;
                 e.Handled = true;
             }
             if (e.Shift && e.KeyCode == Keys.F2)
             {
-                scroll_delta = -1;
+                delta.Scroll = -1;
                 e.Handled = true;
             }
-            if (!e.Shift && !e.Control && e.KeyCode == Keys.PageDown)
+            if (e.Alt && e.KeyCode == Keys.PageDown)
             {
-                scroll_delta = 1;
+                delta.Scroll = 1;
                 e.Handled = true;
             }
-            if (!e.Shift && !e.Control && e.KeyCode == Keys.PageUp)
+            if (e.Alt && e.KeyCode == Keys.PageUp)
             {
-                scroll_delta = -1;
+                delta.Scroll = -1;
                 e.Handled = true;
             }
-            var reachedEnd = textBox.SelectionStart == textBox.TextLength &&
-                textBox.Lines.Length > 0 &&
-                _priorColumn > textBox.Lines.Last().Length;
-            if (!e.Shift && e.KeyCode == Keys.Right && reachedEnd)
-            {
-                scroll_delta = 1;
-                arrowShifted = true;
-                e.Handled = true;
-            }
-            var reachedStart = textBox.SelectionStart == 0 &&
-                               _priorColumn == 1;
-            if (!e.Shift && e.KeyCode == Keys.Left && reachedStart)
-            {
-                scroll_delta = -1;
-                arrowShifted = true;
-                e.Handled = true;
-            }
-            if (!e.Shift && e.KeyCode == Keys.Down && _priorLine == _model.Terse.Coords.Line)
-            {
-                scroll_delta = 1;
-                arrowShifted = true;
-                e.Handled = true;
-            }
-            if (!e.Shift && e.KeyCode == Keys.Up && _priorLine == 1)
-            {
-                scroll_delta = -1;
-                arrowShifted = true;
-                e.Handled = true;
-            }
-            if (scroll_delta != 0 || section_delta != 0 || chapter_delta != 0)
+
+            if (delta != new Coordinates())
             {
                 collectScroll();
-                _model.Terse.processDelta(chapter_delta, section_delta, scroll_delta);
+                _model.Terse.processDelta(delta);
                 loadScroll();
-                if (arrowShifted)
-                {
-                    if (scroll_delta < 0)
-                    {
-                        textBox.SelectionStart = textBox.TextLength > 1 ? textBox.TextLength - 1 : 0;
-                    }
-                    if (scroll_delta > 0)
-                    {
-                        textBox.SelectionStart = 0;
-                    }
-                }
             }
         }
 
@@ -700,35 +731,23 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
-        private void dimensionReportToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var result = new StringBuilder();
-            foreach (var chapter_index in _model.Terse.Chapter.Keys)
-            {
-                foreach (var section_index in _model.Terse.Chapter[chapter_index].Children.Keys)
-                {
-                    foreach (var scroll_index in _model.Terse.Chapter[chapter_index].Children[section_index].Children.Keys)
-                    {
-                        var content = _model.Terse.Chapter[chapter_index].Children[section_index].Children[scroll_index];
-                        var count = content.Text.Length;
-                        var summary = TerseModel.GetScrollSummary(_model.Coords, content.Text);
-                        result.AppendLine($"Chapter: {chapter_index}, Section: {section_index}, Scroll: {scroll_index} => {summary} ({count})");
-                    }
-                }
-            }
-
-            textBox.AppendText(result.ToString());
-        }
-
         private void jumpButton_Click(object sender, EventArgs e)
         {
             collectScroll();
             try
             {
-                var update = new Coordinates();
-                update.Chapter = uint.Parse(chapterID.Text);
-                update.Section = uint.Parse(sectionID.Text);
-                update.Scroll = uint.Parse(scrollID.Text);
+                var update = new Coordinates
+                {
+                    Scroll = short.Parse(scrollID.Text),
+                    Section = short.Parse(sectionID.Text),
+                    Chapter = short.Parse(chapterID.Text),
+                    Book = short.Parse(bookID.Text),
+                    Volume = short.Parse(volumeID.Text),
+                    Collection = short.Parse(collectionID.Text),
+                    Series = short.Parse(seriesID.Text),
+                    Shelf = short.Parse(shelfID.Text),
+                    Library = short.Parse(libraryID.Text)
+                };
                 _model.Terse.Coords = update;
                 loadScroll();
             }
@@ -894,13 +913,6 @@ Use F2 - F11 to access additional dimensions.
             if (e.Control && e.KeyCode == Keys.O)
             {
                 OpenNewFile();
-                e.Handled = true;
-                return;
-            }
-            // Ctrl-D: Dimension Report
-            if (e.Control && e.KeyCode == Keys.D)
-            {
-                dimensionReportToolStripMenuItem_Click(sender, e);
                 e.Handled = true;
                 return;
             }

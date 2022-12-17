@@ -46,7 +46,7 @@ View
 Help
 ----
  * About: Display Program Version
-Bug List v0.1.9
+Bug List v0.2.0
 ---------------
 
 Bugs
@@ -90,6 +90,7 @@ v0.2.0 (2022-12-15)
 -------------------
 🪲 Chapter 1 problems were being caused by re-use of 1-1-1 for a null state \o/
 ➕ Increased Tree View width to 325 pixels
+➕ Refactored for dimension growth
 
 v0.1.9 (2022-12-14)
 -------------------
@@ -272,4 +273,4 @@ No fields require quotation marks - values are taken verbatim.
 * WordWrap    Boolean: Controls editor word wrap
 * ZoomFactor  Scale factor for text size - 1.0 is normal
 * Theme       'Light' or 'Dark' currently
-* VimMode     Boolean: 'True' for Vim as your editor ('False' is default)
+* VimMode     Boolean: 'True' for Vim as your editor ('False' is default)

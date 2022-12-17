@@ -1,29 +1,66 @@
 ﻿namespace TerseNotepad
 {
-    public class TextNode
+    public class ScrollNode
     {
         public TreeNode Node { get; set; } = new();
         public string Text { get; set; } = string.Empty;
     };
-    public class ScrollNode
-    {
-        public TreeNode Node { get; set; } = new();
-        public SortedDictionary<uint, TextNode> Children { get; set; } = new();
-    };
     public class SectionNode
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<uint, ScrollNode> Children { get; set; } = new();
+        public SortedDictionary<short, ScrollNode> Scroll { get; set; } = new();
     };
-    public class ChapterNode : SortedDictionary<uint, SectionNode>
+    public class ChapterNode
     {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<short, SectionNode> Section { get; set; } = new();
+    };
+    public class BookNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<short, ChapterNode> Chapter { get; set; } = new();
+    };
+
+    public class VolumeNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<short, BookNode> Book { get; set; } = new();
+    };
+
+    public class CollectionNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<short, VolumeNode> Volume { get; set; } = new();
+    };
+
+    public class SeriesNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<short, CollectionNode> Collection { get; set; } = new();
+    };
+
+    public class ShelfNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<short, SeriesNode> Series { get; set; } = new();
+    };
+
+    public class LibraryNode
+    {
+        public TreeNode Node { get; set; } = new();
+        public SortedDictionary<short, ShelfNode> Shelf { get; set; } = new();
+    };
+
+    public class RootNode
+    {
+        public SortedDictionary<short, LibraryNode> Library { get; set; } = new();
     };
 
     public class TerseText
     {
         public Coordinates Coords = new();
-        public ChapterNode Chapter = new();
-        public int NodeCount { get; private set; } = 0;
+        public RootNode Root = new();
+        public int LeafCount { get; private set; } = 0;
         public int WordCount { get; private set; } = 0;
 
         public int ScrollWordCount
@@ -33,34 +70,146 @@
                 return GetWordCount(getScroll());
             }
         }
+        public LibraryNode Library
+        {
+            get
+            {
+                if (!Root.Library.ContainsKey(Coords.Library))
+                {
+                    Root.Library[Coords.Library] = new();
+                }
+                return Root.Library[Coords.Library];
+            }
+            set
+            {
+                Root.Library[Coords.Library] = value;
+            }
+        }
+
+        public ShelfNode Shelf
+        {
+            get
+            {
+                if (!Library.Shelf.ContainsKey(Coords.Shelf))
+                {
+                    Library.Shelf[Coords.Shelf] = new();
+                }
+                return Library.Shelf[Coords.Shelf];
+            }
+            set
+            {
+                Library.Shelf[Coords.Shelf] = value;
+            }
+        }
+
+        public SeriesNode Series
+        {
+            get
+            {
+                if (!Shelf.Series.ContainsKey(Coords.Series))
+                {
+                    Shelf.Series[Coords.Series] = new();
+                }
+                return Shelf.Series[Coords.Series];
+            }
+            set
+            {
+                Shelf.Series[Coords.Series] = value;
+            }
+        }
+
+        public CollectionNode Collection
+        {
+            get
+            {
+                if (!Series.Collection.ContainsKey(Coords.Collection))
+                {
+                    Series.Collection[Coords.Collection] = new();
+                }
+                return Series.Collection[Coords.Collection];
+            }
+            set
+            {
+                Series.Collection[Coords.Collection] = value;
+            }
+        }
+
+        public VolumeNode Volume
+        {
+            get
+            {
+                if (!Collection.Volume.ContainsKey(Coords.Volume))
+                {
+                    Collection.Volume[Coords.Volume] = new();
+                }
+                return Collection.Volume[Coords.Volume];
+            }
+            set
+            {
+                Collection.Volume[Coords.Volume] = value;
+            }
+        }
+
+        public BookNode Book
+        {
+            get
+            {
+                if (!Volume.Book.ContainsKey(Coords.Book))
+                {
+                    Volume.Book[Coords.Book] = new();
+                }
+                return Volume.Book[Coords.Book];
+            }
+            set
+            {
+                Volume.Book[Coords.Book] = value;
+            }
+        }
+
+        public ChapterNode Chapter
+        {
+            get
+            {
+                if (!Book.Chapter.ContainsKey(Coords.Chapter))
+                {
+                    Book.Chapter[Coords.Chapter] = new();
+                }
+                return Book.Chapter[Coords.Chapter];
+            }
+            set
+            {
+                Book.Chapter[Coords.Chapter] = value;
+            }
+        }
+
         public SectionNode Section
         {
             get
             {
-                if (!Chapter.ContainsKey(Coords.Chapter))
+                if (!Chapter.Section.ContainsKey(Coords.Section))
                 {
-                    Chapter[Coords.Chapter] = new();
+                    Chapter.Section[Coords.Section] = new();
                 }
-                return Chapter[Coords.Chapter];
+                return Chapter.Section[Coords.Section];
             }
             set
             {
-                Chapter[Coords.Chapter] = value;
+                Chapter.Section[Coords.Section] = value;
             }
         }
         public ScrollNode Scroll
         {
             get
             {
-                if (!Section.Children.ContainsKey(Coords.Section))
+                if (!Section.Scroll.ContainsKey(Coords.Scroll))
                 {
-                    Section.Children[Coords.Section] = new();
+                    Section.Scroll[Coords.Scroll] = new();
                 }
-                return Section.Children[Coords.Section];
+                return Section.Scroll[Coords.Scroll];
             }
             set
             {
-                Section.Children[Coords.Section] = value;
+                Section.Scroll[Coords.Scroll] = value;
             }
         }
 
@@ -89,69 +238,154 @@
         {
             if (text.Length > 0)
             {
-                if (!Scroll.Children.ContainsKey(Coords.Scroll))
-                {
-                    Scroll.Children[Coords.Scroll] = new();
-                    ++NodeCount;
-                }
-                var priorText = Scroll.Children[Coords.Scroll].Text;
+                var priorText = Scroll.Text;
                 var priorCount = GetWordCount(priorText);
-                Scroll.Children[Coords.Scroll].Text = text;
+                Scroll.Text = text;
                 var count = GetWordCount(text);
                 WordCount += (count - priorCount);
                 if (node != null)
                 {
-                    Scroll.Children[Coords.Scroll].Node = node;
+                    Scroll.Node = node;
                 }
             }
             // note: the key checks here optimize performance on sparse files
             if (text.Length == 0 &&
-                Chapter.ContainsKey(Coords.Chapter) &&
-                Section.Children.ContainsKey(Coords.Section) &&
-                Scroll.Children.ContainsKey(Coords.Scroll))
+                Root.Library.ContainsKey(Coords.Library) &&
+                Library.Shelf.ContainsKey(Coords.Shelf) &&
+                Shelf.Series.ContainsKey(Coords.Series) &&
+                Series.Collection.ContainsKey(Coords.Collection) &&
+                Collection.Volume.ContainsKey(Coords.Volume) &&
+                Volume.Book.ContainsKey(Coords.Book) &&
+                Book.Chapter.ContainsKey(Coords.Chapter) &&
+                Chapter.Section.ContainsKey(Coords.Section) &&
+                Section.Scroll.ContainsKey(Coords.Scroll))
             {
-                Scroll.Children.Remove(Coords.Scroll);
-                --NodeCount;
+                Section.Scroll.Remove(Coords.Scroll);
+                if (Section.Scroll.Count == 0)
+                {
+                    Chapter.Section.Remove(Coords.Section);
+                }
+                if (Chapter.Section.Count == 0)
+                {
+                    Book.Chapter.Remove(Coords.Chapter);
+                }
+                if (Book.Chapter.Count == 0)
+                {
+                    Volume.Book.Remove(Coords.Book);
+                }
+                if (Volume.Book.Count == 0)
+                {
+                    Collection.Volume.Remove(Coords.Volume);
+                }
+                if (Collection.Volume.Count == 0)
+                {
+                    Series.Collection.Remove(Coords.Collection);
+                }
+                if (Series.Collection.Count == 0)
+                {
+                    Shelf.Series.Remove(Coords.Series);
+                }
+                if (Shelf.Series.Count == 0)
+                {
+                    Library.Shelf.Remove(Coords.Shelf);
+                }
+                if (Root.Library.Count == 0)
+                {
+                    Root.Library.Remove(Coords.Library);
+                }
+                --LeafCount;
             }
         }
 
-        public void processDelta(int chapter_delta, int section_delta, int scroll_delta)
+        public void processDelta(Coordinates delta)
         {
-            var haveDelta = false;
-
-            if (chapter_delta != 0)
+            if (delta.Library != 0)
             {
-                if (chapter_delta > 0)
-                {
-                    ++Coords.Chapter;
-                }
-                if (chapter_delta < 0) { --Coords.Chapter; }
+                Coords.Library += delta.Library;
+                if (Coords.Library < 1) { Coords.Library = 1; }
+                Coords.Shelf = 1;
+                Coords.Series = 1;
+                Coords.Collection = 1;
+                Coords.Volume = 1;
+                Coords.Book = 1;
+                Coords.Chapter = 1;
                 Coords.Section = 1;
                 Coords.Scroll = 1;
-                haveDelta = true;
+                return;
             }
-
-            if (!haveDelta && section_delta != 0)
+            if (delta.Shelf != 0)
             {
-                if (section_delta > 0) { ++Coords.Section; }
-                if (section_delta < 0) { --Coords.Section; }
+                Coords.Shelf += delta.Shelf;
+                if (Coords.Shelf < 1) { Coords.Shelf = 1; }
+                Coords.Series = 1;
+                Coords.Collection = 1;
+                Coords.Volume = 1;
+                Coords.Book = 1;
+                Coords.Chapter = 1;
+                Coords.Section = 1;
                 Coords.Scroll = 1;
-                haveDelta = true;
+                return;
+            }
+            if (delta.Series != 0)
+            {
+                Coords.Series += delta.Series;
+                if (Coords.Series < 1) { Coords.Series = 1; }
+                Coords.Collection = 1;
+                Coords.Volume = 1;
+                Coords.Book = 1;
+                Coords.Chapter = 1;
+                Coords.Section = 1;
+                Coords.Scroll = 1;
+                return;
+            }
+            if (delta.Collection != 0)
+            {
+                Coords.Collection += delta.Collection;
+                if (Coords.Collection < 1) { Coords.Collection = 1; }
+                Coords.Volume = 1;
+                Coords.Book = 1;
+                Coords.Chapter = 1;
+                Coords.Section = 1;
+                Coords.Scroll = 1;
+                return;
+            }
+            if (delta.Volume != 0)
+            {
+                Coords.Volume += delta.Volume;
+                if (Coords.Volume < 1) { Coords.Volume = 1; }
+                Coords.Book = 1;
+                Coords.Chapter = 1;
+                Coords.Section = 1;
+                Coords.Scroll = 1;
+                return;
+            }
+            if (delta.Book != 0)
+            {
+                Coords.Book += delta.Book;
+                if (Coords.Book < 1) { Coords.Book = 1; }
+                Coords.Chapter = 1;
+                Coords.Section = 1;
+                Coords.Scroll = 1;
+                return;
             }
 
-            if (!haveDelta && scroll_delta != 0)
+            if (delta.Chapter != 0)
             {
-                if (scroll_delta > 0) { ++Coords.Scroll; }
-                if (scroll_delta < 0) { --Coords.Scroll; }
-                haveDelta = true;
-            }
-
-            if (haveDelta)
-            {
-                if (Coords.Scroll < 1) { Coords.Scroll = 1; }
-                if (Coords.Section < 1) { Coords.Section = 1; }
+                Coords.Chapter += delta.Chapter;
                 if (Coords.Chapter < 1) { Coords.Chapter = 1; }
+                Coords.Section = 1;
+                Coords.Scroll = 1;
+                return;
             }
+
+            if (delta.Section != 0)
+            {
+                Coords.Section += delta.Section;
+                Coords.Scroll = 1;
+                return;
+            }
+
+            Coords.Scroll += delta.Scroll;
         }
 
         public string getScroll()

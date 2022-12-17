@@ -4,7 +4,6 @@
     {
         public Coordinates()
         {
-
         }
 
         public Coordinates(string coordinates)
@@ -25,29 +24,101 @@
             Shelf = other.Shelf;
             Library = other.Library;
         }
-        public uint Column { get; set; } = 1;
-        public uint Line { get; set; } = 1;
-        public uint Scroll { get; set; } = 1;
-        public uint Section { get; set; } = 1;
-        public uint Chapter { get; set; } = 1;
-        public uint Book { get; set; } = 1;
-        public uint Volume { get; set; } = 1;
-        public uint Collection { get; set; } = 1;
-        public uint Series { get; set; } = 1;
-        public uint Shelf { get; set; } = 1;
-        public uint Library { get; set; } = 1;
+        public int Column { get; set; } = 0;
+        public int Line { get; set; } = 0;
+        public short Scroll { get; set; } = 0;
+        public short Section { get; set; } = 0;
+        public short Chapter { get; set; } = 0;
+        public short Book { get; set; } = 0;
+        public short Volume { get; set; } = 0;
+        public short Collection { get; set; } = 0;
+        public short Series { get; set; } = 0;
+        public short Shelf { get; set; } = 0;
+        public short Library { get; set; } = 0;
 
         public override string ToString()
         {
-            return $"{Scroll}-{Section}-{Chapter}";
+            return ToString(this);
         }
-        public string ToSectionParentID()
+        public static string ToString(Coordinates c)
         {
-            return $"{Chapter}-{Section}-0";
+            return $"p{c.Scroll}-g{c.Section}-s{c.Chapter}-y{c.Book}-h{c.Volume}-e{c.Collection}-w{c.Series}-i{c.Shelf}-m{c.Library}";
         }
-        public string ToChapterParentID()
+        public Coordinates GetLibraryRoot()
         {
-            return $"{Chapter}-0-0";
+            Coordinates view = this;
+            view.Library = 0;
+            return view;
+        }
+        public Coordinates GetShelfRoot()
+        {
+            Coordinates view = this;
+            view.Library = 0;
+            view.Shelf = 0;
+            return view;
+        }
+        public Coordinates GetSeriesRoot()
+        {
+            Coordinates view = this;
+            view.Library = 0;
+            view.Shelf = 0;
+            view.Series = 0;
+            return view;
+        }
+        public Coordinates GetVolumeRoot()
+        {
+            Coordinates view = this;
+            view.Library = 0;
+            view.Shelf = 0;
+            view.Series = 0;
+            view.Collection = 0;
+            return view;
+        }
+        public Coordinates GetBookRoot()
+        {
+            Coordinates view = this;
+            view.Library = 0;
+            view.Shelf = 0;
+            view.Series = 0;
+            view.Collection = 0;
+            view.Volume = 0;
+            return view;
+        }
+        public Coordinates GetChapterRoot()
+        {
+            Coordinates view = this;
+            view.Library = 0;
+            view.Shelf = 0;
+            view.Series = 0;
+            view.Collection = 0;
+            view.Volume = 0;
+            view.Book = 0;
+            return view;
+        }
+        public Coordinates GetSectionRoot()
+        {
+            Coordinates view = this;
+            view.Library = 0;
+            view.Shelf = 0;
+            view.Series = 0;
+            view.Collection = 0;
+            view.Volume = 0;
+            view.Book = 0;
+            view.Chapter = 0;
+            return view;
+        }
+        public Coordinates GetScrollRoot()
+        {
+            Coordinates view = this;
+            view.Library = 0;
+            view.Shelf = 0;
+            view.Series = 0;
+            view.Collection = 0;
+            view.Volume = 0;
+            view.Book = 0;
+            view.Chapter = 0;
+            view.Section = 0;
+            return view;
         }
 
         public string GetNodeSummary()
@@ -82,20 +153,27 @@
 
         public void Load(string coordinates)
         {
-            // TODO: Support Book through Library
-            var parts = coordinates.Split('-', 3);
-            if (parts.Length != 3)
+            var parts = coordinates.Split('-', 9);
+            if (parts.Length != 9)
             {
                 return;
             }
-            Scroll = uint.Parse(parts[0]);
-            Section = uint.Parse(parts[1]);
-            Chapter = uint.Parse(parts[2]);
+            Scroll = short.Parse(parts[0]);
+            Section = short.Parse(parts[1]);
+            Chapter = short.Parse(parts[2]);
+            Book = short.Parse(parts[3]);
+            Volume = short.Parse(parts[4]);
+            Collection = short.Parse(parts[5]);
+            Series = short.Parse(parts[6]);
+            Shelf = short.Parse(parts[7]);
+            Library = short.Parse(parts[8]);
         }
 
         public bool IsValid()
         {
-            return Chapter >= 1 && Section >= 1 && Scroll >= 1;
+            return Chapter >= 1 && Section >= 1 && Scroll >= 1 &&
+                   Book >= 1 && Volume >= 1 && Collection >= 1 &&
+                   Series >= 1 && Shelf >= 1 && Library >= 1;
         }
     }
 }
