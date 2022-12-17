@@ -4,8 +4,11 @@ namespace TerseNotepad
 {
     public class TerseModel
     {
+        public TerseModel()
+        {
+            Coords.Reset();
+        }
         public TerseText Terse = new();
-        private Dictionary<string, TreeNode> _nodeCache = new();
         public Coordinates Coords
         {
             get
@@ -18,11 +21,11 @@ namespace TerseNotepad
             }
         }
 
-        public int NodeCount
+        public int LeafCount
         {
             get
             {
-                return Terse.NodeCount;
+                return Terse.LeafCount;
             }
         }
 
@@ -54,20 +57,21 @@ namespace TerseNotepad
         public static readonly char SHELF_BREAK = '\x1F';
         public static readonly char LIBRARY_BREAK = '\x01';
 
-        public void Load(string data, TreeView? treeView = null, ScrollBar? sectionScrollbar = null, ScrollBar? chapterScrollbar = null)
+        public void Load(string data, TreeView? treeView = null)
         {
             var charStream = data.ToCharArray();
             Terse = new();
             Coordinates local = new();
+            local.Reset();
             var stage = new StringBuilder();
-            /*var chapterNode = new TreeNode($"Chapter {local.Chapter}")
-            {
-                Name = $"{local.Chapter}-0-0"
-            };
-            var sectionNode = new TreeNode($"Section {local.Section}")
-            {
-                Name = $"{local.Chapter}-{local.Section}-0"
-            };*/
+            var sectionNode = Terse.GetSectionTreeRoot(local);
+            var chapterNode = Terse.GetChapterTreeRoot(local);
+            var bookNode = Terse.GetBookTreeRoot(local);
+            var volumeNode = Terse.GetVolumeTreeRoot(local);
+            var collectionNode = Terse.GetCollectionTreeRoot(local);
+            var seriesNode = Terse.GetSeriesTreeRoot(local);
+            var shelfNode = Terse.GetShelfTreeRoot(local);
+            var libraryNode = Terse.GetLibraryTreeRoot(local);
             for (int i = 0; i < charStream.Length; ++i)
             {
                 var next = charStream[i];
@@ -87,23 +91,12 @@ namespace TerseNotepad
                 {
                     ++local.Section;
                     local.Scroll = 1;
-                    /*if (sectionNode.Nodes.Count > 0)
+                    if (sectionNode.Nodes.Count > 0)
                     {
                         chapterNode.Nodes.Add(sectionNode);
-                        Terse.SetSectionNode(sectionNode, local.Chapter, local.Section);
-                        _nodeCache[sectionNode.Name] = sectionNode;
+                        Terse.SetSectionNode(sectionNode, local);
                     }
-                    sectionNode = new TreeNode($"Section {local.Section}")
-                    {
-                        Name = $"{local.Chapter}-{local.Section}-0"
-                    };
-                    _nodeCache[sectionNode.Name] = sectionNode;
-
-                    if (sectionScrollbar != null)
-                    {
-                        sectionScrollbar.Value = sectionScrollbar.Minimum;
-                        sectionScrollbar.Maximum = (int)local.Section + 1;
-                    }*/
+                    sectionNode = Terse.GetSectionTreeRoot(local);
                     continue;
                 }
 
@@ -112,22 +105,12 @@ namespace TerseNotepad
                     ++local.Chapter;
                     local.Section = 1;
                     local.Scroll = 1;
-                    /*if (chapterNode != null && chapterNode.Nodes.Count > 0)
+                    if (chapterNode != null && chapterNode.Nodes.Count > 0)
                     {
                         treeView?.Nodes.Add(chapterNode);
-                        Terse.SetChapterNode(chapterNode, local.Chapter);
-                        _nodeCache[chapterNode.Name] = chapterNode;
+                        Terse.SetChapterNode(chapterNode, local);
                     }
-                    chapterNode = new TreeNode($"Chapter {local.Chapter}")
-                    {
-                        Name = $"{local.Chapter}-0-0"
-                    };
-                    _nodeCache[chapterNode.Name] = chapterNode;
-                    if (chapterScrollbar != null)
-                    {
-                        chapterScrollbar.Value = chapterScrollbar.Minimum;
-                        chapterScrollbar.Maximum = (int)local.Chapter + 1;
-                    }*/
+                    chapterNode = Terse.GetChapterTreeRoot(local);
                     continue;
                 }
 
@@ -136,21 +119,20 @@ namespace TerseNotepad
 
             if (stage.Length > 0)
             {
-                insertScroll(stage, local, null); // sectionNode);
+                insertScroll(stage, local, sectionNode);
                 stage.Clear();
             }
-            /*if (sectionNode.Nodes.Count > 0)
+            if (sectionNode.Nodes.Count > 0)
             {
                 chapterNode.Nodes.Add(sectionNode);
-                Terse.SetSectionNode(sectionNode, local.Chapter, local.Section);
-                _nodeCache[sectionNode.Name] = sectionNode;
+                Terse.SetSectionNode(sectionNode, local);
             }
             if (chapterNode.Nodes.Count > 0)
             {
                 treeView?.Nodes.Add(chapterNode);
-                Terse.SetChapterNode(chapterNode, local.Chapter);
-                _nodeCache[chapterNode.Name] = chapterNode;
-            }*/
+                Terse.SetChapterNode(chapterNode, local);
+            }
+            Coords.Reset();
         }
 
         private void insertScroll(StringBuilder stage, Coordinates local, TreeNode? node)
@@ -162,12 +144,8 @@ namespace TerseNotepad
                 var key = local.ToString();
                 var line = GetScrollSummary(local, scroll);
                 var scrollNode = node?.Nodes.Add(key, key + "! " + line);
-                if (scrollNode != null)
-                {
-                    _nodeCache[local.ToString()] = scrollNode;
-                }
-                Terse.setScroll(scroll, scrollNode);
                 Terse.Coords = local;
+                Terse.setScroll(scroll, scrollNode);
             }
         }
 
@@ -185,56 +163,149 @@ namespace TerseNotepad
         public string Serialize()
         {
             var collector = new StringBuilder();
-            uint chapter_break_counter = 0;
-            foreach (var chapter_index in Terse.Chapter.Keys)
+            uint library_break_counter = 0;
+            var local = new Coordinates();
+            foreach (var library_index in Terse.Root.Library.Keys)
             {
-                Coordinates local = new();
-                local.Chapter = chapter_index;
-                chapter_break_counter = Serialize_Chapters(collector, Terse.Chapter, chapter_break_counter, local);
+                local.Library = library_index;
+                library_break_counter = Serialize_Library(collector, Terse.Root.Library[library_index], library_break_counter, local);
             }
-
             return collector.ToString();
         }
+        private uint Serialize_Library(StringBuilder collector, LibraryNode library, uint library_break_counter, Coordinates local)
+        {
+            while (++library_break_counter < local.Library)
+            {
+                collector.Append(LIBRARY_BREAK);
+            }
+            uint shelf_break_counter = 0;
+            foreach (var shelf_index in library.Shelf.Keys)
+            {
+                local.Shelf = shelf_index;
+                shelf_break_counter = Serialize_Shelf(collector, library.Shelf[shelf_index], shelf_break_counter, local);
+            }
 
-        private uint Serialize_Chapters(StringBuilder collector, SortedDictionary<short, ChapterNode> chapters, uint chapter_break_counter, Coordinates local)
+            return shelf_break_counter;
+        }
+
+        private uint Serialize_Shelf(StringBuilder collector, ShelfNode shelf, uint shelf_break_counter, Coordinates local)
+        {
+            while (++shelf_break_counter < local.Shelf)
+            {
+                collector.Append(SHELF_BREAK);
+            }
+            uint series_break_counter = 0;
+            foreach (var series_index in shelf.Series.Keys)
+            {
+                local.Series = series_index;
+                series_break_counter = Serialize_Series(collector, shelf.Series[series_index], series_break_counter, local);
+            }
+
+            return series_break_counter;
+        }
+        private uint Serialize_Series(StringBuilder collector, SeriesNode series, uint series_break_counter, Coordinates local)
+        {
+            while (++series_break_counter < local.Series)
+            {
+                collector.Append(SERIES_BREAK);
+            }
+            uint collection_break_counter = 0;
+            foreach (var collection_index in series.Collection.Keys)
+            {
+                local.Collection = collection_index;
+                collection_break_counter = Serialize_Collection(collector, series.Collection[collection_index], collection_break_counter, local);
+            }
+
+            return collection_break_counter;
+        }
+
+        private uint Serialize_Collection(StringBuilder collector, CollectionNode collection, uint collection_break_counter, Coordinates local)
+        {
+            while (++collection_break_counter < local.Collection)
+            {
+                collector.Append(COLLECTION_BREAK);
+            }
+            uint volume_break_counter = 0;
+            foreach (var volume_index in collection.Volume.Keys)
+            {
+                local.Volume = volume_index;
+                volume_break_counter = Serialize_Volume(collector, collection.Volume[volume_index], volume_break_counter, local);
+            }
+
+            return volume_break_counter;
+        }
+
+        private uint Serialize_Volume(StringBuilder collector, VolumeNode volume, uint volume_break_counter, Coordinates local)
+        {
+            while (++volume_break_counter < local.Volume)
+            {
+                collector.Append(VOLUME_BREAK);
+            }
+            uint book_break_counter = 0;
+            foreach (var book_index in volume.Book.Keys)
+            {
+                local.Book = book_index;
+                book_break_counter = Serialize_Book(collector, volume.Book[book_index], book_break_counter, local);
+            }
+
+            return book_break_counter;
+        }
+
+        private uint Serialize_Book(StringBuilder collector, BookNode book, uint book_break_counter, Coordinates local)
+        {
+            while (++book_break_counter < local.Book)
+            {
+                collector.Append(BOOK_BREAK);
+            }
+            uint chapter_break_counter = 0;
+            foreach (var chapter_index in book.Chapter.Keys)
+            {
+                local.Chapter = chapter_index;
+                chapter_break_counter = Serialize_Chapter(collector, book.Chapter[chapter_index], chapter_break_counter, local);
+            }
+
+            return chapter_break_counter;
+        }
+
+        private uint Serialize_Chapter(StringBuilder collector, ChapterNode chapter, uint chapter_break_counter, Coordinates local)
         {
             while (++chapter_break_counter < local.Chapter)
             {
                 collector.Append(CHAPTER_BREAK);
             }
             uint section_break_counter = 0;
-            foreach (var section_index in chapters[local.Chapter].Children.Keys)
+            foreach (var section_index in chapter.Section.Keys)
             {
                 local.Section = section_index;
-                section_break_counter = Serialize_Sections(collector, chapters[local.Chapter].Children, section_break_counter, local);
+                section_break_counter = Serialize_Section(collector, chapter.Section[section_index], section_break_counter, local);
             }
 
             return chapter_break_counter;
         }
 
-        private uint Serialize_Sections(StringBuilder collector, SortedDictionary<short, SectionNode> sections, uint section_break_counter, Coordinates local)
+        private uint Serialize_Section(StringBuilder collector, SectionNode section, uint section_break_counter, Coordinates local)
         {
             while (++section_break_counter < local.Section)
             {
                 collector.Append(SECTION_BREAK);
             }
             uint scroll_break_counter = 0;
-            foreach (var scroll_index in sections[local.Section].Children.Keys)
+            foreach (var scroll_index in section.Scroll.Keys)
             {
                 local.Scroll = scroll_index;
-                scroll_break_counter = Serialize_Scrolls(collector, sections[local.Section].Children, scroll_break_counter, local);
+                scroll_break_counter = Serialize_Scroll(collector, section.Scroll[scroll_index], scroll_break_counter, local);
             }
 
             return section_break_counter;
         }
 
-        private uint Serialize_Scrolls(StringBuilder collector, SortedDictionary<short, ScrollNode> scrolls, uint scroll_break_counter, Coordinates local)
+        private uint Serialize_Scroll(StringBuilder collector, ScrollNode scroll, uint scroll_break_counter, Coordinates local)
         {
             while (++scroll_break_counter < local.Scroll)
             {
                 collector.Append(SCROLL_BREAK);
             }
-            collector.Append(scrolls[local.Scroll].Text);
+            collector.Append(scroll.Text);
 
             return scroll_break_counter;
         }
@@ -252,21 +323,15 @@ namespace TerseNotepad
 
         public TreeNode? Find(Coordinates coordinates)
         {
-            string test = coordinates.ToString();
-            if (_nodeCache.ContainsKey(test))
-            {
-                return _nodeCache[test];
-            }
-
-            return null;
+            return Terse.Find(coordinates);
         }
 
         public TreeNode CreateNode(TreeNode sectionNode, string line)
         {
             var key = Coords.ToString();
             var scrollNode = sectionNode.Nodes.Add(key, key + ": " + line);
-            Terse.Chapter[Coords.Chapter].Children[Coords.Section].Children[Coords.Scroll].Node = scrollNode;
-            _nodeCache[key] = scrollNode;
+            Terse.Section.Node = scrollNode;
+            Terse.Cache[scrollNode.Name] = scrollNode;
             return scrollNode;
         }
     }

@@ -44,81 +44,97 @@
         {
             return $"p{c.Scroll}-g{c.Section}-s{c.Chapter}-y{c.Book}-h{c.Volume}-e{c.Collection}-w{c.Series}-i{c.Shelf}-m{c.Library}";
         }
+        public Coordinates GetRoot()
+        {
+            return new Coordinates();
+        }
         public Coordinates GetLibraryRoot()
         {
-            Coordinates view = this;
-            view.Library = 0;
-            return view;
+            return new Coordinates(this)
+            {
+                Scroll = 0,
+                Section = 0,
+                Chapter = 0,
+                Book = 0,
+                Volume = 0,
+                Collection = 0,
+                Series = 0,
+                Shelf = 0
+            };
         }
         public Coordinates GetShelfRoot()
         {
-            Coordinates view = this;
-            view.Library = 0;
-            view.Shelf = 0;
-            return view;
+            return new Coordinates(this)
+            {
+                Scroll = 0,
+                Section = 0,
+                Chapter = 0,
+                Book = 0,
+                Volume = 0,
+                Collection = 0,
+                Series = 0
+            };
         }
         public Coordinates GetSeriesRoot()
         {
-            Coordinates view = this;
-            view.Library = 0;
-            view.Shelf = 0;
-            view.Series = 0;
-            return view;
+            return new Coordinates(this)
+            {
+                Scroll = 0,
+                Section = 0,
+                Chapter = 0,
+                Book = 0,
+                Volume = 0,
+                Collection = 0
+            };
+        }
+        public Coordinates GetCollectionRoot()
+        {
+            return new Coordinates(this)
+            {
+                Scroll = 0,
+                Section = 0,
+                Chapter = 0,
+                Book = 0,
+                Volume = 0
+            };
         }
         public Coordinates GetVolumeRoot()
         {
-            Coordinates view = this;
-            view.Library = 0;
-            view.Shelf = 0;
-            view.Series = 0;
-            view.Collection = 0;
-            return view;
+            return new Coordinates(this)
+            {
+                Scroll = 0,
+                Section = 0,
+                Chapter = 0,
+                Book = 0
+            };
         }
         public Coordinates GetBookRoot()
         {
-            Coordinates view = this;
-            view.Library = 0;
-            view.Shelf = 0;
-            view.Series = 0;
-            view.Collection = 0;
-            view.Volume = 0;
-            return view;
+            return new Coordinates(this)
+            {
+                Scroll = 0,
+                Section = 0,
+                Chapter = 0
+            };
         }
         public Coordinates GetChapterRoot()
         {
-            Coordinates view = this;
-            view.Library = 0;
-            view.Shelf = 0;
-            view.Series = 0;
-            view.Collection = 0;
-            view.Volume = 0;
-            view.Book = 0;
-            return view;
+            return new Coordinates(this)
+            {
+                Scroll = 0,
+                Section = 0
+            };
         }
         public Coordinates GetSectionRoot()
         {
-            Coordinates view = this;
-            view.Library = 0;
-            view.Shelf = 0;
-            view.Series = 0;
-            view.Collection = 0;
-            view.Volume = 0;
-            view.Book = 0;
-            view.Chapter = 0;
-            return view;
+            return new Coordinates(this)
+            {
+                Scroll = 0
+            };
         }
         public Coordinates GetScrollRoot()
         {
-            Coordinates view = this;
-            view.Library = 0;
-            view.Shelf = 0;
-            view.Series = 0;
-            view.Collection = 0;
-            view.Volume = 0;
-            view.Book = 0;
-            view.Chapter = 0;
-            view.Section = 0;
-            return view;
+            return new Coordinates(this);
         }
 
         public string GetNodeSummary()
@@ -158,15 +174,15 @@
             {
                 return;
             }
-            Scroll = short.Parse(parts[0]);
-            Section = short.Parse(parts[1]);
-            Chapter = short.Parse(parts[2]);
-            Book = short.Parse(parts[3]);
-            Volume = short.Parse(parts[4]);
-            Collection = short.Parse(parts[5]);
-            Series = short.Parse(parts[6]);
-            Shelf = short.Parse(parts[7]);
-            Library = short.Parse(parts[8]);
+            Scroll = short.Parse(parts[0].Skip(1).ToArray());
+            Section = short.Parse(parts[1].Skip(1).ToArray());
+            Chapter = short.Parse(parts[2].Skip(1).ToArray());
+            Book = short.Parse(parts[3].Skip(1).ToArray());
+            Volume = short.Parse(parts[4].Skip(1).ToArray());
+            Collection = short.Parse(parts[5].Skip(1).ToArray());
+            Series = short.Parse(parts[6].Skip(1).ToArray());
+            Shelf = short.Parse(parts[7].Skip(1).ToArray());
+            Library = short.Parse(parts[8].Skip(1).ToArray());
         }
 
         public bool IsValid()
@@ -174,6 +190,13 @@
             return Chapter >= 1 && Section >= 1 && Scroll >= 1 &&
                    Book >= 1 && Volume >= 1 && Collection >= 1 &&
                    Series >= 1 && Shelf >= 1 && Library >= 1;
+        }
+
+        public bool HasDelta()
+        {
+            return Chapter >= 1 || Section >= 1 || Scroll >= 1 ||
+                   Book >= 1 || Volume >= 1 || Collection >= 1 ||
+                   Series >= 1 || Shelf >= 1 || Library >= 1;
         }
     }
 }

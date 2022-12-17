@@ -1,7 +1,5 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using static TerseNotepad.TerseText;
 
 namespace TerseNotepad
 {
@@ -181,6 +179,8 @@ Use F2 - F11 to access additional dimensions.
 
         private void updateScrollbarValue(ScrollBar bar, short value)
         {
+            if (value < 1) { return; }
+
             int translated = value;
             if (translated > bar.Maximum)
             {
@@ -401,7 +401,8 @@ Use F2 - F11 to access additional dimensions.
             treeView.SuspendLayout();
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
-            _model.Load(data, treeView, sectionScrollbar, chapterScrollbar);
+            _model.Load(data, treeView);
+            // todo: scrollbars
             treeView.ExpandAll();
             treeView.EndUpdate();
             treeView.ResumeLayout();
@@ -522,6 +523,8 @@ Use F2 - F11 to access additional dimensions.
             chapterID.Text = _model.Terse.Coords.Chapter.ToString();
             sectionID.Text = _model.Terse.Coords.Section.ToString();
             scrollID.Text = _model.Terse.Coords.Scroll.ToString();
+
+            textBox.Enabled = _checkout != null;
 
             updateScrollbarValue(scrollScrollbar, _model.Terse.Coords.Scroll);
             updateScrollbarValue(sectionScrollbar, _model.Terse.Coords.Section);
@@ -703,7 +706,7 @@ Use F2 - F11 to access additional dimensions.
                 e.Handled = true;
             }
 
-            if (delta != new Coordinates())
+            if (delta.HasDelta())
             {
                 collectScroll();
                 _model.Terse.processDelta(delta);
@@ -771,32 +774,8 @@ Use F2 - F11 to access additional dimensions.
                 return null;
             }
 
-            if (!_model.Terse.Chapter.ContainsKey(coords.Chapter))
-            {
-                _model.Terse.Chapter.Add(coords.Chapter, new());
-            }
-            var chapter = _model.Terse.Chapter[coords.Chapter];
-            var lookup = treeView.Nodes.Find(coords.ToChapterParentID(), true);
-            if (lookup != null && lookup.Length > 0)
-            {
-                chapter.Node = lookup[0];
-            }
-            else
-            {
-                chapter.Node = treeView.Nodes.Add(coords.ToChapterParentID(), $"Chapter {coords.Chapter}");
-            }
-
-            if (!_model.Terse.Chapter[coords.Chapter].Children.ContainsKey(coords.Section))
-            {
-                _model.Terse.Chapter[coords.Chapter].Children.Add(coords.Section, new());
-            }
-            var section = _model.Terse.Chapter[coords.Chapter].Children[coords.Section];
-            if (section.Node == null || section.Node.Parent == null)
-            {
-                section.Node = chapter.Node.Nodes.Add(coords.ToSectionParentID(), $"Section {coords.Section}");
-            }
-
-            return section.Node;
+            // todo: rewrite from scratch using new idioms
+            return null;
         }
 
         // pre: the UI always shows the selected node...
@@ -845,19 +824,27 @@ Use F2 - F11 to access additional dimensions.
             {
                 return;
             }
-            if (_model.Coords.ToString() == coordinates)
+            if (_checkout?.ToString() == coordinates)
             {
                 return;
             }
             if (storeFirst)
             {
+                _checkout = new Coordinates(_model.Coords);
                 collectScroll();
             }
             _model.Coords.Load(coordinates);
-            chapterID.Text = _model.Terse.Coords.Chapter.ToString();
-            sectionID.Text = _model.Terse.Coords.Section.ToString();
-            scrollID.Text = _model.Terse.Coords.Scroll.ToString();
+            scrollID.Text = _model.Coords.Scroll.ToString();
+            sectionID.Text = _model.Coords.Section.ToString();
+            chapterID.Text = _model.Coords.Chapter.ToString();
+            bookID.Text = _model.Coords.Book.ToString();
+            volumeID.Text = _model.Coords.Volume.ToString();
+            collectionID.Text = _model.Coords.Collection.ToString();
+            seriesID.Text = _model.Coords.Series.ToString();
+            shelfID.Text = _model.Coords.Shelf.ToString();
+            libraryID.Text = _model.Coords.Library.ToString();
             loadScroll();
+            _checkout = new Coordinates(_model.Coords);
         }
 
         private void SyncEditorState()

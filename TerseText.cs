@@ -5,15 +5,33 @@
         public TreeNode Node { get; set; } = new();
         public string Text { get; set; } = string.Empty;
     };
-    public class SectionNode
+    public interface ITerseNode<T>
+    {
+        public TreeNode Node { get; set; }
+        public SortedDictionary<short, T> Children { get; set; }
+        public char Delimiter { get; }
+    };
+    public class SectionNode : ITerseNode<ScrollNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<short, ScrollNode> Scroll { get; set; } = new();
+        public SortedDictionary<short, ScrollNode> Children
+        {
+            get { return Scroll; }
+            set { Scroll = value; }
+        }
+        public char Delimiter { get { return TerseModel.SECTION_BREAK; } }
     };
-    public class ChapterNode
+    public class ChapterNode : ITerseNode<SectionNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<short, SectionNode> Section { get; set; } = new();
+        public SortedDictionary<short, SectionNode> Children
+        {
+            get { return Section; }
+            set { Section = value; }
+        }
+        public char Delimiter { get { return TerseModel.CHAPTER_BREAK; } }
     };
     public class BookNode
     {
@@ -60,6 +78,7 @@
     {
         public Coordinates Coords = new();
         public RootNode Root = new();
+        public Dictionary<string, TreeNode> Cache = new();
         public int LeafCount { get; private set; } = 0;
         public int WordCount { get; private set; } = 0;
 
@@ -241,11 +260,13 @@
                 var priorText = Scroll.Text;
                 var priorCount = GetWordCount(priorText);
                 Scroll.Text = text;
+                ++LeafCount;
                 var count = GetWordCount(text);
                 WordCount += (count - priorCount);
                 if (node != null)
                 {
                     Scroll.Node = node;
+                    Cache[node.Name] = node;
                 }
             }
             // note: the key checks here optimize performance on sparse files
@@ -390,7 +411,7 @@
 
         public string getScroll()
         {
-            return Scroll.Children.ContainsKey(Coords.Scroll) ? Scroll.Children[Coords.Scroll].Text : "";
+            return Scroll.Text;
         }
 
         public string EditorSummary(string action = "")
@@ -398,26 +419,94 @@
             return Coords.EditorSummary(action);
         }
 
-        public void SetSectionNode(TreeNode sectionNode, uint chapter_index, uint section_index)
+        public void SetChapterNode(TreeNode chapterNode, Coordinates local)
         {
-            if (!Chapter.ContainsKey(chapter_index))
+            if (!Book.Chapter.ContainsKey(local.Chapter))
             {
-                Chapter[chapter_index] = new();
+                Book.Chapter[local.Chapter] = new()
+                {
+                    Node = chapterNode
+                };
             }
-            if (!Chapter[chapter_index].Children.ContainsKey(section_index))
-            {
-                Chapter[chapter_index].Children[section_index] = new();
-            }
-            Chapter[chapter_index].Children[section_index].Node = sectionNode;
+            Cache[chapterNode.Name] = chapterNode;
         }
 
-        public void SetChapterNode(TreeNode chapterNode, uint chapter_index)
+        public void SetSectionNode(TreeNode sectionNode, Coordinates local)
         {
-            if (!Chapter.ContainsKey(chapter_index))
+            if (!Book.Chapter.ContainsKey(local.Chapter))
             {
-                Chapter[chapter_index] = new();
+                Book.Chapter[local.Chapter] = new();
             }
-            Chapter[chapter_index].Node = chapterNode;
+            if (!Book.Chapter[local.Chapter].Section.ContainsKey(local.Section))
+            {
+                Book.Chapter[local.Chapter].Section[local.Section] = new()
+                {
+                    Node = sectionNode
+                };
+            }
+            Cache[sectionNode.Name] = sectionNode;
+        }
+
+        private TreeNode CreateNamedRootNode(string text, Coordinates local)
+        {
+            var name = local.ToString();
+            var node = new TreeNode(text)
+            {
+                Name = name
+            };
+            Cache[name] = node;
+            return node;
+        }
+
+        public TreeNode GetSectionTreeRoot(Coordinates local)
+        {
+            return CreateNamedRootNode($"Section {local.Section}", local.GetSectionRoot());
+        }
+
+        public TreeNode GetChapterTreeRoot(Coordinates local)
+        {
+            return CreateNamedRootNode($"Chapter {local.Chapter}", local.GetChapterRoot());
+        }
+
+        public TreeNode GetBookTreeRoot(Coordinates local)
+        {
+            return CreateNamedRootNode($"Book {local.Book}", local.GetBookRoot());
+        }
+
+        public TreeNode GetVolumeTreeRoot(Coordinates local)
+        {
+            return CreateNamedRootNode($"Volume {local.Volume}", local.GetVolumeRoot());
+        }
+
+        public TreeNode GetCollectionTreeRoot(Coordinates local)
+        {
+            return CreateNamedRootNode($"Collection {local.Collection}", local.GetCollectionRoot());
+        }
+
+        public TreeNode GetSeriesTreeRoot(Coordinates local)
+        {
+            return CreateNamedRootNode($"Series {local.Series}", local.GetSeriesRoot());
+        }
+
+        public TreeNode GetShelfTreeRoot(Coordinates local)
+        {
+            return CreateNamedRootNode($"Shelf {local.Shelf}", local.GetShelfRoot());
+        }
+
+        public TreeNode GetLibraryTreeRoot(Coordinates local)
+        {
+            return CreateNamedRootNode($"Library {local.Library}", local.GetLibraryRoot());
+        }
+
+        public TreeNode? Find(Coordinates coordinates)
+        {
+            string test = coordinates.ToString();
+            if (Cache.ContainsKey(test))
+            {
+                return Cache[test];
+            }
+
+            return null;
         }
     }
 }
