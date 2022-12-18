@@ -2,8 +2,9 @@
 {
     public class Coordinates
     {
-        public Coordinates()
+        public Coordinates(bool reset = false)
         {
+            if (reset) { Reset(); }
         }
 
         public Coordinates(string coordinates)

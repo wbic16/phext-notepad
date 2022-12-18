@@ -61,8 +61,7 @@ namespace TerseNotepad
         {
             var charStream = data.ToCharArray();
             Terse = new();
-            Coordinates local = new();
-            local.Reset();
+            Coordinates local = new(true);
             var stage = new StringBuilder();
             var sectionNode = Terse.GetSectionTreeRoot(local);
             var chapterNode = Terse.GetChapterTreeRoot(local);
@@ -305,13 +304,14 @@ namespace TerseNotepad
 
         public string Serialize()
         {
-            var collector = new StringBuilder();
-            var local = new Coordinates();
+            StringBuilder collector = new();
+            Coordinates local = new(true);
             foreach (var library_index in Terse.Root.Library.Keys)
             {
-                while (++local.Library < library_index)
+                while (local.Library < library_index)
                 {
                     collector.Append(LIBRARY_BREAK);
+                    ++local.Library;
                 }
                 Serialize_Library(collector, Terse.Root.Library[library_index], local);
             }
@@ -321,9 +321,10 @@ namespace TerseNotepad
         {
             foreach (var shelf_index in library.Shelf.Keys)
             {
-                while (++local.Shelf < shelf_index)
+                while (local.Shelf < shelf_index)
                 {
                     collector.Append(SHELF_BREAK);
+                    ++local.Shelf;
                 }
                 Serialize_Shelf(collector, library.Shelf[shelf_index], local);
             }
@@ -333,9 +334,10 @@ namespace TerseNotepad
         {
             foreach (var series_index in shelf.Series.Keys)
             {
-                while (++local.Series < series_index)
+                while (local.Series < series_index)
                 {
                     collector.Append(SERIES_BREAK);
+                    ++local.Series;
                 }
                 Serialize_Series(collector, shelf.Series[series_index], local);
             }
@@ -344,9 +346,10 @@ namespace TerseNotepad
         {
             foreach (var collection_index in series.Collection.Keys)
             {
-                while (++local.Collection < collection_index)
+                while (local.Collection < collection_index)
                 {
                     collector.Append(COLLECTION_BREAK);
+                    ++local.Collection;
                 }
                 Serialize_Collection(collector, series.Collection[collection_index], local);
             }
@@ -356,9 +359,10 @@ namespace TerseNotepad
         {
             foreach (var volume_index in collection.Volume.Keys)
             {
-                while (++local.Volume < volume_index)
+                while (local.Volume < volume_index)
                 {
                     collector.Append(VOLUME_BREAK);
+                    ++local.Volume;
                 }
                 Serialize_Volume(collector, collection.Volume[volume_index], local);
             }
@@ -368,9 +372,10 @@ namespace TerseNotepad
         {
             foreach (var book_index in volume.Book.Keys)
             {
-                while (++local.Book < book_index)
+                while (local.Book < book_index)
                 {
                     collector.Append(BOOK_BREAK);
+                    ++local.Book;
                 }
                 Serialize_Book(collector, volume.Book[book_index], local);
             }
@@ -380,9 +385,10 @@ namespace TerseNotepad
         {
             foreach (var chapter_index in book.Chapter.Keys)
             {
-                while (++local.Chapter < chapter_index)
+                while (local.Chapter < chapter_index)
                 {
                     collector.Append(CHAPTER_BREAK);
+                    ++local.Chapter;
                 }
                 Serialize_Chapter(collector, book.Chapter[chapter_index], local);
             }
@@ -392,9 +398,10 @@ namespace TerseNotepad
         {
             foreach (var section_index in chapter.Section.Keys)
             {
-                while (++local.Section < section_index)
+                while (local.Section < section_index)
                 {
                     collector.Append(SECTION_BREAK);
+                    ++local.Section;
                 }
                 Serialize_Section(collector, chapter.Section[section_index], local);
             }
@@ -404,9 +411,10 @@ namespace TerseNotepad
         {
             foreach (var scroll_index in section.Scroll.Keys)
             {
-                while (++local.Scroll < scroll_index)
+                while (local.Scroll < scroll_index)
                 {
                     collector.Append(SCROLL_BREAK);
+                    ++local.Scroll;
                 }
                 Serialize_Scroll(collector, section.Scroll[scroll_index]);
             }
