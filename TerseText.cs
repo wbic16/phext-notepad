@@ -419,6 +419,78 @@
             return Coords.EditorSummary(action);
         }
 
+        public void SetLibraryNode(TreeNode libraryNode, Coordinates local)
+        {
+            if (!Root.Library.ContainsKey(local.Library))
+            {
+                Root.Library[local.Library] = new()
+                {
+                    Node = libraryNode
+                };
+            }
+            Cache[libraryNode.Name] = libraryNode;
+        }
+
+        public void SetShelfNode(TreeNode shelfNode, Coordinates local)
+        {
+            if (!Library.Shelf.ContainsKey(local.Shelf))
+            {
+                Library.Shelf[local.Shelf] = new()
+                {
+                    Node = shelfNode
+                };
+            }
+            Cache[shelfNode.Name] = shelfNode;
+        }
+
+        public void SetSeriesNode(TreeNode seriesNode, Coordinates local)
+        {
+            if (!Shelf.Series.ContainsKey(local.Series))
+            {
+                Shelf.Series[local.Series] = new()
+                {
+                    Node = seriesNode
+                };
+            }
+            Cache[seriesNode.Name] = seriesNode;
+        }
+
+        public void SetCollectionNode(TreeNode collectionNode, Coordinates local)
+        {
+            if (!Series.Collection.ContainsKey(local.Collection))
+            {
+                Series.Collection[local.Collection] = new()
+                {
+                    Node = collectionNode
+                };
+            }
+            Cache[collectionNode.Name] = collectionNode;
+        }
+
+        public void SetVolumeNode(TreeNode volumeNode, Coordinates local)
+        {
+            if (!Collection.Volume.ContainsKey(local.Volume))
+            {
+                Collection.Volume[local.Volume] = new()
+                {
+                    Node = volumeNode
+                };
+            }
+            Cache[volumeNode.Name] = volumeNode;
+        }
+
+        public void SetBookNode(TreeNode bookNode, Coordinates local)
+        {
+            if (!Volume.Book.ContainsKey(local.Book))
+            {
+                Volume.Book[local.Book] = new()
+                {
+                    Node = bookNode
+                };
+            }
+            Cache[bookNode.Name] = bookNode;
+        }
+
         public void SetChapterNode(TreeNode chapterNode, Coordinates local)
         {
             if (!Book.Chapter.ContainsKey(local.Chapter))

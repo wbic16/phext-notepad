@@ -75,7 +75,15 @@ namespace TerseNotepad
             for (int i = 0; i < charStream.Length; ++i)
             {
                 var next = charStream[i];
-                if (next == SCROLL_BREAK || next == SECTION_BREAK || next == CHAPTER_BREAK)
+                if (next == SCROLL_BREAK ||
+                    next == SECTION_BREAK ||
+                    next == CHAPTER_BREAK ||
+                    next == BOOK_BREAK ||
+                    next == COLLECTION_BREAK ||
+                    next == VOLUME_BREAK ||
+                    next == SERIES_BREAK ||
+                    next == SHELF_BREAK ||
+                    next == LIBRARY_BREAK)
                 {
                     insertScroll(stage, local, null); // sectionNode);
                     stage.Clear();
@@ -105,12 +113,27 @@ namespace TerseNotepad
                     ++local.Chapter;
                     local.Section = 1;
                     local.Scroll = 1;
-                    if (chapterNode != null && chapterNode.Nodes.Count > 0)
+                    if (chapterNode.Nodes.Count > 0)
                     {
                         treeView?.Nodes.Add(chapterNode);
                         Terse.SetChapterNode(chapterNode, local);
                     }
                     chapterNode = Terse.GetChapterTreeRoot(local);
+                    continue;
+                }
+
+                if (next == BOOK_BREAK)
+                {
+                    ++local.Book;
+                    local.Chapter = 1;
+                    local.Section = 1;
+                    local.Scroll = 1;
+                    if (bookNode.Nodes.Count > 0)
+                    {
+                        treeView?.Nodes.Add(bookNode);
+                        Terse.SetBookNode(bookNode, local);
+                    }
+                    bookNode = Terse.GetBookTreeRoot(local);
                     continue;
                 }
 

@@ -24,17 +24,105 @@
             Shelf = other.Shelf;
             Library = other.Library;
         }
+        public class ScrollIndex : TypedCoordinate
+        {
+            public ScrollIndex(short value) : base(value)
+            {
+            }
+        }
+        public class SectionIndex : TypedCoordinate
+        {
+            public SectionIndex(short value) : base(value)
+            {
+            }
+            public static implicit operator SectionIndex(short value)
+            {
+                return new ChapterIndex(value);
+            }
+        }
+        public class ChapterIndex : TypedCoordinate
+        {
+            public ChapterIndex(short value) : base(value)
+            {
+            }
+
+            public static implicit operator ChapterIndex(short value)
+            {
+                return new ChapterIndex(value);
+            }
+        }
+        public class BookIndex : TypedCoordinate
+        {
+            public BookIndex(short value) : base(value)
+            {
+            }
+            public static implicit operator BookIndex(short value)
+            {
+                return new BookIndex(value);
+            }
+        }
+        public class VolumeIndex : TypedCoordinate
+        {
+            public VolumeIndex(short value) : base(value)
+            {
+            }
+            public static implicit operator VolumeIndex(short value)
+            {
+                return new VolumeIndex(value);
+            }
+        }
+        public class CollectionIndex : TypedCoordinate
+        {
+            public CollectionIndex(short value) : base(value)
+            {
+            }
+            public static implicit operator CollectionIndex(short value)
+            {
+                return new CollectionIndex(value);
+            }
+        }
+        public class SeriesIndex : TypedCoordinate
+        {
+            public SeriesIndex(short value) : base(value)
+            {
+            }
+            public static implicit operator SeriesIndex(short value)
+            {
+                return new SeriesIndex(value);
+            }
+        }
+        public class ShelfIndex : TypedCoordinate
+        {
+            public ShelfIndex(short value) : base(value)
+            {
+            }
+            public static implicit operator ShelfIndex(short value)
+            {
+                return new ShelfIndex(value);
+            }
+        }
+        public class LibraryIndex : TypedCoordinate
+        {
+            public LibraryIndex(short value) : base(value)
+            {
+            }
+            public static implicit operator LibraryIndex(short value)
+            {
+                return new LibraryIndex(value);
+            }
+        }
+
         public int Column { get; set; } = 0;
         public int Line { get; set; } = 0;
         public short Scroll { get; set; } = 0;
-        public short Section { get; set; } = 0;
-        public short Chapter { get; set; } = 0;
-        public short Book { get; set; } = 0;
-        public short Volume { get; set; } = 0;
-        public short Collection { get; set; } = 0;
-        public short Series { get; set; } = 0;
-        public short Shelf { get; set; } = 0;
-        public short Library { get; set; } = 0;
+        public ScrollIndex Section { get; set; } = 0;
+        public ChapterIndex Chapter { get; set; } = 0;
+        public BookIndex Book { get; set; } = 0;
+        public VolumeIndex Volume { get; set; } = 0;
+        public CollectionIndex Collection { get; set; } = 0;
+        public SeriesIndex Series { get; set; } = 0;
+        public ShelfIndex Shelf { get; set; } = 0;
+        public LibraryIndex Library { get; set; } = 0;
 
         public override string ToString()
         {
