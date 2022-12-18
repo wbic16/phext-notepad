@@ -74,176 +74,151 @@ namespace TerseNotepad
             for (int i = 0; i < charStream.Length; ++i)
             {
                 var next = charStream[i];
-                if (next == SCROLL_BREAK ||
-                    next == SECTION_BREAK ||
-                    next == CHAPTER_BREAK ||
-                    next == BOOK_BREAK ||
-                    next == VOLUME_BREAK ||
-                    next == COLLECTION_BREAK ||
-                    next == SERIES_BREAK ||
-                    next == SHELF_BREAK ||
-                    next == LIBRARY_BREAK)
+                int dimensions_broken = 0;
+                switch (next)
+                {
+                    case LIBRARY_BREAK:
+                        dimensions_broken = 9;
+                        break;
+                    case SHELF_BREAK:
+                        dimensions_broken = 8;
+                        break;
+                    case SERIES_BREAK:
+                        dimensions_broken = 7;
+                        break;
+                    case COLLECTION_BREAK:
+                        dimensions_broken = 6;
+                        break;
+                    case VOLUME_BREAK:
+                        dimensions_broken = 5;
+                        break;
+                    case BOOK_BREAK:
+                        dimensions_broken = 4;
+                        break;
+                    case CHAPTER_BREAK:
+                        dimensions_broken = 3;
+                        break;
+                    case SECTION_BREAK:
+                        dimensions_broken = 2;
+                        break;
+                    case SCROLL_BREAK:
+                        dimensions_broken = 1;
+                        break;
+                    default:
+                        stage.Append(next);
+                        break;
+                }
+
+                if (dimensions_broken == 0)
+                {
+                    continue;
+                }
+
+                if (dimensions_broken >= 1)
                 {
                     if (stage.Length > 0)
                     {
                         insertScroll(stage, local, sectionNode);
                         stage.Clear();
                     }
-                }
-
-                if (next == SCROLL_BREAK)
-                {
                     ++local.Scroll;
-                    continue;
                 }
 
-                int dimensions_broken = 0;
-                switch (next)
+                if (dimensions_broken >= 2)
                 {
-                    case CHAPTER_BREAK:
-                        ++dimensions_broken;
-                        goto case SECTION_BREAK;
-                    case SECTION_BREAK:
-                        ++dimensions_broken;
-                        goto case SCROLL_BREAK;
-                    case SCROLL_BREAK:
-                        ++dimensions_broken;
-                        break;
-                }
-
-                if (next == SECTION_BREAK)
-                {
-                    ++local.Section;
-                    local.Scroll = 1;
                     if (sectionNode.Nodes.Count > 0)
                     {
                         chapterNode.Nodes.Add(sectionNode);
-                        Terse.SetSectionNode(sectionNode, local);
+                        Terse.SetSectionNode(sectionNode, local.GetSectionRoot());
                     }
+                    ++local.Section;
+                    local.Scroll = 1;
                     sectionNode = Terse.GetSectionTreeRoot(local);
-                    continue;
                 }
 
-                if (next == CHAPTER_BREAK)
+                if (dimensions_broken >= 3)
                 {
-                    ++local.Chapter;
-                    local.Section = 1;
-                    local.Scroll = 1;
                     if (chapterNode.Nodes.Count > 0)
                     {
                         bookNode.Nodes.Add(chapterNode);
-                        Terse.SetChapterNode(chapterNode, local);
+                        Terse.SetChapterNode(chapterNode, local.GetChapterRoot());
                     }
+                    ++local.Chapter;
+                    local.Section = 1;
                     chapterNode = Terse.GetChapterTreeRoot(local);
-                    continue;
                 }
 
-                if (next == BOOK_BREAK)
+                if (dimensions_broken >= 4)
                 {
-                    ++local.Book;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
                     if (bookNode.Nodes.Count > 0)
                     {
                         volumeNode.Nodes.Add(bookNode);
-                        Terse.SetBookNode(bookNode, local);
+                        Terse.SetBookNode(bookNode, local.GetBookRoot());
                     }
+                    ++local.Book;
+                    local.Chapter = 1;
                     bookNode = Terse.GetBookTreeRoot(local);
-                    continue;
                 }
 
-                if (next == VOLUME_BREAK)
+                if (dimensions_broken >= 5)
                 {
-                    ++local.Volume;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
                     if (volumeNode.Nodes.Count > 0)
                     {
                         collectionNode.Nodes.Add(volumeNode);
-                        Terse.SetVolumeNode(volumeNode, local);
+                        Terse.SetVolumeNode(volumeNode, local.GetVolumeRoot());
                     }
+                    ++local.Volume;
+                    local.Book = 1;
                     volumeNode = Terse.GetVolumeTreeRoot(local);
-                    continue;
                 }
 
-                if (next == COLLECTION_BREAK)
+                if (dimensions_broken >= 6)
                 {
-                    ++local.Collection;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
                     if (collectionNode.Nodes.Count > 0)
                     {
                         seriesNode.Nodes.Add(collectionNode);
-                        Terse.SetCollectionNode(collectionNode, local);
+                        Terse.SetCollectionNode(collectionNode, local.GetCollectionRoot());
                     }
+                    ++local.Collection;
+                    local.Volume = 1;
                     collectionNode = Terse.GetCollectionTreeRoot(local);
-                    continue;
                 }
 
-                if (next == SERIES_BREAK)
+                if (dimensions_broken >= 7)
                 {
-                    ++local.Series;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
                     if (seriesNode.Nodes.Count > 0)
                     {
                         shelfNode.Nodes.Add(seriesNode);
-                        Terse.SetSeriesNode(seriesNode, local);
+                        Terse.SetSeriesNode(seriesNode, local.GetSeriesRoot());
                     }
+                    ++local.Series;
+                    local.Collection = 1;
                     seriesNode = Terse.GetSeriesTreeRoot(local);
-                    continue;
                 }
 
-                if (next == SHELF_BREAK)
+                if (dimensions_broken >= 8)
                 {
-                    ++local.Shelf;
-                    local.Series = 1;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
                     if (shelfNode.Nodes.Count > 0)
                     {
                         libraryNode.Nodes.Add(shelfNode);
-                        Terse.SetShelfNode(shelfNode, local);
+                        Terse.SetShelfNode(shelfNode, local.GetShelfRoot());
                     }
+                    ++local.Shelf;
+                    local.Series = 1;
                     shelfNode = Terse.GetShelfTreeRoot(local);
-                    continue;
                 }
 
-                if (next == LIBRARY_BREAK)
+                if (dimensions_broken >= 9)
                 {
-                    ++local.Library;
-                    local.Shelf = 1;
-                    local.Series = 1;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
                     if (libraryNode.Nodes.Count > 0)
                     {
                         treeView?.Nodes.Add(libraryNode);
-                        Terse.SetLibraryNode(libraryNode, local);
+                        Terse.SetLibraryNode(libraryNode, local.GetLibraryRoot());
                     }
+                    ++local.Library;
+                    local.Shelf = 1;
                     libraryNode = Terse.GetLibraryTreeRoot(local);
-                    continue;
                 }
-
-                stage.Append(next);
             }
 
             if (stage.Length > 0)

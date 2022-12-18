@@ -843,7 +843,7 @@ Use F2 - F11 to access additional dimensions.
             {
                 return;
             }
-            _model.Coords = test;
+            _model.Coords = test.Clamp();
             scrollID.Text = _model.Coords.Scroll.ToString();
             sectionID.Text = _model.Coords.Section.ToString();
             chapterID.Text = _model.Coords.Chapter.ToString();

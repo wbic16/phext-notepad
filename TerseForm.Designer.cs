@@ -619,7 +619,6 @@
             this.libraryScrollbar.Name = "libraryScrollbar";
             this.libraryScrollbar.Size = new System.Drawing.Size(26, 552);
             this.libraryScrollbar.TabIndex = 12;
-            this.libraryScrollbar.Visible = false;
             // 
             // shelfScrollbar
             // 
@@ -628,7 +627,6 @@
             this.shelfScrollbar.Name = "shelfScrollbar";
             this.shelfScrollbar.Size = new System.Drawing.Size(26, 552);
             this.shelfScrollbar.TabIndex = 13;
-            this.shelfScrollbar.Visible = false;
             // 
             // seriesScrollbar
             // 
@@ -637,7 +635,6 @@
             this.seriesScrollbar.Name = "seriesScrollbar";
             this.seriesScrollbar.Size = new System.Drawing.Size(26, 552);
             this.seriesScrollbar.TabIndex = 14;
-            this.seriesScrollbar.Visible = false;
             // 
             // collectionScrollbar
             // 
@@ -646,7 +643,6 @@
             this.collectionScrollbar.Name = "collectionScrollbar";
             this.collectionScrollbar.Size = new System.Drawing.Size(26, 552);
             this.collectionScrollbar.TabIndex = 15;
-            this.collectionScrollbar.Visible = false;
             // 
             // volumeScrollbar
             // 
@@ -655,7 +651,6 @@
             this.volumeScrollbar.Name = "volumeScrollbar";
             this.volumeScrollbar.Size = new System.Drawing.Size(26, 552);
             this.volumeScrollbar.TabIndex = 23;
-            this.volumeScrollbar.Visible = false;
             // 
             // bookScrollbar
             // 
@@ -664,7 +659,6 @@
             this.bookScrollbar.Name = "bookScrollbar";
             this.bookScrollbar.Size = new System.Drawing.Size(26, 552);
             this.bookScrollbar.TabIndex = 26;
-            this.bookScrollbar.Visible = false;
             // 
             // chapterScrollbar
             // 
@@ -712,6 +706,7 @@
             this.treeView.HideSelection = false;
             this.treeView.Location = new System.Drawing.Point(3, 5);
             this.treeView.Name = "treeView";
+            this.treeView.PathSeparator = "/";
             this.treeView.Size = new System.Drawing.Size(450, 547);
             this.treeView.TabIndex = 29;
             this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);

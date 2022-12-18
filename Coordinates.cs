@@ -140,6 +140,11 @@
         {
             return ToString(this);
         }
+
+        public static short CoordinateClamp(short value)
+        {
+            return (value < 1) ? (short)1 : value;
+        }
         public static string ToString(Coordinates c)
         {
             return $"{_cl[0]}{c.Scroll}" +
@@ -314,16 +319,32 @@
 
         public bool IsValid()
         {
-            return Chapter >= 1 && Section >= 1 && Scroll >= 1 &&
-                   Book >= 1 && Volume >= 1 && Collection >= 1 &&
-                   Series >= 1 && Shelf >= 1 && Library >= 1;
+            return Chapter >= 0 && Section >= 0 && Scroll >= 0 &&
+                   Book >= 0 && Volume >= 0 && Collection >= 0 &&
+                   Series >= 0 && Shelf >= 0 && Library >= 0;
         }
 
         public bool HasDelta()
         {
-            return Chapter >= 1 || Section >= 1 || Scroll >= 1 ||
-                   Book >= 1 || Volume >= 1 || Collection >= 1 ||
-                   Series >= 1 || Shelf >= 1 || Library >= 1;
+            return Chapter != 0 || Section != 0 || Scroll != 0 ||
+                   Book != 0 || Volume != 0 || Collection != 0 ||
+                   Series != 0 || Shelf != 0 || Library != 0;
+        }
+
+        public Coordinates Clamp()
+        {
+            return new Coordinates()
+            {
+                Scroll = CoordinateClamp(Scroll),
+                Section = CoordinateClamp(Section),
+                Chapter = CoordinateClamp(Chapter),
+                Book = CoordinateClamp(Book),
+                Collection = CoordinateClamp(Collection),
+                Volume = CoordinateClamp(Volume),
+                Series = CoordinateClamp(Series),
+                Shelf = CoordinateClamp(Shelf),
+                Library = CoordinateClamp(Library)
+            };
         }
     }
 }
