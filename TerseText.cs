@@ -1,77 +1,117 @@
-﻿namespace TerseNotepad
+﻿using static System.Collections.Specialized.BitVector32;
+using static TerseNotepad.Coordinates;
+
+namespace TerseNotepad
 {
     public class ScrollNode
     {
         public TreeNode Node { get; set; } = new();
         public string Text { get; set; } = string.Empty;
     };
-    public interface ITerseNode<T>
+    public interface ITerseNode<T, S>
+        where T : notnull
     {
         public TreeNode Node { get; set; }
-        public SortedDictionary<short, T> Children { get; set; }
+        public SortedDictionary<T, S> Children { get; set; }
         public char Delimiter { get; }
     };
-    public class SectionNode : ITerseNode<ScrollNode>
+    public class SectionNode : ITerseNode<ScrollIndex, ScrollNode>
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<short, ScrollNode> Scroll { get; set; } = new();
-        public SortedDictionary<short, ScrollNode> Children
+        public SortedDictionary<ScrollIndex, ScrollNode> Scroll { get; set; } = new();
+        public SortedDictionary<ScrollIndex, ScrollNode> Children
         {
             get { return Scroll; }
             set { Scroll = value; }
         }
         public char Delimiter { get { return TerseModel.SECTION_BREAK; } }
     };
-    public class ChapterNode : ITerseNode<SectionNode>
+    public class ChapterNode : ITerseNode<SectionIndex, SectionNode>
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<short, SectionNode> Section { get; set; } = new();
-        public SortedDictionary<short, SectionNode> Children
+        public SortedDictionary<SectionIndex, SectionNode> Section { get; set; } = new();
+        public SortedDictionary<SectionIndex, SectionNode> Children
         {
             get { return Section; }
             set { Section = value; }
         }
         public char Delimiter { get { return TerseModel.CHAPTER_BREAK; } }
     };
-    public class BookNode
+    public class BookNode : ITerseNode<ChapterIndex, ChapterNode>
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<short, ChapterNode> Chapter { get; set; } = new();
+        public SortedDictionary<ChapterIndex, ChapterNode> Chapter { get; set; } = new();
+        public SortedDictionary<ChapterIndex, ChapterNode> Children
+        {
+            get { return Chapter; }
+            set { Chapter = value; }
+        }
+        public char Delimiter { get { return TerseModel.BOOK_BREAK; } }
     };
 
-    public class VolumeNode
+    public class VolumeNode : ITerseNode<BookIndex, BookNode>
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<short, BookNode> Book { get; set; } = new();
+        public SortedDictionary<BookIndex, BookNode> Book { get; set; } = new();
+        public SortedDictionary<BookIndex, BookNode> Children
+        {
+            get { return Book; }
+            set { Book = value; }
+        }
+        public char Delimiter { get { return TerseModel.VOLUME_BREAK; } }
     };
 
-    public class CollectionNode
+    public class CollectionNode : ITerseNode<VolumeIndex, VolumeNode>
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<short, VolumeNode> Volume { get; set; } = new();
+        public SortedDictionary<VolumeIndex, VolumeNode> Volume { get; set; } = new();
+        public SortedDictionary<VolumeIndex, VolumeNode> Children
+        {
+            get { return Volume; }
+            set { Volume = value; }
+        }
+        public char Delimiter { get { return TerseModel.COLLECTION_BREAK; } }
     };
 
-    public class SeriesNode
+    public class SeriesNode : ITerseNode<CollectionIndex, CollectionNode>
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<short, CollectionNode> Collection { get; set; } = new();
+        public SortedDictionary<CollectionIndex, CollectionNode> Collection { get; set; } = new();
+        public SortedDictionary<CollectionIndex, CollectionNode> Children
+        {
+            get { return Collection; }
+            set { Collection = value; }
+        }
+        public char Delimiter { get { return TerseModel.SERIES_BREAK; } }
     };
 
-    public class ShelfNode
+    public class ShelfNode : ITerseNode<SeriesIndex, SeriesNode>
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<short, SeriesNode> Series { get; set; } = new();
+        public SortedDictionary<SeriesIndex, SeriesNode> Series { get; set; } = new();
+        public SortedDictionary<SeriesIndex, SeriesNode> Children
+        {
+            get { return Series; }
+            set { Series = value; }
+        }
+        public char Delimiter { get { return TerseModel.SHELF_BREAK; } }
     };
 
-    public class LibraryNode
+    public class LibraryNode : ITerseNode<ShelfIndex, ShelfNode>
     {
         public TreeNode Node { get; set; } = new();
-        public SortedDictionary<short, ShelfNode> Shelf { get; set; } = new();
+        public SortedDictionary<ShelfIndex, ShelfNode> Shelf { get; set; } = new();
+        public SortedDictionary<ShelfIndex, ShelfNode> Children
+        {
+            get { return Shelf; }
+            set { Shelf = value; }
+        }
+        public char Delimiter { get { return TerseModel.LIBRARY_BREAK; } }
     };
 
     public class RootNode
     {
-        public SortedDictionary<short, LibraryNode> Library { get; set; } = new();
+        public SortedDictionary<LibraryIndex, LibraryNode> Library { get; set; } = new();
     };
 
     public class TerseText

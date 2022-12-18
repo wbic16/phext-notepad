@@ -29,6 +29,10 @@
             public ScrollIndex(short value) : base(value)
             {
             }
+            public static implicit operator ScrollIndex(short value)
+            {
+                return new ScrollIndex(value);
+            }
         }
         public class SectionIndex : TypedCoordinate
         {
@@ -37,7 +41,7 @@
             }
             public static implicit operator SectionIndex(short value)
             {
-                return new ChapterIndex(value);
+                return new SectionIndex(value);
             }
         }
         public class ChapterIndex : TypedCoordinate
@@ -112,10 +116,12 @@
             }
         }
 
+        public static readonly short SZERO = 0;
+
         public int Column { get; set; } = 0;
         public int Line { get; set; } = 0;
-        public short Scroll { get; set; } = 0;
-        public ScrollIndex Section { get; set; } = 0;
+        public ScrollIndex Scroll { get; set; } = 0;
+        public SectionIndex Section { get; set; } = 0;
         public ChapterIndex Chapter { get; set; } = 0;
         public BookIndex Book { get; set; } = 0;
         public VolumeIndex Volume { get; set; } = 0;
