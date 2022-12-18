@@ -45,17 +45,17 @@ namespace TerseNotepad
             }
         }
 
-        public static readonly char WORD_BREAK = '\x20';
-        public static readonly char LINE_BREAK = '\n';
-        public static readonly char SCROLL_BREAK = '\x17';
-        public static readonly char SECTION_BREAK = '\x18';
-        public static readonly char CHAPTER_BREAK = '\x19';
-        public static readonly char BOOK_BREAK = '\x1A';
-        public static readonly char VOLUME_BREAK = '\x1C';
-        public static readonly char COLLECTION_BREAK = '\x1D';
-        public static readonly char SERIES_BREAK = '\x1E';
-        public static readonly char SHELF_BREAK = '\x1F';
-        public static readonly char LIBRARY_BREAK = '\x01';
+        public const char WORD_BREAK = '\x20';
+        public const char LINE_BREAK = '\n';
+        public const char SCROLL_BREAK = '\x17';
+        public const char SECTION_BREAK = '\x18';
+        public const char CHAPTER_BREAK = '\x19';
+        public const char BOOK_BREAK = '\x1A';
+        public const char VOLUME_BREAK = '\x1C';
+        public const char COLLECTION_BREAK = '\x1D';
+        public const char SERIES_BREAK = '\x1E';
+        public const char SHELF_BREAK = '\x1F';
+        public const char LIBRARY_BREAK = '\x01';
 
         public void Load(string data, TreeView? treeView = null)
         {
@@ -84,14 +84,31 @@ namespace TerseNotepad
                     next == SHELF_BREAK ||
                     next == LIBRARY_BREAK)
                 {
-                    insertScroll(stage, local, null); // sectionNode);
-                    stage.Clear();
+                    if (stage.Length > 0)
+                    {
+                        insertScroll(stage, local, sectionNode);
+                        stage.Clear();
+                    }
                 }
 
                 if (next == SCROLL_BREAK)
                 {
                     ++local.Scroll;
                     continue;
+                }
+
+                int dimensions_broken = 0;
+                switch (next)
+                {
+                    case CHAPTER_BREAK:
+                        ++dimensions_broken;
+                        goto case SECTION_BREAK;
+                    case SECTION_BREAK:
+                        ++dimensions_broken;
+                        goto case SCROLL_BREAK;
+                    case SCROLL_BREAK:
+                        ++dimensions_broken;
+                        break;
                 }
 
                 if (next == SECTION_BREAK)
@@ -279,7 +296,6 @@ namespace TerseNotepad
 
         private void insertScroll(StringBuilder stage, Coordinates local, TreeNode? node)
         {
-            if (stage.Length == 0) { return; }
             var scroll = stage.ToString();
             if (scroll.Length > 0)
             {

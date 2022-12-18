@@ -236,20 +236,18 @@ Use F2 - F11 to access additional dimensions.
             _model.Terse.Coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
-            // libraryID.Enabled = true;
-            // libraryLabel.Enabled = true;
-            // shelfID.Enabled = true;
-            // shelfLabel.Enabled = true;
-            // worldID.Enabled = true;
-            // worldLabel.Enabled = true;
-            // languageID.Enabled = true;
-            // languageLabel.Enabled = true;
-            // branchID.Enabled = true;
-            // branchLabel.Enabled = true;
-            // volumeID.Enabled = true;
-            // volumeLabel.Enabled = true;
-            // bookID.Enabled = true;
-            // bookLabel.Enabled = true;
+            libraryID.Enabled = true;
+            libraryLabel.Enabled = true;
+            shelfID.Enabled = true;
+            shelfLabel.Enabled = true;
+            seriesID.Enabled = true;
+            seriesLabel.Enabled = true;
+            collectionID.Enabled = true;
+            collectionLabel.Enabled = true;
+            volumeID.Enabled = true;
+            volumeLabel.Enabled = true;
+            bookID.Enabled = true;
+            bookLabel.Enabled = true;
             chapterID.Enabled = true;
             chapterLabel.Enabled = true;
             sectionID.Enabled = true;
@@ -756,6 +754,12 @@ Use F2 - F11 to access additional dimensions.
             }
             catch
             {
+                libraryID.Text = _model.Terse.Coords.Library.ToString();
+                shelfID.Text = _model.Terse.Coords.Shelf.ToString();
+                seriesID.Text = _model.Terse.Coords.Series.ToString();
+                collectionID.Text = _model.Terse.Coords.Collection.ToString();
+                volumeID.Text = _model.Terse.Coords.Volume.ToString();
+                bookID.Text = _model.Terse.Coords.Book.ToString();
                 chapterID.Text = _model.Terse.Coords.Chapter.ToString();
                 sectionID.Text = _model.Terse.Coords.Section.ToString();
                 scrollID.Text = _model.Terse.Coords.Scroll.ToString();
@@ -785,8 +789,13 @@ Use F2 - F11 to access additional dimensions.
             {
                 return;
             }
-            _checkout = new Coordinates(coordinates);
-            _model.Terse.Coords.Load(coordinates);
+            var test = new Coordinates(coordinates);
+            if (!test.IsValid())
+            {
+                return;
+            }
+            _checkout = test;
+            _model.Terse.Coords = test;
             UpdateUI("Delete");
             var node = getTreeNode(_model.Terse.Coords);
             if (node == null) { return; }
@@ -820,10 +829,6 @@ Use F2 - F11 to access additional dimensions.
 
         private void coordinateJump(string coordinates, bool storeFirst)
         {
-            if (!coordinates.Contains('-'))
-            {
-                return;
-            }
             if (_checkout?.ToString() == coordinates)
             {
                 return;
@@ -833,7 +838,12 @@ Use F2 - F11 to access additional dimensions.
                 _checkout = new Coordinates(_model.Coords);
                 collectScroll();
             }
-            _model.Coords.Load(coordinates);
+            var test = new Coordinates(coordinates);
+            if (!test.IsValid())
+            {
+                return;
+            }
+            _model.Coords = test;
             scrollID.Text = _model.Coords.Scroll.ToString();
             sectionID.Text = _model.Coords.Section.ToString();
             chapterID.Text = _model.Coords.Chapter.ToString();
@@ -951,31 +961,43 @@ Use F2 - F11 to access additional dimensions.
         private void libraryID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
+            UpDownHandler(libraryID, e);
+            jumpButton_Click(sender, e);
         }
 
         private void shelfID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
+            UpDownHandler(shelfID, e);
+            jumpButton_Click(sender, e);
         }
 
         private void seriesID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
+            UpDownHandler(seriesID, e);
+            jumpButton_Click(sender, e);
         }
 
         private void collectionID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
+            UpDownHandler(collectionID, e);
+            jumpButton_Click(sender, e);
         }
 
         private void volumeID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
+            UpDownHandler(volumeID, e);
+            jumpButton_Click(sender, e);
         }
 
         private void bookID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
+            UpDownHandler(bookID, e);
+            jumpButton_Click(sender, e);
         }
 
         private void chapterID_KeyUp(object sender, KeyEventArgs e)
@@ -1081,6 +1103,36 @@ Use F2 - F11 to access additional dimensions.
         private void chapterID_TextChanged(object sender, EventArgs e)
         {
             UpdateScrollbarMaximum(chapterID, chapterScrollbar);
+        }
+
+        private void bookID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(bookID, bookScrollbar);
+        }
+
+        private void volumeID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(volumeID, volumeScrollbar);
+        }
+
+        private void collectionID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(collectionID, collectionScrollbar);
+        }
+
+        private void seriesID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(seriesID, seriesScrollbar);
+        }
+
+        private void shelfID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(shelfID, shelfScrollbar);
+        }
+
+        private void libraryID_TextChanged(object sender, EventArgs e)
+        {
+            UpdateScrollbarMaximum(libraryID, libraryScrollbar);
         }
 
         private void SetEditorTheme()

@@ -131,13 +131,26 @@
         public ShelfIndex Shelf { get; set; } = 0;
         public LibraryIndex Library { get; set; } = 0;
 
+        private static char[] _cl = new char[9]
+            {
+                'p', 'g', 's', 'y', 'h', 'e', 'w', 'i', 'm'
+            };
+
         public override string ToString()
         {
             return ToString(this);
         }
         public static string ToString(Coordinates c)
         {
-            return $"p{c.Scroll}-g{c.Section}-s{c.Chapter}-y{c.Book}-h{c.Volume}-e{c.Collection}-w{c.Series}-i{c.Shelf}-m{c.Library}";
+            return $"{_cl[0]}{c.Scroll}" +
+                   $"{_cl[1]}{c.Section}" +
+                   $"{_cl[2]}{c.Chapter}" +
+                   $"{_cl[3]}{c.Book}" +
+                   $"{_cl[4]}{c.Volume}" +
+                   $"{_cl[5]}{c.Collection}" +
+                   $"{_cl[6]}{c.Series}" +
+                   $"{_cl[7]}{c.Shelf}" +
+                   $"{_cl[8]}{c.Library}";
         }
         public Coordinates GetRoot()
         {
@@ -262,22 +275,41 @@
             Library = 1;
         }
 
+        private short[] ParseCoordinateString(string coordinates)
+        {
+            var pass1 = coordinates;
+            foreach (var c in _cl)
+            {
+                pass1 = pass1.Replace(c, '-');
+            }
+            var strings = pass1.Split('-', StringSplitOptions.RemoveEmptyEntries);
+            var result = new List<short>();
+            foreach (var s in strings)
+            {
+                if (short.TryParse(s, out short parsed))
+                {
+                    result.Add(parsed);
+                }
+            }
+            return result.ToArray();
+        }
+
         public void Load(string coordinates)
         {
-            var parts = coordinates.Split('-', 9);
+            var parts = ParseCoordinateString(coordinates);
             if (parts.Length != 9)
             {
                 return;
             }
-            Scroll = short.Parse(parts[0].Skip(1).ToArray());
-            Section = short.Parse(parts[1].Skip(1).ToArray());
-            Chapter = short.Parse(parts[2].Skip(1).ToArray());
-            Book = short.Parse(parts[3].Skip(1).ToArray());
-            Volume = short.Parse(parts[4].Skip(1).ToArray());
-            Collection = short.Parse(parts[5].Skip(1).ToArray());
-            Series = short.Parse(parts[6].Skip(1).ToArray());
-            Shelf = short.Parse(parts[7].Skip(1).ToArray());
-            Library = short.Parse(parts[8].Skip(1).ToArray());
+            Scroll = parts[0];
+            Section = parts[1];
+            Chapter = parts[2];
+            Book = parts[3];
+            Volume = parts[4];
+            Collection = parts[5];
+            Series = parts[6];
+            Shelf = parts[7];
+            Library = parts[8];
         }
 
         public bool IsValid()
