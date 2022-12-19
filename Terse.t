@@ -86,7 +86,7 @@ Editor List
 (c) 2022 Will Bickford
 MIT License
 
-v0.2.0 (2022-12-15)
+v0.2.0 (2022-12-19)
 -------------------
 🐛 Fixed keyboard navigation - dimension breaks are less glitchy
 🪲 Chapter 1 problems were being caused by re-use of 1-1-1 for a null state \o/
