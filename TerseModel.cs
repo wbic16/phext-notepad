@@ -121,7 +121,10 @@ namespace TerseNotepad
                         insertScroll(stage, local, sectionNode);
                         stage.Clear();
                     }
-                    ++local.Scroll;
+                    if (next == SCROLL_BREAK)
+                    {
+                        ++local.Scroll;
+                    }
                 }
 
                 if (dimensions_broken >= 2)
@@ -131,9 +134,12 @@ namespace TerseNotepad
                         chapterNode.Nodes.Add(sectionNode);
                         Terse.SetSectionNode(sectionNode, local.GetSectionRoot());
                     }
-                    ++local.Section;
-                    local.Scroll = 1;
                     sectionNode = Terse.GetSectionTreeRoot(local);
+                    if (next == SECTION_BREAK)
+                    {
+                        ++local.Section;
+                        local.Scroll = 1;
+                    }
                 }
 
                 if (dimensions_broken >= 3)
@@ -143,9 +149,13 @@ namespace TerseNotepad
                         bookNode.Nodes.Add(chapterNode);
                         Terse.SetChapterNode(chapterNode, local.GetChapterRoot());
                     }
-                    ++local.Chapter;
-                    local.Section = 1;
                     chapterNode = Terse.GetChapterTreeRoot(local);
+                    if (next == CHAPTER_BREAK)
+                    {
+                        ++local.Chapter;
+                        local.Section = 1;
+                        local.Scroll = 1;
+                    }
                 }
 
                 if (dimensions_broken >= 4)
@@ -155,9 +165,14 @@ namespace TerseNotepad
                         volumeNode.Nodes.Add(bookNode);
                         Terse.SetBookNode(bookNode, local.GetBookRoot());
                     }
-                    ++local.Book;
-                    local.Chapter = 1;
                     bookNode = Terse.GetBookTreeRoot(local);
+                    if (next == BOOK_BREAK)
+                    {
+                        ++local.Book;
+                        local.Chapter = 1;
+                        local.Section = 1;
+                        local.Scroll = 1;
+                    }
                 }
 
                 if (dimensions_broken >= 5)
@@ -167,9 +182,15 @@ namespace TerseNotepad
                         collectionNode.Nodes.Add(volumeNode);
                         Terse.SetVolumeNode(volumeNode, local.GetVolumeRoot());
                     }
-                    ++local.Volume;
-                    local.Book = 1;
                     volumeNode = Terse.GetVolumeTreeRoot(local);
+                    if (next == VOLUME_BREAK)
+                    {
+                        ++local.Volume;
+                        local.Book = 1;
+                        local.Chapter = 1;
+                        local.Section = 1;
+                        local.Scroll = 1;
+                    }
                 }
 
                 if (dimensions_broken >= 6)
@@ -179,9 +200,16 @@ namespace TerseNotepad
                         seriesNode.Nodes.Add(collectionNode);
                         Terse.SetCollectionNode(collectionNode, local.GetCollectionRoot());
                     }
-                    ++local.Collection;
-                    local.Volume = 1;
                     collectionNode = Terse.GetCollectionTreeRoot(local);
+                    if (next == COLLECTION_BREAK)
+                    {
+                        ++local.Collection;
+                        local.Volume = 1;
+                        local.Book = 1;
+                        local.Chapter = 1;
+                        local.Section = 1;
+                        local.Scroll = 1;
+                    }
                 }
 
                 if (dimensions_broken >= 7)
@@ -191,9 +219,17 @@ namespace TerseNotepad
                         shelfNode.Nodes.Add(seriesNode);
                         Terse.SetSeriesNode(seriesNode, local.GetSeriesRoot());
                     }
-                    ++local.Series;
-                    local.Collection = 1;
                     seriesNode = Terse.GetSeriesTreeRoot(local);
+                    if (next == SERIES_BREAK)
+                    {
+                        ++local.Series;
+                        local.Collection = 1;
+                        local.Volume = 1;
+                        local.Book = 1;
+                        local.Chapter = 1;
+                        local.Section = 1;
+                        local.Scroll = 1;
+                    }
                 }
 
                 if (dimensions_broken >= 8)
@@ -203,9 +239,18 @@ namespace TerseNotepad
                         libraryNode.Nodes.Add(shelfNode);
                         Terse.SetShelfNode(shelfNode, local.GetShelfRoot());
                     }
-                    ++local.Shelf;
-                    local.Series = 1;
                     shelfNode = Terse.GetShelfTreeRoot(local);
+                    if (next == SHELF_BREAK)
+                    {
+                        ++local.Shelf;
+                        local.Series = 1;
+                        local.Collection = 1;
+                        local.Volume = 1;
+                        local.Book = 1;
+                        local.Chapter = 1;
+                        local.Section = 1;
+                        local.Scroll = 1;
+                    }
                 }
 
                 if (dimensions_broken >= 9)
@@ -215,9 +260,19 @@ namespace TerseNotepad
                         treeView?.Nodes.Add(libraryNode);
                         Terse.SetLibraryNode(libraryNode, local.GetLibraryRoot());
                     }
-                    ++local.Library;
-                    local.Shelf = 1;
                     libraryNode = Terse.GetLibraryTreeRoot(local);
+                    if (next == LIBRARY_BREAK)
+                    {
+                        ++local.Library;
+                        local.Shelf = 1;
+                        local.Series = 1;
+                        local.Collection = 1;
+                        local.Volume = 1;
+                        local.Book = 1;
+                        local.Chapter = 1;
+                        local.Section = 1;
+                        local.Scroll = 1;
+                    }
                 }
             }
 
@@ -303,6 +358,14 @@ namespace TerseNotepad
                 {
                     collector.Append(LIBRARY_BREAK);
                     ++local.Library;
+                    local.Shelf = 1;
+                    local.Series = 1;
+                    local.Collection = 1;
+                    local.Volume = 1;
+                    local.Book = 1;
+                    local.Chapter = 1;
+                    local.Section = 1;
+                    local.Scroll = 1;
                 }
                 Serialize_Library(collector, Terse.Root.Library[library_index], local);
             }
@@ -316,6 +379,13 @@ namespace TerseNotepad
                 {
                     collector.Append(SHELF_BREAK);
                     ++local.Shelf;
+                    local.Series = 1;
+                    local.Collection = 1;
+                    local.Volume = 1;
+                    local.Book = 1;
+                    local.Chapter = 1;
+                    local.Section = 1;
+                    local.Scroll = 1;
                 }
                 Serialize_Shelf(collector, library.Shelf[shelf_index], local);
             }
@@ -329,6 +399,12 @@ namespace TerseNotepad
                 {
                     collector.Append(SERIES_BREAK);
                     ++local.Series;
+                    local.Collection = 1;
+                    local.Volume = 1;
+                    local.Book = 1;
+                    local.Chapter = 1;
+                    local.Section = 1;
+                    local.Scroll = 1;
                 }
                 Serialize_Series(collector, shelf.Series[series_index], local);
             }
@@ -341,6 +417,11 @@ namespace TerseNotepad
                 {
                     collector.Append(COLLECTION_BREAK);
                     ++local.Collection;
+                    local.Volume = 1;
+                    local.Book = 1;
+                    local.Chapter = 1;
+                    local.Section = 1;
+                    local.Scroll = 1;
                 }
                 Serialize_Collection(collector, series.Collection[collection_index], local);
             }
@@ -354,6 +435,10 @@ namespace TerseNotepad
                 {
                     collector.Append(VOLUME_BREAK);
                     ++local.Volume;
+                    local.Book = 1;
+                    local.Chapter = 1;
+                    local.Section = 1;
+                    local.Scroll = 1;
                 }
                 Serialize_Volume(collector, collection.Volume[volume_index], local);
             }
@@ -367,6 +452,9 @@ namespace TerseNotepad
                 {
                     collector.Append(BOOK_BREAK);
                     ++local.Book;
+                    local.Chapter = 1;
+                    local.Section = 1;
+                    local.Scroll = 1;
                 }
                 Serialize_Book(collector, volume.Book[book_index], local);
             }
@@ -380,6 +468,8 @@ namespace TerseNotepad
                 {
                     collector.Append(CHAPTER_BREAK);
                     ++local.Chapter;
+                    local.Section = 1;
+                    local.Scroll = 1;
                 }
                 Serialize_Chapter(collector, book.Chapter[chapter_index], local);
             }
@@ -393,6 +483,7 @@ namespace TerseNotepad
                 {
                     collector.Append(SECTION_BREAK);
                     ++local.Section;
+                    local.Scroll = 1;
                 }
                 Serialize_Section(collector, chapter.Section[section_index], local);
             }

@@ -51,8 +51,8 @@ Help
 
 Bugs
 ----
-🐛 Keyboard navigation on scrolls is glitchy - jumps pages unexpectedly
 🐛 Unicode glyphs aren't fixed width with Font = Cascadia Code
+🐛 Tree View Parent Lables are Off
 
 Key
 ---
@@ -88,9 +88,27 @@ MIT License
 
 v0.2.0 (2022-12-15)
 -------------------
+🐛 Fixed keyboard navigation - dimension breaks are less glitchy
 🪲 Chapter 1 problems were being caused by re-use of 1-1-1 for a null state \o/
-➕ Increased Tree View width to 325 pixels
-➕ Refactored for dimension growth
+➕ Increased Tree View width to 450 pixels
+➕ New coordinate format
+ ➕ p_g_s_y_h_e_w_i_m
+ ➕ p = Scroll Index
+ ➕ g = Section Index
+ ➕ s = Chapter Index
+ ➕ y = Book Index
+ ➕ h = Collection Index
+ ➕ e = Volume Index
+ ➕ w = Series Index
+ ➕ i = Shelf Index
+ ➕ m = Library Index
+➕ Enabled All Dimensions! \o/
+ ➕ Book - F5
+ ➕ Collection - F6
+ ➕ Volume - F7
+ ➕ Series - F8
+ ➕ Shelf - F9
+ ➕ Library - F10
 
 v0.1.9 (2022-12-14)
 -------------------
@@ -273,4 +291,4 @@ No fields require quotation marks - values are taken verbatim.
 * WordWrap    Boolean: Controls editor word wrap
 * ZoomFactor  Scale factor for text size - 1.0 is normal
 * Theme       'Light' or 'Dark' currently
-* VimMode     Boolean: 'True' for Vim as your editor ('False' is default)
+* VimMode     Boolean: 'True' for Vim as your editor ('False' is default)

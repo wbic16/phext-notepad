@@ -467,6 +467,7 @@ Use F2 - F11 to access additional dimensions.
                 }
             }
 
+            collectScroll();
             var serialized = _model.Serialize();
             File.WriteAllText(_settings.Filename, serialized);
 
@@ -1014,7 +1015,7 @@ Use F2 - F11 to access additional dimensions.
             jumpButton_Click(sender, e);
         }
 
-        private void BumpCoordinate(System.Windows.Forms.TextBox box, int amount)
+        private void BumpCoordinate(TextBox box, int amount)
         {
             var value = int.Parse(box.Text) + amount;
             if (value < 1) { value = 1; }
@@ -1022,7 +1023,7 @@ Use F2 - F11 to access additional dimensions.
             box.Text = value.ToString();
         }
 
-        private void UpDownHandler(System.Windows.Forms.TextBox box, KeyEventArgs e)
+        private void UpDownHandler(TextBox box, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Up)
             {
@@ -1075,7 +1076,7 @@ Use F2 - F11 to access additional dimensions.
             jumpButton_Click(sender, e);
         }
 
-        private void UpdateScrollbarMaximum(System.Windows.Forms.TextBox box, System.Windows.Forms.ScrollBar bar)
+        private void UpdateScrollbarMaximum(TextBox box, ScrollBar bar)
         {
             try
             {
