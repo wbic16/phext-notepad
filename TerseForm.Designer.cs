@@ -47,10 +47,10 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.dimensionReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lockToScrollMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.wordWrapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.darkModeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showCoordinatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defaultTerseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -272,26 +272,20 @@
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.dimensionReportToolStripMenuItem,
             this.lockToScrollMenuItem,
             this.wordWrapToolStripMenuItem,
-            this.darkModeMenuItem});
+            this.darkModeMenuItem,
+            this.showCoordinatesToolStripMenuItem});
             this.viewToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "&View";
             // 
-            // dimensionReportToolStripMenuItem
-            // 
-            this.dimensionReportToolStripMenuItem.Name = "dimensionReportToolStripMenuItem";
-            this.dimensionReportToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.dimensionReportToolStripMenuItem.Text = "&Dimension Report";
-            // 
             // lockToScrollMenuItem
             // 
             this.lockToScrollMenuItem.CheckOnClick = true;
             this.lockToScrollMenuItem.Name = "lockToScrollMenuItem";
-            this.lockToScrollMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.lockToScrollMenuItem.Size = new System.Drawing.Size(180, 22);
             this.lockToScrollMenuItem.Text = "&Lock to Scroll";
             this.lockToScrollMenuItem.CheckedChanged += new System.EventHandler(this.lockToScrollMenuItem_CheckedChanged);
             // 
@@ -301,7 +295,7 @@
             this.wordWrapToolStripMenuItem.CheckOnClick = true;
             this.wordWrapToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.wordWrapToolStripMenuItem.Name = "wordWrapToolStripMenuItem";
-            this.wordWrapToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.wordWrapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.wordWrapToolStripMenuItem.Text = "&Word Wrap";
             this.wordWrapToolStripMenuItem.Click += new System.EventHandler(this.wordWrapToolStripMenuItem_Click);
             // 
@@ -311,9 +305,19 @@
             this.darkModeMenuItem.CheckOnClick = true;
             this.darkModeMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.darkModeMenuItem.Name = "darkModeMenuItem";
-            this.darkModeMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.darkModeMenuItem.Size = new System.Drawing.Size(180, 22);
             this.darkModeMenuItem.Text = "Dark &Mode";
             this.darkModeMenuItem.Click += new System.EventHandler(this.darkModeMenuItem_Click);
+            // 
+            // showCoordinatesToolStripMenuItem
+            // 
+            this.showCoordinatesToolStripMenuItem.Checked = true;
+            this.showCoordinatesToolStripMenuItem.CheckOnClick = true;
+            this.showCoordinatesToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.showCoordinatesToolStripMenuItem.Name = "showCoordinatesToolStripMenuItem";
+            this.showCoordinatesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.showCoordinatesToolStripMenuItem.Text = "&Show Coordinates";
+            this.showCoordinatesToolStripMenuItem.CheckedChanged += new System.EventHandler(this.showCoordinatesToolStripMenuItem_CheckedChanged);
             // 
             // helpToolStripMenuItem
             // 
@@ -771,7 +775,7 @@
         private ToolStripMenuItem aboutToolStripMenuItem;
         private ToolStripMenuItem saveToolStripMenuItem;
         private ToolStripMenuItem viewToolStripMenuItem;
-        private ToolStripMenuItem dimensionReportToolStripMenuItem;
+        private ToolStripMenuItem showCoordinatesToolStripMenuItem;
         private TextBox libraryID;
         private Label shelfLabel;
         private TextBox shelfID;

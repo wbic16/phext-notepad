@@ -30,7 +30,7 @@ namespace TerseNotepad
             if (File.Exists(_configFilename))
             {
                 var text = File.ReadAllText(_configFilename);
-                Deserialize(text);                
+                Deserialize(text);
             }
         }
         public string Format { get; set; } = "TerseConfig";
@@ -86,6 +86,7 @@ namespace TerseNotepad
         public bool LightMode { get { return Theme == "Light"; } }
 
         public bool VimMode { get; set; } = false;
+        public bool ShowCoordinates { get; set; } = true;
 
         public string Serialize()
         {
@@ -112,7 +113,8 @@ namespace TerseNotepad
                  + $"WordWrap = {WordWrap}\n"
                  + $"ZoomFactor = {ZoomFactor}\n"
                  + $"Theme = {Theme}\n"
-                 + $"VimMode = {VimMode}\n";
+                 + $"VimMode = {VimMode}\n"
+                 + $"ShowCoordinates = {ShowCoordinates}\n";
             foreach (var key in RecentFile.Keys.OrderByDescending(q => q))
             {
                 var file = RecentFile[key];
@@ -214,6 +216,9 @@ namespace TerseNotepad
                             break;
                         case "VimMode":
                             VimMode = parts[1] == "True";
+                            break;
+                        case "ShowCoordinates":
+                            ShowCoordinates = parts[1] == "True";
                             break;
                     }
                 }

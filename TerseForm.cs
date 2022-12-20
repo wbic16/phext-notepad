@@ -146,7 +146,8 @@ Use F2 - F11 to access additional dimensions.
             {
                 if (textBox.Lines != null && textBox.Lines.Length >= 1)
                 {
-                    node.Text = node.Name + "? " + TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Lines.First());
+                    var line = TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Text);
+                    node.Text = _settings.ShowCoordinates ? $"{node.Name}? {line}" : line;
                 }
             }
             else
@@ -165,7 +166,7 @@ Use F2 - F11 to access additional dimensions.
                     }
 
                     var line = TerseModel.GetScrollSummary(_model.Terse.Coords, textBox.Text);
-                    var scrollNode = _model.CreateNode(sectionNode, line);
+                    var scrollNode = _model.CreateNode(sectionNode, line, _settings.ShowCoordinates);
                     scrollNode.NodeFont = SCROLL_NODE_FONT;
                     treeView.SelectedNode = scrollNode;
                     textBox.SelectionStart = textBox.Text.Length;
@@ -321,6 +322,7 @@ Use F2 - F11 to access additional dimensions.
             chapterLabel.Text = _settings.Dimension5;
             sectionLabel.Text = _settings.Dimension4;
             scrollLabel.Text = _settings.Dimension3;
+            showCoordinatesToolStripMenuItem.Checked = _settings.ShowCoordinates;
             SetEditorTheme();
 
             if (!File.Exists(_settings.IniFilePath))
@@ -399,7 +401,7 @@ Use F2 - F11 to access additional dimensions.
             treeView.SuspendLayout();
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
-            _model.Load(data, treeView);
+            _model.Load(data, _settings.ShowCoordinates, treeView);
             // todo: scrollbars
             treeView.ExpandAll();
             treeView.EndUpdate();
@@ -1215,6 +1217,13 @@ Use F2 - F11 to access additional dimensions.
         {
             textBox.Focus();
             textBox.SelectionStart = textBox.Text.Length;
+        }
+
+        private void showCoordinatesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            _settings.ShowCoordinates = showCoordinatesToolStripMenuItem.Checked;
+            _settings.Save();
+            LoadFile(_settings.Filename, false);
         }
     }
 }

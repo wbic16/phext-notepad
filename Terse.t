@@ -41,18 +41,20 @@ Edit
 
 View
 ----
- * Dimension Report: Append a Text Summary of Your Terse Space (Ctrl-D)
+ * Lock to Scroll: Toggles the Tree View On/Off
+ * Word Wrap: Controls text editor word wrap
+ * Dark Mode: Toggles a white or black background
+ * Show Coordinates: Display coordinates in the Tree View
 
 Help
 ----
  * About: Display Program Version
-Bug List v0.2.0
+Bug List v0.2.1
 ---------------
 
 Bugs
 ----
 🐛 Unicode glyphs aren't fixed width with Font = Cascadia Code
-🐛 Tree View Parent Lables are Off
 
 Key
 ---
@@ -85,6 +87,11 @@ Editor List
 -------------
 (c) 2022 Will Bickford
 MIT License
+
+v0.2.1 (2022-12-19)
+-------------------
+🐛 Fixed Tree View Labels
+➕ Added Show Coordinates setting
 
 v0.2.0 (2022-12-19)
 -------------------
