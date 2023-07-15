@@ -19,12 +19,9 @@ namespace TerseNotepad
         private TerseConfig _settings = new();
         private Font SCROLL_NODE_FONT = new("Cascadia Code", 11);
 
-        private Vim.Vim? vimEditor { get; set; } = null;
-
         public TerseForm(string[] args)
         {
             InitializeComponent();
-            InitializeExternalEditor();
 
             lockToScrollMenuItem.Checked = Control.IsKeyLocked(Keys.Scroll);
             LoadFonts();
@@ -48,32 +45,8 @@ namespace TerseNotepad
             {
                 LoadFile(_settings.Filename, false);
             }
-
-            vimModeToolStripMenuItem.Checked = _settings.VimMode;
-            if (_settings.VimMode)
-            {
-                vimEditor?.SetForeground();
-                SendToBack();
-            }
         }
-
-        private void InitializeExternalEditor()
-        {
-            if (!_settings.VimMode)
-            {
-                return;
-            }
-            // VIM Integration via OLE
-            vimEditor = new();
-            var vimWindow = (IntPtr)vimEditor.GetHwnd();
-            var screenCoordinates = PointToScreen(Location);
-            var vimX = screenCoordinates.X + textBox.Left;
-            var vimY = screenCoordinates.Y + textBox.Top;
-            var vimWidth = textBox.Size.Width;
-            var vimHeight = textBox.Size.Height;
-            SetWindowPos(vimWindow, Handle, vimX, vimY, vimWidth, vimHeight, 0);
-        }
-
+      
         private void LoadDefaultTerse()
         {
             _settings.Filename = "";
@@ -119,21 +92,7 @@ Use F2 - F11 to access additional dimensions.
             {
                 return;
             }
-            reloadMenuItem.Enabled = true;
-            if (vimEditor != null)
-            {
-                var scratchpad = _settings.Filename + $".scroll-{_model.Coords}";
-                if (File.Exists(scratchpad))
-                {
-                    VimSetEditMode(false);
-                    vimEditor.SendKeys(":w!\n");
-                    try
-                    {
-                        textBox.Text = File.ReadAllText(scratchpad);
-                    }
-                    catch { }
-                }
-            }
+            reloadMenuItem.Enabled = true;            
             _model.Terse.setScroll(textBox.Text);
             if (textBox.Text.Length == 0)
             {
@@ -190,50 +149,11 @@ Use F2 - F11 to access additional dimensions.
             bar.Value = translated;
         }
 
-        private void VimSetEditMode(bool insert = true, bool retry = false)
-        {
-            try
-            {
-                if (vimEditor == null)
-                {
-                    InitializeExternalEditor();
-                }
-                if (vimEditor == null)
-                {
-                    return;
-                }
-                var test = vimEditor.Eval("mode()");
-                if (test == "n" && insert)
-                {
-                    vimEditor.SendKeys("i");
-                }
-                if (test == "i" && !insert)
-                {
-                    vimEditor.SendKeys("<C-\\><C-N>");
-                }
-            }
-            catch
-            {
-                vimEditor = new();
-                if (retry)
-                {
-                    VimSetEditMode(insert, false);
-                }
-            }
-        }
-
         private void loadScroll()
         {
             textBox.SuspendLayout();
             _checkout = new Coordinates(_model.Coords);
             textBox.Text = _model.Terse.getScroll();
-            if (_settings.VimMode && vimEditor != null)
-            {
-                VimSetEditMode(false);
-                var scratchpad = _settings.Filename + $".scroll-{_model.Coords}";
-                File.WriteAllText(scratchpad, textBox.Text);
-                vimEditor.SendKeys($":e! {scratchpad}\n");
-            }
             _model.Terse.Coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
@@ -433,23 +353,8 @@ Use F2 - F11 to access additional dimensions.
             LoadData("", true);
         }
 
-        private void CloseExternalEditor()
-        {
-            if (!_settings.VimMode)
-            {
-                return;
-            }
-
-            try
-            {
-                vimEditor?.SendKeys(":q!\n");
-            }
-            catch { }
-        }
-
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CloseExternalEditor();
             SyncEditorState();
             Close();
         }
@@ -873,7 +778,6 @@ Use F2 - F11 to access additional dimensions.
 
         private void TerseForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            CloseExternalEditor();
             SyncEditorState();
         }
 
@@ -1168,21 +1072,7 @@ Use F2 - F11 to access additional dimensions.
                         return;
                     }
                 }
-            }
-            _settings.VimMode = vimModeToolStripMenuItem.Checked;
-            if (_settings.VimMode)
-            {
-                InitializeExternalEditor();
-            }
-            else
-            {
-                if (vimEditor != null)
-                {
-                    VimSetEditMode(false);
-                    vimEditor.SendKeys(":q!\n");
-                    vimEditor = null;
-                }
-            }
+            }            
         }
 
         private void lockToScrollMenuItem_CheckedChanged(object sender, EventArgs e)
