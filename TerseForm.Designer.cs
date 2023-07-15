@@ -74,15 +74,6 @@
             this.scrollID = new System.Windows.Forms.TextBox();
             this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.wordCountLabel = new System.Windows.Forms.Label();
-            this.libraryScrollbar = new System.Windows.Forms.VScrollBar();
-            this.shelfScrollbar = new System.Windows.Forms.VScrollBar();
-            this.seriesScrollbar = new System.Windows.Forms.VScrollBar();
-            this.collectionScrollbar = new System.Windows.Forms.VScrollBar();
-            this.volumeScrollbar = new System.Windows.Forms.VScrollBar();
-            this.bookScrollbar = new System.Windows.Forms.VScrollBar();
-            this.chapterScrollbar = new System.Windows.Forms.VScrollBar();
-            this.sectionScrollbar = new System.Windows.Forms.VScrollBar();
-            this.scrollScrollbar = new System.Windows.Forms.VScrollBar();
             this.treeView = new System.Windows.Forms.TreeView();
             this.panel1 = new System.Windows.Forms.Panel();
             this.menuStrip.SuspendLayout();
@@ -104,7 +95,7 @@
             this.textBox.Location = new System.Drawing.Point(459, 5);
             this.textBox.MaxLength = 100000000;
             this.textBox.Name = "textBox";
-            this.textBox.Size = new System.Drawing.Size(870, 547);
+            this.textBox.Size = new System.Drawing.Size(960, 547);
             this.textBox.TabIndex = 0;
             this.textBox.Text = "";
             this.textBox.SelectionChanged += new System.EventHandler(this.textBox_SelectionChanged);
@@ -353,7 +344,6 @@
             this.libraryID.Name = "libraryID";
             this.libraryID.Size = new System.Drawing.Size(55, 23);
             this.libraryID.TabIndex = 1;
-            this.libraryID.TextChanged += new System.EventHandler(this.libraryID_TextChanged);
             this.libraryID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.libraryID_KeyUp);
             // 
             // shelfLabel
@@ -379,7 +369,6 @@
             this.shelfID.Name = "shelfID";
             this.shelfID.Size = new System.Drawing.Size(55, 23);
             this.shelfID.TabIndex = 2;
-            this.shelfID.TextChanged += new System.EventHandler(this.shelfID_TextChanged);
             this.shelfID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.shelfID_KeyUp);
             // 
             // seriesLabel
@@ -405,7 +394,6 @@
             this.seriesID.Name = "seriesID";
             this.seriesID.Size = new System.Drawing.Size(55, 23);
             this.seriesID.TabIndex = 3;
-            this.seriesID.TextChanged += new System.EventHandler(this.seriesID_TextChanged);
             this.seriesID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.seriesID_KeyUp);
             // 
             // collectionLabel
@@ -431,7 +419,6 @@
             this.collectionID.Name = "collectionID";
             this.collectionID.Size = new System.Drawing.Size(55, 23);
             this.collectionID.TabIndex = 4;
-            this.collectionID.TextChanged += new System.EventHandler(this.collectionID_TextChanged);
             this.collectionID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.collectionID_KeyUp);
             // 
             // volumeLabel
@@ -457,7 +444,6 @@
             this.volumeID.Name = "volumeID";
             this.volumeID.Size = new System.Drawing.Size(55, 23);
             this.volumeID.TabIndex = 5;
-            this.volumeID.TextChanged += new System.EventHandler(this.volumeID_TextChanged);
             this.volumeID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.volumeID_KeyUp);
             // 
             // bookLabel
@@ -483,7 +469,6 @@
             this.bookID.Name = "bookID";
             this.bookID.Size = new System.Drawing.Size(55, 23);
             this.bookID.TabIndex = 6;
-            this.bookID.TextChanged += new System.EventHandler(this.bookID_TextChanged);
             this.bookID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.bookID_KeyUp);
             // 
             // chapterLabel
@@ -546,7 +531,6 @@
             this.chapterID.Name = "chapterID";
             this.chapterID.Size = new System.Drawing.Size(55, 23);
             this.chapterID.TabIndex = 7;
-            this.chapterID.TextChanged += new System.EventHandler(this.chapterID_TextChanged);
             this.chapterID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.chapterID_KeyUp);
             // 
             // sectionID
@@ -559,7 +543,6 @@
             this.sectionID.Name = "sectionID";
             this.sectionID.Size = new System.Drawing.Size(55, 23);
             this.sectionID.TabIndex = 8;
-            this.sectionID.TextChanged += new System.EventHandler(this.sectionID_TextChanged);
             this.sectionID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.sectionID_KeyUp);
             // 
             // scrollID
@@ -572,7 +555,6 @@
             this.scrollID.Name = "scrollID";
             this.scrollID.Size = new System.Drawing.Size(55, 23);
             this.scrollID.TabIndex = 9;
-            this.scrollID.TextChanged += new System.EventHandler(this.scrollID_TextChanged);
             this.scrollID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.scrollID_KeyUp);
             // 
             // flowLayoutPanel
@@ -616,90 +598,6 @@
             this.wordCountLabel.TabIndex = 10;
             this.wordCountLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // libraryScrollbar
-            // 
-            this.libraryScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.libraryScrollbar.Location = new System.Drawing.Point(1358, 24);
-            this.libraryScrollbar.Name = "libraryScrollbar";
-            this.libraryScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.libraryScrollbar.TabIndex = 12;
-            // 
-            // shelfScrollbar
-            // 
-            this.shelfScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.shelfScrollbar.Location = new System.Drawing.Point(1332, 24);
-            this.shelfScrollbar.Name = "shelfScrollbar";
-            this.shelfScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.shelfScrollbar.TabIndex = 13;
-            // 
-            // seriesScrollbar
-            // 
-            this.seriesScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.seriesScrollbar.Location = new System.Drawing.Point(1306, 24);
-            this.seriesScrollbar.Name = "seriesScrollbar";
-            this.seriesScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.seriesScrollbar.TabIndex = 14;
-            // 
-            // collectionScrollbar
-            // 
-            this.collectionScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.collectionScrollbar.Location = new System.Drawing.Point(1280, 24);
-            this.collectionScrollbar.Name = "collectionScrollbar";
-            this.collectionScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.collectionScrollbar.TabIndex = 15;
-            // 
-            // volumeScrollbar
-            // 
-            this.volumeScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.volumeScrollbar.Location = new System.Drawing.Point(1254, 24);
-            this.volumeScrollbar.Name = "volumeScrollbar";
-            this.volumeScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.volumeScrollbar.TabIndex = 23;
-            // 
-            // bookScrollbar
-            // 
-            this.bookScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.bookScrollbar.Location = new System.Drawing.Point(1228, 24);
-            this.bookScrollbar.Name = "bookScrollbar";
-            this.bookScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.bookScrollbar.TabIndex = 26;
-            // 
-            // chapterScrollbar
-            // 
-            this.chapterScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.chapterScrollbar.LargeChange = 1;
-            this.chapterScrollbar.Location = new System.Drawing.Point(1202, 24);
-            this.chapterScrollbar.Maximum = 1;
-            this.chapterScrollbar.Minimum = 1;
-            this.chapterScrollbar.Name = "chapterScrollbar";
-            this.chapterScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.chapterScrollbar.TabIndex = 34;
-            this.chapterScrollbar.Value = 1;
-            // 
-            // sectionScrollbar
-            // 
-            this.sectionScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.sectionScrollbar.LargeChange = 1;
-            this.sectionScrollbar.Location = new System.Drawing.Point(1176, 24);
-            this.sectionScrollbar.Maximum = 1;
-            this.sectionScrollbar.Minimum = 1;
-            this.sectionScrollbar.Name = "sectionScrollbar";
-            this.sectionScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.sectionScrollbar.TabIndex = 35;
-            this.sectionScrollbar.Value = 1;
-            // 
-            // scrollScrollbar
-            // 
-            this.scrollScrollbar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.scrollScrollbar.LargeChange = 1;
-            this.scrollScrollbar.Location = new System.Drawing.Point(1150, 24);
-            this.scrollScrollbar.Maximum = 1;
-            this.scrollScrollbar.Minimum = 1;
-            this.scrollScrollbar.Name = "scrollScrollbar";
-            this.scrollScrollbar.Size = new System.Drawing.Size(26, 552);
-            this.scrollScrollbar.TabIndex = 36;
-            this.scrollScrollbar.Value = 1;
-            // 
             // treeView
             // 
             this.treeView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -733,15 +631,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlDark;
             this.ClientSize = new System.Drawing.Size(1384, 641);
-            this.Controls.Add(this.scrollScrollbar);
-            this.Controls.Add(this.sectionScrollbar);
-            this.Controls.Add(this.chapterScrollbar);
-            this.Controls.Add(this.bookScrollbar);
-            this.Controls.Add(this.volumeScrollbar);
-            this.Controls.Add(this.collectionScrollbar);
-            this.Controls.Add(this.seriesScrollbar);
-            this.Controls.Add(this.shelfScrollbar);
-            this.Controls.Add(this.libraryScrollbar);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.flowLayoutPanel);
             this.Controls.Add(this.menuStrip);
@@ -794,15 +683,7 @@
         private TextBox chapterID;
         private TextBox sectionID;
         private TextBox scrollID;
-        private VScrollBar libraryScrollbar;
-        private VScrollBar shelfScrollbar;
-        private VScrollBar seriesScrollbar;
-        private VScrollBar collectionScrollbar;
-        private VScrollBar volumeScrollbar;
-        private VScrollBar bookScrollbar;
-        private VScrollBar chapterScrollbar;
-        private VScrollBar sectionScrollbar;
-        private VScrollBar scrollScrollbar;
+        private VScrollBar scrollbar;
         private TreeView treeView;
         private FlowLayoutPanel flowLayoutPanel;
         private ToolStripMenuItem lockToScrollMenuItem;

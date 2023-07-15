@@ -49,7 +49,7 @@ View
 Help
 ----
  * About: Display Program Version
-Bug List v0.2.1
+Bug List v0.2.2
 ---------------
 
 Bugs
@@ -85,8 +85,13 @@ Editor List
 * Flownote: One infinite scroll [C++]
 * Dreamnote: A place for all of your notes [Rust]Release Notes
 -------------
-(c) 2022 Will Bickford
+(c) 2022-2023 Will Bickford
 MIT License
+
+v0.2.2 (2023-07-14)
+-------------------
+➕ Removed extra scroll bars
+➕ Removed Vim integration
 
 v0.2.1 (2022-12-19)
 -------------------

@@ -137,18 +137,6 @@ Use F2 - F11 to access additional dimensions.
             treeView.EndUpdate();
         }
 
-        private void updateScrollbarValue(ScrollBar bar, short value)
-        {
-            if (value < 1) { return; }
-
-            int translated = value;
-            if (translated > bar.Maximum)
-            {
-                bar.Maximum = translated + 1;
-            }
-            bar.Value = translated;
-        }
-
         private void loadScroll()
         {
             textBox.SuspendLayout();
@@ -315,14 +303,10 @@ Use F2 - F11 to access additional dimensions.
 
         private void LoadData(string data, bool resetView)
         {
-            chapterScrollbar.SuspendLayout();
-            sectionScrollbar.SuspendLayout();
-            scrollScrollbar.SuspendLayout();
             treeView.SuspendLayout();
             treeView.BeginUpdate();
             treeView.Nodes.Clear();
             _model.Load(data, _settings.ShowCoordinates, treeView);
-            // todo: scrollbars
             treeView.ExpandAll();
             treeView.EndUpdate();
             treeView.ResumeLayout();
@@ -334,9 +318,6 @@ Use F2 - F11 to access additional dimensions.
             {
                 coordinateJump(_settings.Coords, false);
             }
-            scrollScrollbar.ResumeLayout();
-            sectionScrollbar.ResumeLayout();
-            chapterScrollbar.ResumeLayout();
         }
 
         private void jumpToOrigin()
@@ -431,10 +412,6 @@ Use F2 - F11 to access additional dimensions.
             scrollID.Text = _model.Terse.Coords.Scroll.ToString();
 
             textBox.Enabled = _checkout != null;
-
-            updateScrollbarValue(scrollScrollbar, _model.Terse.Coords.Scroll);
-            updateScrollbarValue(sectionScrollbar, _model.Terse.Coords.Section);
-            updateScrollbarValue(chapterScrollbar, _model.Terse.Coords.Chapter);
 
             status.Text = _model.Terse.EditorSummary(action);
             wordCountLabel.Text = $"Doc: {FormatNumber(_model.WordCount)}, Scroll: {FormatNumber(_model.ScrollWordCount)}";
@@ -963,85 +940,7 @@ Use F2 - F11 to access additional dimensions.
             textBox.WordWrap = wordWrapToolStripMenuItem.Checked;
             _settings.WordWrap = textBox.WordWrap;
         }
-
-        private void scrollScrollbar_ValueChanged(object sender, EventArgs e)
-        {
-            scrollID.Text = scrollScrollbar.Value.ToString();
-            jumpButton_Click(sender, e);
-        }
-
-        private void sectionScrollbar_ValueChanged(object sender, EventArgs e)
-        {
-            sectionID.Text = sectionScrollbar.Value.ToString();
-            jumpButton_Click(sender, e);
-        }
-
-        private void chapterScrollbar_ValueChanged(object sender, EventArgs e)
-        {
-            chapterID.Text = chapterScrollbar.Value.ToString();
-            jumpButton_Click(sender, e);
-        }
-
-        private void UpdateScrollbarMaximum(TextBox box, ScrollBar bar)
-        {
-            try
-            {
-                var test = int.Parse(box.Text);
-                if (test > bar.Maximum)
-                {
-                    bar.Maximum = test;
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        private void scrollID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(scrollID, scrollScrollbar);
-        }
-
-        private void sectionID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(sectionID, sectionScrollbar);
-        }
-
-        private void chapterID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(chapterID, chapterScrollbar);
-        }
-
-        private void bookID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(bookID, bookScrollbar);
-        }
-
-        private void volumeID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(volumeID, volumeScrollbar);
-        }
-
-        private void collectionID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(collectionID, collectionScrollbar);
-        }
-
-        private void seriesID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(seriesID, seriesScrollbar);
-        }
-
-        private void shelfID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(shelfID, shelfScrollbar);
-        }
-
-        private void libraryID_TextChanged(object sender, EventArgs e)
-        {
-            UpdateScrollbarMaximum(libraryID, libraryScrollbar);
-        }
-
+        
         private void SetEditorTheme()
         {
             bool mode = _settings.DarkMode;
@@ -1088,12 +987,12 @@ Use F2 - F11 to access additional dimensions.
             if (lockToScrollMenuItem.Checked)
             {
                 textBox.Left = 0;
-                textBox.Width = Width - 100;
+                textBox.Width = Width - 24;
             }
             else
             {
                 textBox.Left = treeView.Right;
-                textBox.Width = Width - treeView.Width - 100;
+                textBox.Width = Width - treeView.Width - 24;
             }
         }
 
