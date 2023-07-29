@@ -34,7 +34,7 @@ namespace TerseNotepad
             }
         }
         public string Format { get; set; } = "TerseConfig";
-        public string Version { get; private set; } = "4";
+        public string Version { get; private set; } = "5";
         private string _filename = "";
         public string Filename
         {
@@ -85,9 +85,30 @@ namespace TerseNotepad
         public bool DarkMode { get { return Theme == "Dark"; } }
         public bool LightMode { get { return Theme == "Light"; } }
 
-        public bool VimMode { get; set; } = false;
+        public Color Color1 { get; set; } = Color.Black;
+        public Color Color2 { get; set; } = Color.White;
+        public Color Color3 { get; set; } = Color.DeepSkyBlue;
+        public Color Color4 { get; set; } = Color.DarkGray;
         public bool ShowCoordinates { get; set; } = true;
 
+        private string SerializeColor(Color color)
+        {
+            var result = ColorTranslator.ToHtml(color);
+            return result;
+        }
+        private Color DeserializeColor(string color, Color fallback)
+        {
+            Color result;
+            try
+            {
+                result = ColorTranslator.FromHtml(color);
+            }
+            catch
+            {
+                result = fallback;
+            }
+            return result;
+        }
         public string Serialize()
         {
             var result = $"[TerseConfig]\n"
@@ -113,7 +134,10 @@ namespace TerseNotepad
                  + $"WordWrap = {WordWrap}\n"
                  + $"ZoomFactor = {ZoomFactor}\n"
                  + $"Theme = {Theme}\n"
-                 + $"VimMode = {VimMode}\n"
+                 + $"Color1 = {SerializeColor(Color1)}\n"
+                 + $"Color2 = {SerializeColor(Color2)}\n"
+                 + $"Color3 = {SerializeColor(Color3)}\n"
+                 + $"Color4 = {SerializeColor(Color4)}\n"
                  + $"ShowCoordinates = {ShowCoordinates}\n";
             foreach (var key in RecentFile.Keys.OrderByDescending(q => q))
             {
@@ -132,97 +156,109 @@ namespace TerseNotepad
                 foreach (var line in lines)
                 {
                     var parts = line.Split(" = ");
+                    var value = parts.Length > 1 ? parts[1] : "";
                     switch (parts[0])
                     {
                         case "Format":
-                            Format = parts[1];
+                            Format = value;
                             break;
                         case "Version":
-                            Version = parts[1];
+                            Version = value;
                             break;
                         case "Filename":
-                            Filename = parts[1];
+                            Filename = value;
                             break;
                         case "TreeView":
-                            TreeView = parts[1] == "True";
+                            TreeView = value == "True";
                             break;
                         case "Coords":
-                            Coords = parts[1];
+                            Coords = value;
                             break;
                         case "Font":
-                            Font = parts[1];
+                            Font = value;
                             break;
                         case "FontSize":
                             try
                             {
-                                FontSize = int.Parse(parts[1]);
+                                FontSize = int.Parse(value);
                             }
                             catch { }
                             break;
                         case "LastError":
-                            LastError = parts[1];
+                            LastError = value;
                             break;
                         case "Dimension1":
-                            Dimension1 = parts[1];
+                            Dimension1 = value;
                             break;
                         case "Dimension2":
-                            Dimension2 = parts[1];
+                            Dimension2 = value;
                             break;
                         case "Dimension3":
-                            Dimension3 = parts[1];
+                            Dimension3 = value;
                             break;
                         case "Dimension4":
-                            Dimension4 = parts[1];
+                            Dimension4 = value;
                             break;
                         case "Dimension5":
-                            Dimension5 = parts[1];
+                            Dimension5 = value;
                             break;
                         case "Dimension6":
-                            Dimension6 = parts[1];
+                            Dimension6 = value;
                             break;
                         case "Dimension7":
-                            Dimension7 = parts[1];
+                            Dimension7 = value;
                             break;
                         case "Dimension8":
-                            Dimension8 = parts[1];
+                            Dimension8 = value;
                             break;
                         case "Dimension9":
-                            Dimension9 = parts[1];
+                            Dimension9 = value;
                             break;
                         case "Dimension10":
-                            Dimension10 = parts[1];
+                            Dimension10 = value;
                             break;
                         case "Dimension11":
-                            Dimension11 = parts[1];
+                            Dimension11 = value;
                             break;
                         case "WordWrap":
-                            WordWrap = parts[1] == "True";
+                            WordWrap = value == "True";
                             break;
                         case "ZoomFactor":
                             try
                             {
-                                ZoomFactor = float.Parse(parts[1]);
+                                ZoomFactor = float.Parse(value);
                             }
                             catch { }
                             break;
                         case "RecentFile":
-                            if (!RecentFile.ContainsValue(parts[1]))
+                            if (!RecentFile.ContainsValue(value))
                             {
-                                RecentFile[fileOrdering++] = parts[1];
+                                RecentFile[fileOrdering++] = value;
                             }
                             break;
                         case "Theme":
-                            Theme = parts[1];
+                            Theme = value;
                             break;
-                        case "VimMode":
-                            VimMode = parts[1] == "True";
+                        case "Color1":
+                            Color1 = DeserializeColor(value, Color.Black);
+                            break;
+                        case "Color2":
+                            Color2 = DeserializeColor(value, Color.White);
+                            break;
+                        case "Color3":
+                            Color3 = DeserializeColor(value, Color.DeepSkyBlue);
+                            break;
+                        case "Color4":
+                            Color4 = DeserializeColor(value, Color.DarkGray);
                             break;
                         case "ShowCoordinates":
-                            ShowCoordinates = parts[1] == "True";
+                            ShowCoordinates = value == "True";
                             break;
                     }
                 }
             }
+
+            // Todo: validate color differences to prevent unreadable text
         }
 
         public void Save()

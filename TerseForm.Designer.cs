@@ -28,627 +28,591 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.textBox = new System.Windows.Forms.RichTextBox();
-            this.libraryLabel = new System.Windows.Forms.Label();
-            this.menuStrip = new System.Windows.Forms.MenuStrip();
-            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.reloadMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.recentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.vimModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.lockToScrollMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.wordWrapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.darkModeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showCoordinatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.defaultTerseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.libraryID = new System.Windows.Forms.TextBox();
-            this.shelfLabel = new System.Windows.Forms.Label();
-            this.shelfID = new System.Windows.Forms.TextBox();
-            this.seriesLabel = new System.Windows.Forms.Label();
-            this.seriesID = new System.Windows.Forms.TextBox();
-            this.collectionLabel = new System.Windows.Forms.Label();
-            this.collectionID = new System.Windows.Forms.TextBox();
-            this.volumeLabel = new System.Windows.Forms.Label();
-            this.volumeID = new System.Windows.Forms.TextBox();
-            this.bookLabel = new System.Windows.Forms.Label();
-            this.bookID = new System.Windows.Forms.TextBox();
-            this.chapterLabel = new System.Windows.Forms.Label();
-            this.sectionLabel = new System.Windows.Forms.Label();
-            this.scrollLabel = new System.Windows.Forms.Label();
-            this.status = new System.Windows.Forms.Label();
-            this.chapterID = new System.Windows.Forms.TextBox();
-            this.sectionID = new System.Windows.Forms.TextBox();
-            this.scrollID = new System.Windows.Forms.TextBox();
-            this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.wordCountLabel = new System.Windows.Forms.Label();
-            this.treeView = new System.Windows.Forms.TreeView();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.menuStrip.SuspendLayout();
-            this.flowLayoutPanel.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.SuspendLayout();
+            textBox = new RichTextBox();
+            libraryLabel = new Label();
+            menuStrip = new MenuStrip();
+            fileToolStripMenuItem = new ToolStripMenuItem();
+            closeToolStripMenuItem = new ToolStripMenuItem();
+            openToolStripMenuItem = new ToolStripMenuItem();
+            reloadMenuItem = new ToolStripMenuItem();
+            toolStripSeparator4 = new ToolStripSeparator();
+            saveToolStripMenuItem = new ToolStripMenuItem();
+            saveAsToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
+            recentToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
+            exitToolStripMenuItem = new ToolStripMenuItem();
+            editToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator3 = new ToolStripSeparator();
+            preferencesToolStripMenuItem = new ToolStripMenuItem();
+            viewToolStripMenuItem = new ToolStripMenuItem();
+            lockToScrollMenuItem = new ToolStripMenuItem();
+            wordWrapToolStripMenuItem = new ToolStripMenuItem();
+            darkModeMenuItem = new ToolStripMenuItem();
+            showCoordinatesToolStripMenuItem = new ToolStripMenuItem();
+            helpToolStripMenuItem = new ToolStripMenuItem();
+            defaultTerseToolStripMenuItem = new ToolStripMenuItem();
+            aboutToolStripMenuItem = new ToolStripMenuItem();
+            libraryID = new TextBox();
+            shelfLabel = new Label();
+            shelfID = new TextBox();
+            seriesLabel = new Label();
+            seriesID = new TextBox();
+            collectionLabel = new Label();
+            collectionID = new TextBox();
+            volumeLabel = new Label();
+            volumeID = new TextBox();
+            bookLabel = new Label();
+            bookID = new TextBox();
+            chapterLabel = new Label();
+            sectionLabel = new Label();
+            scrollLabel = new Label();
+            status = new Label();
+            chapterID = new TextBox();
+            sectionID = new TextBox();
+            scrollID = new TextBox();
+            flowLayoutPanel = new FlowLayoutPanel();
+            wordCountLabel = new Label();
+            treeView = new TreeView();
+            panel1 = new Panel();
+            menuStrip.SuspendLayout();
+            flowLayoutPanel.SuspendLayout();
+            panel1.SuspendLayout();
+            SuspendLayout();
             // 
             // textBox
             // 
-            this.textBox.AcceptsTab = true;
-            this.textBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox.BackColor = System.Drawing.Color.Black;
-            this.textBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textBox.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.textBox.Font = new System.Drawing.Font("Cascadia Code", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.textBox.ForeColor = System.Drawing.Color.WhiteSmoke;
-            this.textBox.Location = new System.Drawing.Point(459, 5);
-            this.textBox.MaxLength = 100000000;
-            this.textBox.Name = "textBox";
-            this.textBox.Size = new System.Drawing.Size(960, 547);
-            this.textBox.TabIndex = 0;
-            this.textBox.Text = "";
-            this.textBox.SelectionChanged += new System.EventHandler(this.textBox_SelectionChanged);
-            this.textBox.TextChanged += new System.EventHandler(this.textBox_TextChanged);
-            this.textBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
-            this.textBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyUp);
+            textBox.AcceptsTab = true;
+            textBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            textBox.BackColor = Color.Black;
+            textBox.BorderStyle = BorderStyle.FixedSingle;
+            textBox.Cursor = Cursors.IBeam;
+            textBox.Font = new Font("Cascadia Code", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            textBox.ForeColor = Color.WhiteSmoke;
+            textBox.Location = new Point(459, 5);
+            textBox.MaxLength = 100000000;
+            textBox.Name = "textBox";
+            textBox.Size = new Size(960, 547);
+            textBox.TabIndex = 0;
+            textBox.Text = "";
+            textBox.SelectionChanged += textBox_SelectionChanged;
+            textBox.TextChanged += textBox_TextChanged;
+            textBox.KeyDown += textBox_KeyDown;
+            textBox.KeyUp += textBox_KeyUp;
             // 
             // libraryLabel
             // 
-            this.libraryLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.libraryLabel.CausesValidation = false;
-            this.libraryLabel.Enabled = false;
-            this.libraryLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.libraryLabel.Location = new System.Drawing.Point(3, 9);
-            this.libraryLabel.Name = "libraryLabel";
-            this.libraryLabel.Size = new System.Drawing.Size(80, 20);
-            this.libraryLabel.TabIndex = 2;
-            this.libraryLabel.Text = "Library:";
-            this.libraryLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            libraryLabel.Anchor = AnchorStyles.Bottom;
+            libraryLabel.CausesValidation = false;
+            libraryLabel.Enabled = false;
+            libraryLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            libraryLabel.Location = new Point(3, 9);
+            libraryLabel.Name = "libraryLabel";
+            libraryLabel.Size = new Size(80, 20);
+            libraryLabel.TabIndex = 2;
+            libraryLabel.Text = "Library:";
+            libraryLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // menuStrip
             // 
-            this.menuStrip.BackColor = System.Drawing.Color.DeepSkyBlue;
-            this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.editToolStripMenuItem,
-            this.viewToolStripMenuItem,
-            this.helpToolStripMenuItem});
-            this.menuStrip.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(1384, 24);
-            this.menuStrip.TabIndex = 3;
-            this.menuStrip.Text = "menuStrip1";
+            menuStrip.BackColor = Color.DeepSkyBlue;
+            menuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem, viewToolStripMenuItem, helpToolStripMenuItem });
+            menuStrip.Location = new Point(0, 0);
+            menuStrip.Name = "menuStrip";
+            menuStrip.Size = new Size(1384, 24);
+            menuStrip.TabIndex = 3;
+            menuStrip.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
-            this.fileToolStripMenuItem.BackColor = System.Drawing.Color.DeepSkyBlue;
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.closeToolStripMenuItem,
-            this.openToolStripMenuItem,
-            this.reloadMenuItem,
-            this.toolStripSeparator4,
-            this.saveToolStripMenuItem,
-            this.saveAsToolStripMenuItem,
-            this.toolStripSeparator2,
-            this.recentToolStripMenuItem,
-            this.toolStripSeparator1,
-            this.exitToolStripMenuItem});
-            this.fileToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "&File";
+            fileToolStripMenuItem.BackColor = Color.DeepSkyBlue;
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { closeToolStripMenuItem, openToolStripMenuItem, reloadMenuItem, toolStripSeparator4, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator2, recentToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
+            fileToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            fileToolStripMenuItem.Size = new Size(37, 20);
+            fileToolStripMenuItem.Text = "&File";
             // 
             // closeToolStripMenuItem
             // 
-            this.closeToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
-            this.closeToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.closeToolStripMenuItem.Text = "&New";
-            this.closeToolStripMenuItem.Click += new System.EventHandler(this.newToolStripMenuItem_Click);
+            closeToolStripMenuItem.BackColor = SystemColors.Menu;
+            closeToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            closeToolStripMenuItem.Name = "closeToolStripMenuItem";
+            closeToolStripMenuItem.Size = new Size(123, 22);
+            closeToolStripMenuItem.Text = "&New";
+            closeToolStripMenuItem.Click += newToolStripMenuItem_Click;
             // 
             // openToolStripMenuItem
             // 
-            this.openToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
-            this.openToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.openToolStripMenuItem.Text = "&Open...";
-            this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            openToolStripMenuItem.BackColor = SystemColors.Menu;
+            openToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            openToolStripMenuItem.Name = "openToolStripMenuItem";
+            openToolStripMenuItem.Size = new Size(123, 22);
+            openToolStripMenuItem.Text = "&Open...";
+            openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
             // reloadMenuItem
             // 
-            this.reloadMenuItem.Enabled = false;
-            this.reloadMenuItem.Name = "reloadMenuItem";
-            this.reloadMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.reloadMenuItem.Text = "Re&load";
-            this.reloadMenuItem.Click += new System.EventHandler(this.reloadMenuItem_Click);
+            reloadMenuItem.Enabled = false;
+            reloadMenuItem.Name = "reloadMenuItem";
+            reloadMenuItem.Size = new Size(123, 22);
+            reloadMenuItem.Text = "Re&load";
+            reloadMenuItem.Click += reloadMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(120, 6);
+            toolStripSeparator4.Name = "toolStripSeparator4";
+            toolStripSeparator4.Size = new Size(120, 6);
             // 
             // saveToolStripMenuItem
             // 
-            this.saveToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
-            this.saveToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.saveToolStripMenuItem.Text = "&Save";
-            this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
+            saveToolStripMenuItem.BackColor = SystemColors.Menu;
+            saveToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            saveToolStripMenuItem.Size = new Size(123, 22);
+            saveToolStripMenuItem.Text = "&Save";
+            saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
             // 
             // saveAsToolStripMenuItem
             // 
-            this.saveAsToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
-            this.saveAsToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.saveAsToolStripMenuItem.Text = "Save &As...";
-            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            saveAsToolStripMenuItem.BackColor = SystemColors.Menu;
+            saveAsToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
+            saveAsToolStripMenuItem.Size = new Size(123, 22);
+            saveAsToolStripMenuItem.Text = "Save &As...";
+            saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
-            this.toolStripSeparator2.BackColor = System.Drawing.Color.Black;
-            this.toolStripSeparator2.ForeColor = System.Drawing.Color.Black;
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(120, 6);
+            toolStripSeparator2.BackColor = Color.Black;
+            toolStripSeparator2.ForeColor = Color.Black;
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(120, 6);
             // 
             // recentToolStripMenuItem
             // 
-            this.recentToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
-            this.recentToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.recentToolStripMenuItem.Name = "recentToolStripMenuItem";
-            this.recentToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.recentToolStripMenuItem.Text = "&Recent";
+            recentToolStripMenuItem.BackColor = SystemColors.Menu;
+            recentToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            recentToolStripMenuItem.Name = "recentToolStripMenuItem";
+            recentToolStripMenuItem.Size = new Size(123, 22);
+            recentToolStripMenuItem.Text = "&Recent";
             // 
             // toolStripSeparator1
             // 
-            this.toolStripSeparator1.BackColor = System.Drawing.Color.Black;
-            this.toolStripSeparator1.ForeColor = System.Drawing.Color.Black;
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(120, 6);
+            toolStripSeparator1.BackColor = Color.Black;
+            toolStripSeparator1.ForeColor = Color.Black;
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(120, 6);
             // 
             // exitToolStripMenuItem
             // 
-            this.exitToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
-            this.exitToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
-            this.exitToolStripMenuItem.Text = "E&xit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            exitToolStripMenuItem.BackColor = SystemColors.Menu;
+            exitToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            exitToolStripMenuItem.Size = new Size(123, 22);
+            exitToolStripMenuItem.Text = "E&xit";
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // editToolStripMenuItem
             // 
-            this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.vimModeToolStripMenuItem,
-            this.toolStripSeparator3,
-            this.preferencesToolStripMenuItem});
-            this.editToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
-            this.editToolStripMenuItem.Text = "&Edit";
-            // 
-            // vimModeToolStripMenuItem
-            // 
-            this.vimModeToolStripMenuItem.CheckOnClick = true;
-            this.vimModeToolStripMenuItem.Name = "vimModeToolStripMenuItem";
-            this.vimModeToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
-            this.vimModeToolStripMenuItem.Text = "&Vim Mode";
-            this.vimModeToolStripMenuItem.Click += new System.EventHandler(this.vimModeToolStripMenuItem_Click);
+            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripSeparator3, preferencesToolStripMenuItem });
+            editToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            editToolStripMenuItem.Name = "editToolStripMenuItem";
+            editToolStripMenuItem.Size = new Size(39, 20);
+            editToolStripMenuItem.Text = "&Edit";
             // 
             // toolStripSeparator3
             // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(141, 6);
+            toolStripSeparator3.Name = "toolStripSeparator3";
+            toolStripSeparator3.Size = new Size(177, 6);
             // 
             // preferencesToolStripMenuItem
             // 
-            this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
-            this.preferencesToolStripMenuItem.Text = "&Preferences...";
-            this.preferencesToolStripMenuItem.Click += new System.EventHandler(this.preferencesToolStripMenuItem_Click);
+            preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
+            preferencesToolStripMenuItem.Size = new Size(180, 22);
+            preferencesToolStripMenuItem.Text = "&Preferences...";
+            preferencesToolStripMenuItem.Click += preferencesToolStripMenuItem_Click;
             // 
             // viewToolStripMenuItem
             // 
-            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lockToScrollMenuItem,
-            this.wordWrapToolStripMenuItem,
-            this.darkModeMenuItem,
-            this.showCoordinatesToolStripMenuItem});
-            this.viewToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.viewToolStripMenuItem.Text = "&View";
+            viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { lockToScrollMenuItem, wordWrapToolStripMenuItem, darkModeMenuItem, showCoordinatesToolStripMenuItem });
+            viewToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+            viewToolStripMenuItem.Size = new Size(44, 20);
+            viewToolStripMenuItem.Text = "&View";
             // 
             // lockToScrollMenuItem
             // 
-            this.lockToScrollMenuItem.CheckOnClick = true;
-            this.lockToScrollMenuItem.Name = "lockToScrollMenuItem";
-            this.lockToScrollMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.lockToScrollMenuItem.Text = "&Lock to Scroll";
-            this.lockToScrollMenuItem.CheckedChanged += new System.EventHandler(this.lockToScrollMenuItem_CheckedChanged);
+            lockToScrollMenuItem.CheckOnClick = true;
+            lockToScrollMenuItem.Name = "lockToScrollMenuItem";
+            lockToScrollMenuItem.Size = new Size(170, 22);
+            lockToScrollMenuItem.Text = "&Lock to Scroll";
+            lockToScrollMenuItem.CheckedChanged += lockToScrollMenuItem_CheckedChanged;
             // 
             // wordWrapToolStripMenuItem
             // 
-            this.wordWrapToolStripMenuItem.Checked = true;
-            this.wordWrapToolStripMenuItem.CheckOnClick = true;
-            this.wordWrapToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.wordWrapToolStripMenuItem.Name = "wordWrapToolStripMenuItem";
-            this.wordWrapToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.wordWrapToolStripMenuItem.Text = "&Word Wrap";
-            this.wordWrapToolStripMenuItem.Click += new System.EventHandler(this.wordWrapToolStripMenuItem_Click);
+            wordWrapToolStripMenuItem.Checked = true;
+            wordWrapToolStripMenuItem.CheckOnClick = true;
+            wordWrapToolStripMenuItem.CheckState = CheckState.Checked;
+            wordWrapToolStripMenuItem.Name = "wordWrapToolStripMenuItem";
+            wordWrapToolStripMenuItem.Size = new Size(170, 22);
+            wordWrapToolStripMenuItem.Text = "&Word Wrap";
+            wordWrapToolStripMenuItem.Click += wordWrapToolStripMenuItem_Click;
             // 
             // darkModeMenuItem
             // 
-            this.darkModeMenuItem.Checked = true;
-            this.darkModeMenuItem.CheckOnClick = true;
-            this.darkModeMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.darkModeMenuItem.Name = "darkModeMenuItem";
-            this.darkModeMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.darkModeMenuItem.Text = "Dark &Mode";
-            this.darkModeMenuItem.Click += new System.EventHandler(this.darkModeMenuItem_Click);
+            darkModeMenuItem.Checked = true;
+            darkModeMenuItem.CheckOnClick = true;
+            darkModeMenuItem.CheckState = CheckState.Checked;
+            darkModeMenuItem.Name = "darkModeMenuItem";
+            darkModeMenuItem.Size = new Size(170, 22);
+            darkModeMenuItem.Text = "Dark &Mode";
+            darkModeMenuItem.Click += darkModeMenuItem_Click;
             // 
             // showCoordinatesToolStripMenuItem
             // 
-            this.showCoordinatesToolStripMenuItem.Checked = true;
-            this.showCoordinatesToolStripMenuItem.CheckOnClick = true;
-            this.showCoordinatesToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.showCoordinatesToolStripMenuItem.Name = "showCoordinatesToolStripMenuItem";
-            this.showCoordinatesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.showCoordinatesToolStripMenuItem.Text = "&Show Coordinates";
-            this.showCoordinatesToolStripMenuItem.CheckedChanged += new System.EventHandler(this.showCoordinatesToolStripMenuItem_CheckedChanged);
+            showCoordinatesToolStripMenuItem.Checked = true;
+            showCoordinatesToolStripMenuItem.CheckOnClick = true;
+            showCoordinatesToolStripMenuItem.CheckState = CheckState.Checked;
+            showCoordinatesToolStripMenuItem.Name = "showCoordinatesToolStripMenuItem";
+            showCoordinatesToolStripMenuItem.Size = new Size(170, 22);
+            showCoordinatesToolStripMenuItem.Text = "&Show Coordinates";
+            showCoordinatesToolStripMenuItem.CheckedChanged += showCoordinatesToolStripMenuItem_CheckedChanged;
             // 
             // helpToolStripMenuItem
             // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.defaultTerseToolStripMenuItem,
-            this.aboutToolStripMenuItem});
-            this.helpToolStripMenuItem.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "&Help";
+            helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultTerseToolStripMenuItem, aboutToolStripMenuItem });
+            helpToolStripMenuItem.ForeColor = SystemColors.ControlText;
+            helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            helpToolStripMenuItem.Size = new Size(44, 20);
+            helpToolStripMenuItem.Text = "&Help";
             // 
             // defaultTerseToolStripMenuItem
             // 
-            this.defaultTerseToolStripMenuItem.Name = "defaultTerseToolStripMenuItem";
-            this.defaultTerseToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
-            this.defaultTerseToolStripMenuItem.Text = "&Contents";
-            this.defaultTerseToolStripMenuItem.Click += new System.EventHandler(this.defaultTerseToolStripMenuItem_Click);
+            defaultTerseToolStripMenuItem.Name = "defaultTerseToolStripMenuItem";
+            defaultTerseToolStripMenuItem.Size = new Size(122, 22);
+            defaultTerseToolStripMenuItem.Text = "&Contents";
+            defaultTerseToolStripMenuItem.Click += defaultTerseToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
-            this.aboutToolStripMenuItem.Text = "&About";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            aboutToolStripMenuItem.Size = new Size(122, 22);
+            aboutToolStripMenuItem.Text = "&About";
+            aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
             // libraryID
             // 
-            this.libraryID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.libraryID.Enabled = false;
-            this.libraryID.Location = new System.Drawing.Point(89, 3);
-            this.libraryID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.libraryID.MaxLength = 4;
-            this.libraryID.Name = "libraryID";
-            this.libraryID.Size = new System.Drawing.Size(55, 23);
-            this.libraryID.TabIndex = 1;
-            this.libraryID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.libraryID_KeyUp);
+            libraryID.Anchor = AnchorStyles.Bottom;
+            libraryID.Enabled = false;
+            libraryID.Location = new Point(89, 3);
+            libraryID.Margin = new Padding(3, 3, 25, 3);
+            libraryID.MaxLength = 4;
+            libraryID.Name = "libraryID";
+            libraryID.Size = new Size(55, 23);
+            libraryID.TabIndex = 1;
+            libraryID.KeyUp += libraryID_KeyUp;
             // 
             // shelfLabel
             // 
-            this.shelfLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.shelfLabel.CausesValidation = false;
-            this.shelfLabel.Enabled = false;
-            this.shelfLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.shelfLabel.Location = new System.Drawing.Point(172, 9);
-            this.shelfLabel.Name = "shelfLabel";
-            this.shelfLabel.Size = new System.Drawing.Size(80, 20);
-            this.shelfLabel.TabIndex = 2;
-            this.shelfLabel.Text = "Shelf:";
-            this.shelfLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            shelfLabel.Anchor = AnchorStyles.Bottom;
+            shelfLabel.CausesValidation = false;
+            shelfLabel.Enabled = false;
+            shelfLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            shelfLabel.Location = new Point(172, 9);
+            shelfLabel.Name = "shelfLabel";
+            shelfLabel.Size = new Size(80, 20);
+            shelfLabel.TabIndex = 2;
+            shelfLabel.Text = "Shelf:";
+            shelfLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // shelfID
             // 
-            this.shelfID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.shelfID.Enabled = false;
-            this.shelfID.Location = new System.Drawing.Point(258, 3);
-            this.shelfID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.shelfID.MaxLength = 4;
-            this.shelfID.Name = "shelfID";
-            this.shelfID.Size = new System.Drawing.Size(55, 23);
-            this.shelfID.TabIndex = 2;
-            this.shelfID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.shelfID_KeyUp);
+            shelfID.Anchor = AnchorStyles.Bottom;
+            shelfID.Enabled = false;
+            shelfID.Location = new Point(258, 3);
+            shelfID.Margin = new Padding(3, 3, 25, 3);
+            shelfID.MaxLength = 4;
+            shelfID.Name = "shelfID";
+            shelfID.Size = new Size(55, 23);
+            shelfID.TabIndex = 2;
+            shelfID.KeyUp += shelfID_KeyUp;
             // 
             // seriesLabel
             // 
-            this.seriesLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.seriesLabel.CausesValidation = false;
-            this.seriesLabel.Enabled = false;
-            this.seriesLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.seriesLabel.Location = new System.Drawing.Point(341, 9);
-            this.seriesLabel.Name = "seriesLabel";
-            this.seriesLabel.Size = new System.Drawing.Size(80, 20);
-            this.seriesLabel.TabIndex = 2;
-            this.seriesLabel.Text = "Series:";
-            this.seriesLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            seriesLabel.Anchor = AnchorStyles.Bottom;
+            seriesLabel.CausesValidation = false;
+            seriesLabel.Enabled = false;
+            seriesLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            seriesLabel.Location = new Point(341, 9);
+            seriesLabel.Name = "seriesLabel";
+            seriesLabel.Size = new Size(80, 20);
+            seriesLabel.TabIndex = 2;
+            seriesLabel.Text = "Series:";
+            seriesLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // seriesID
             // 
-            this.seriesID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.seriesID.Enabled = false;
-            this.seriesID.Location = new System.Drawing.Point(427, 3);
-            this.seriesID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.seriesID.MaxLength = 4;
-            this.seriesID.Name = "seriesID";
-            this.seriesID.Size = new System.Drawing.Size(55, 23);
-            this.seriesID.TabIndex = 3;
-            this.seriesID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.seriesID_KeyUp);
+            seriesID.Anchor = AnchorStyles.Bottom;
+            seriesID.Enabled = false;
+            seriesID.Location = new Point(427, 3);
+            seriesID.Margin = new Padding(3, 3, 25, 3);
+            seriesID.MaxLength = 4;
+            seriesID.Name = "seriesID";
+            seriesID.Size = new Size(55, 23);
+            seriesID.TabIndex = 3;
+            seriesID.KeyUp += seriesID_KeyUp;
             // 
             // collectionLabel
             // 
-            this.collectionLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.collectionLabel.CausesValidation = false;
-            this.collectionLabel.Enabled = false;
-            this.collectionLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.collectionLabel.Location = new System.Drawing.Point(510, 9);
-            this.collectionLabel.Name = "collectionLabel";
-            this.collectionLabel.Size = new System.Drawing.Size(80, 20);
-            this.collectionLabel.TabIndex = 2;
-            this.collectionLabel.Text = "Collection:";
-            this.collectionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            collectionLabel.Anchor = AnchorStyles.Bottom;
+            collectionLabel.CausesValidation = false;
+            collectionLabel.Enabled = false;
+            collectionLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            collectionLabel.Location = new Point(510, 9);
+            collectionLabel.Name = "collectionLabel";
+            collectionLabel.Size = new Size(80, 20);
+            collectionLabel.TabIndex = 2;
+            collectionLabel.Text = "Collection:";
+            collectionLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // collectionID
             // 
-            this.collectionID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.collectionID.Enabled = false;
-            this.collectionID.Location = new System.Drawing.Point(596, 3);
-            this.collectionID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.collectionID.MaxLength = 4;
-            this.collectionID.Name = "collectionID";
-            this.collectionID.Size = new System.Drawing.Size(55, 23);
-            this.collectionID.TabIndex = 4;
-            this.collectionID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.collectionID_KeyUp);
+            collectionID.Anchor = AnchorStyles.Bottom;
+            collectionID.Enabled = false;
+            collectionID.Location = new Point(596, 3);
+            collectionID.Margin = new Padding(3, 3, 25, 3);
+            collectionID.MaxLength = 4;
+            collectionID.Name = "collectionID";
+            collectionID.Size = new Size(55, 23);
+            collectionID.TabIndex = 4;
+            collectionID.KeyUp += collectionID_KeyUp;
             // 
             // volumeLabel
             // 
-            this.volumeLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.volumeLabel.CausesValidation = false;
-            this.volumeLabel.Enabled = false;
-            this.volumeLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.volumeLabel.Location = new System.Drawing.Point(679, 9);
-            this.volumeLabel.Name = "volumeLabel";
-            this.volumeLabel.Size = new System.Drawing.Size(80, 20);
-            this.volumeLabel.TabIndex = 2;
-            this.volumeLabel.Text = "Volume:";
-            this.volumeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            volumeLabel.Anchor = AnchorStyles.Bottom;
+            volumeLabel.CausesValidation = false;
+            volumeLabel.Enabled = false;
+            volumeLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            volumeLabel.Location = new Point(679, 9);
+            volumeLabel.Name = "volumeLabel";
+            volumeLabel.Size = new Size(80, 20);
+            volumeLabel.TabIndex = 2;
+            volumeLabel.Text = "Volume:";
+            volumeLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // volumeID
             // 
-            this.volumeID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.volumeID.Enabled = false;
-            this.volumeID.Location = new System.Drawing.Point(765, 3);
-            this.volumeID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.volumeID.MaxLength = 4;
-            this.volumeID.Name = "volumeID";
-            this.volumeID.Size = new System.Drawing.Size(55, 23);
-            this.volumeID.TabIndex = 5;
-            this.volumeID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.volumeID_KeyUp);
+            volumeID.Anchor = AnchorStyles.Bottom;
+            volumeID.Enabled = false;
+            volumeID.Location = new Point(765, 3);
+            volumeID.Margin = new Padding(3, 3, 25, 3);
+            volumeID.MaxLength = 4;
+            volumeID.Name = "volumeID";
+            volumeID.Size = new Size(55, 23);
+            volumeID.TabIndex = 5;
+            volumeID.KeyUp += volumeID_KeyUp;
             // 
             // bookLabel
             // 
-            this.bookLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.bookLabel.CausesValidation = false;
-            this.bookLabel.Enabled = false;
-            this.bookLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.bookLabel.Location = new System.Drawing.Point(3, 38);
-            this.bookLabel.Name = "bookLabel";
-            this.bookLabel.Size = new System.Drawing.Size(80, 20);
-            this.bookLabel.TabIndex = 2;
-            this.bookLabel.Text = "Book:";
-            this.bookLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            bookLabel.Anchor = AnchorStyles.Bottom;
+            bookLabel.CausesValidation = false;
+            bookLabel.Enabled = false;
+            bookLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            bookLabel.Location = new Point(3, 38);
+            bookLabel.Name = "bookLabel";
+            bookLabel.Size = new Size(80, 20);
+            bookLabel.TabIndex = 2;
+            bookLabel.Text = "Book:";
+            bookLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // bookID
             // 
-            this.bookID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.bookID.Enabled = false;
-            this.bookID.Location = new System.Drawing.Point(89, 32);
-            this.bookID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.bookID.MaxLength = 4;
-            this.bookID.Name = "bookID";
-            this.bookID.Size = new System.Drawing.Size(55, 23);
-            this.bookID.TabIndex = 6;
-            this.bookID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.bookID_KeyUp);
+            bookID.Anchor = AnchorStyles.Bottom;
+            bookID.Enabled = false;
+            bookID.Location = new Point(89, 32);
+            bookID.Margin = new Padding(3, 3, 25, 3);
+            bookID.MaxLength = 4;
+            bookID.Name = "bookID";
+            bookID.Size = new Size(55, 23);
+            bookID.TabIndex = 6;
+            bookID.KeyUp += bookID_KeyUp;
             // 
             // chapterLabel
             // 
-            this.chapterLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.chapterLabel.CausesValidation = false;
-            this.chapterLabel.Enabled = false;
-            this.chapterLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.chapterLabel.Location = new System.Drawing.Point(172, 38);
-            this.chapterLabel.Name = "chapterLabel";
-            this.chapterLabel.Size = new System.Drawing.Size(80, 20);
-            this.chapterLabel.TabIndex = 2;
-            this.chapterLabel.Text = "Chapter:";
-            this.chapterLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            chapterLabel.Anchor = AnchorStyles.Bottom;
+            chapterLabel.CausesValidation = false;
+            chapterLabel.Enabled = false;
+            chapterLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            chapterLabel.Location = new Point(172, 38);
+            chapterLabel.Name = "chapterLabel";
+            chapterLabel.Size = new Size(80, 20);
+            chapterLabel.TabIndex = 2;
+            chapterLabel.Text = "Chapter:";
+            chapterLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // sectionLabel
             // 
-            this.sectionLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.sectionLabel.CausesValidation = false;
-            this.sectionLabel.Enabled = false;
-            this.sectionLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.sectionLabel.Location = new System.Drawing.Point(341, 38);
-            this.sectionLabel.Name = "sectionLabel";
-            this.sectionLabel.Size = new System.Drawing.Size(80, 20);
-            this.sectionLabel.TabIndex = 2;
-            this.sectionLabel.Text = "Section:";
-            this.sectionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            sectionLabel.Anchor = AnchorStyles.Bottom;
+            sectionLabel.CausesValidation = false;
+            sectionLabel.Enabled = false;
+            sectionLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            sectionLabel.Location = new Point(341, 38);
+            sectionLabel.Name = "sectionLabel";
+            sectionLabel.Size = new Size(80, 20);
+            sectionLabel.TabIndex = 2;
+            sectionLabel.Text = "Section:";
+            sectionLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // scrollLabel
             // 
-            this.scrollLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.scrollLabel.CausesValidation = false;
-            this.scrollLabel.Enabled = false;
-            this.scrollLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.scrollLabel.Location = new System.Drawing.Point(510, 38);
-            this.scrollLabel.Name = "scrollLabel";
-            this.scrollLabel.Size = new System.Drawing.Size(80, 20);
-            this.scrollLabel.TabIndex = 2;
-            this.scrollLabel.Text = "Scroll:";
-            this.scrollLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            scrollLabel.Anchor = AnchorStyles.Bottom;
+            scrollLabel.CausesValidation = false;
+            scrollLabel.Enabled = false;
+            scrollLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            scrollLabel.Location = new Point(510, 38);
+            scrollLabel.Name = "scrollLabel";
+            scrollLabel.Size = new Size(80, 20);
+            scrollLabel.TabIndex = 2;
+            scrollLabel.Text = "Scroll:";
+            scrollLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // status
             // 
-            this.status.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.status.CausesValidation = false;
-            this.status.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.status.Location = new System.Drawing.Point(679, 38);
-            this.status.Name = "status";
-            this.status.Size = new System.Drawing.Size(230, 20);
-            this.status.TabIndex = 2;
-            this.status.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            status.Anchor = AnchorStyles.Bottom;
+            status.CausesValidation = false;
+            status.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            status.Location = new Point(679, 38);
+            status.Name = "status";
+            status.Size = new Size(230, 20);
+            status.TabIndex = 2;
+            status.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // chapterID
             // 
-            this.chapterID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.chapterID.Enabled = false;
-            this.chapterID.Location = new System.Drawing.Point(258, 32);
-            this.chapterID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.chapterID.MaxLength = 4;
-            this.chapterID.Name = "chapterID";
-            this.chapterID.Size = new System.Drawing.Size(55, 23);
-            this.chapterID.TabIndex = 7;
-            this.chapterID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.chapterID_KeyUp);
+            chapterID.Anchor = AnchorStyles.Bottom;
+            chapterID.Enabled = false;
+            chapterID.Location = new Point(258, 32);
+            chapterID.Margin = new Padding(3, 3, 25, 3);
+            chapterID.MaxLength = 4;
+            chapterID.Name = "chapterID";
+            chapterID.Size = new Size(55, 23);
+            chapterID.TabIndex = 7;
+            chapterID.KeyUp += chapterID_KeyUp;
             // 
             // sectionID
             // 
-            this.sectionID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.sectionID.Enabled = false;
-            this.sectionID.Location = new System.Drawing.Point(427, 32);
-            this.sectionID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.sectionID.MaxLength = 4;
-            this.sectionID.Name = "sectionID";
-            this.sectionID.Size = new System.Drawing.Size(55, 23);
-            this.sectionID.TabIndex = 8;
-            this.sectionID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.sectionID_KeyUp);
+            sectionID.Anchor = AnchorStyles.Bottom;
+            sectionID.Enabled = false;
+            sectionID.Location = new Point(427, 32);
+            sectionID.Margin = new Padding(3, 3, 25, 3);
+            sectionID.MaxLength = 4;
+            sectionID.Name = "sectionID";
+            sectionID.Size = new Size(55, 23);
+            sectionID.TabIndex = 8;
+            sectionID.KeyUp += sectionID_KeyUp;
             // 
             // scrollID
             // 
-            this.scrollID.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.scrollID.Enabled = false;
-            this.scrollID.Location = new System.Drawing.Point(596, 32);
-            this.scrollID.Margin = new System.Windows.Forms.Padding(3, 3, 25, 3);
-            this.scrollID.MaxLength = 4;
-            this.scrollID.Name = "scrollID";
-            this.scrollID.Size = new System.Drawing.Size(55, 23);
-            this.scrollID.TabIndex = 9;
-            this.scrollID.KeyUp += new System.Windows.Forms.KeyEventHandler(this.scrollID_KeyUp);
+            scrollID.Anchor = AnchorStyles.Bottom;
+            scrollID.Enabled = false;
+            scrollID.Location = new Point(596, 32);
+            scrollID.Margin = new Padding(3, 3, 25, 3);
+            scrollID.MaxLength = 4;
+            scrollID.Name = "scrollID";
+            scrollID.Size = new Size(55, 23);
+            scrollID.TabIndex = 9;
+            scrollID.KeyUp += scrollID_KeyUp;
             // 
             // flowLayoutPanel
             // 
-            this.flowLayoutPanel.Controls.Add(this.libraryLabel);
-            this.flowLayoutPanel.Controls.Add(this.libraryID);
-            this.flowLayoutPanel.Controls.Add(this.shelfLabel);
-            this.flowLayoutPanel.Controls.Add(this.shelfID);
-            this.flowLayoutPanel.Controls.Add(this.seriesLabel);
-            this.flowLayoutPanel.Controls.Add(this.seriesID);
-            this.flowLayoutPanel.Controls.Add(this.collectionLabel);
-            this.flowLayoutPanel.Controls.Add(this.collectionID);
-            this.flowLayoutPanel.Controls.Add(this.volumeLabel);
-            this.flowLayoutPanel.Controls.Add(this.volumeID);
-            this.flowLayoutPanel.Controls.Add(this.wordCountLabel);
-            this.flowLayoutPanel.Controls.Add(this.bookLabel);
-            this.flowLayoutPanel.Controls.Add(this.bookID);
-            this.flowLayoutPanel.Controls.Add(this.chapterLabel);
-            this.flowLayoutPanel.Controls.Add(this.chapterID);
-            this.flowLayoutPanel.Controls.Add(this.sectionLabel);
-            this.flowLayoutPanel.Controls.Add(this.sectionID);
-            this.flowLayoutPanel.Controls.Add(this.scrollLabel);
-            this.flowLayoutPanel.Controls.Add(this.scrollID);
-            this.flowLayoutPanel.Controls.Add(this.status);
-            this.flowLayoutPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.flowLayoutPanel.Location = new System.Drawing.Point(0, 576);
-            this.flowLayoutPanel.MaximumSize = new System.Drawing.Size(1100, 65);
-            this.flowLayoutPanel.MinimumSize = new System.Drawing.Size(925, 65);
-            this.flowLayoutPanel.Name = "flowLayoutPanel";
-            this.flowLayoutPanel.Size = new System.Drawing.Size(1100, 65);
-            this.flowLayoutPanel.TabIndex = 11;
+            flowLayoutPanel.Controls.Add(libraryLabel);
+            flowLayoutPanel.Controls.Add(libraryID);
+            flowLayoutPanel.Controls.Add(shelfLabel);
+            flowLayoutPanel.Controls.Add(shelfID);
+            flowLayoutPanel.Controls.Add(seriesLabel);
+            flowLayoutPanel.Controls.Add(seriesID);
+            flowLayoutPanel.Controls.Add(collectionLabel);
+            flowLayoutPanel.Controls.Add(collectionID);
+            flowLayoutPanel.Controls.Add(volumeLabel);
+            flowLayoutPanel.Controls.Add(volumeID);
+            flowLayoutPanel.Controls.Add(wordCountLabel);
+            flowLayoutPanel.Controls.Add(bookLabel);
+            flowLayoutPanel.Controls.Add(bookID);
+            flowLayoutPanel.Controls.Add(chapterLabel);
+            flowLayoutPanel.Controls.Add(chapterID);
+            flowLayoutPanel.Controls.Add(sectionLabel);
+            flowLayoutPanel.Controls.Add(sectionID);
+            flowLayoutPanel.Controls.Add(scrollLabel);
+            flowLayoutPanel.Controls.Add(scrollID);
+            flowLayoutPanel.Controls.Add(status);
+            flowLayoutPanel.Dock = DockStyle.Bottom;
+            flowLayoutPanel.Location = new Point(0, 576);
+            flowLayoutPanel.MaximumSize = new Size(1100, 65);
+            flowLayoutPanel.MinimumSize = new Size(925, 65);
+            flowLayoutPanel.Name = "flowLayoutPanel";
+            flowLayoutPanel.Size = new Size(1100, 65);
+            flowLayoutPanel.TabIndex = 11;
             // 
             // wordCountLabel
             // 
-            this.wordCountLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.wordCountLabel.CausesValidation = false;
-            this.wordCountLabel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.wordCountLabel.Location = new System.Drawing.Point(848, 9);
-            this.wordCountLabel.Name = "wordCountLabel";
-            this.wordCountLabel.Size = new System.Drawing.Size(239, 20);
-            this.wordCountLabel.TabIndex = 10;
-            this.wordCountLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            wordCountLabel.Anchor = AnchorStyles.Bottom;
+            wordCountLabel.CausesValidation = false;
+            wordCountLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            wordCountLabel.Location = new Point(848, 9);
+            wordCountLabel.Name = "wordCountLabel";
+            wordCountLabel.Size = new Size(239, 20);
+            wordCountLabel.TabIndex = 10;
+            wordCountLabel.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // treeView
             // 
-            this.treeView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.treeView.BackColor = System.Drawing.Color.Black;
-            this.treeView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.treeView.ForeColor = System.Drawing.Color.White;
-            this.treeView.HideSelection = false;
-            this.treeView.Location = new System.Drawing.Point(3, 5);
-            this.treeView.Name = "treeView";
-            this.treeView.PathSeparator = "/";
-            this.treeView.Size = new System.Drawing.Size(450, 547);
-            this.treeView.TabIndex = 29;
-            this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
-            this.treeView.DoubleClick += new System.EventHandler(this.treeView_DoubleClick);
-            this.treeView.KeyUp += new System.Windows.Forms.KeyEventHandler(this.treeView_KeyUp);
+            treeView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            treeView.BackColor = Color.Black;
+            treeView.BorderStyle = BorderStyle.FixedSingle;
+            treeView.ForeColor = Color.White;
+            treeView.HideSelection = false;
+            treeView.Location = new Point(3, 5);
+            treeView.Name = "treeView";
+            treeView.PathSeparator = "/";
+            treeView.Size = new Size(450, 547);
+            treeView.TabIndex = 29;
+            treeView.AfterSelect += treeView_AfterSelect;
+            treeView.DoubleClick += treeView_DoubleClick;
+            treeView.KeyUp += treeView_KeyUp;
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.textBox);
-            this.panel1.Controls.Add(this.treeView);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(0, 24);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1384, 552);
-            this.panel1.TabIndex = 30;
+            panel1.Controls.Add(textBox);
+            panel1.Controls.Add(treeView);
+            panel1.Dock = DockStyle.Fill;
+            panel1.Location = new Point(0, 24);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(1384, 552);
+            panel1.TabIndex = 30;
             // 
             // TerseForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.ClientSize = new System.Drawing.Size(1384, 641);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.flowLayoutPanel);
-            this.Controls.Add(this.menuStrip);
-            this.ForeColor = System.Drawing.Color.White;
-            this.MainMenuStrip = this.menuStrip;
-            this.MinimumSize = new System.Drawing.Size(850, 400);
-            this.Name = "TerseForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Terse Notepad";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TerseForm_FormClosing);
-            this.menuStrip.ResumeLayout(false);
-            this.menuStrip.PerformLayout();
-            this.flowLayoutPanel.ResumeLayout(false);
-            this.flowLayoutPanel.PerformLayout();
-            this.panel1.ResumeLayout(false);
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = SystemColors.ControlDark;
+            ClientSize = new Size(1384, 641);
+            Controls.Add(panel1);
+            Controls.Add(flowLayoutPanel);
+            Controls.Add(menuStrip);
+            ForeColor = Color.White;
+            MainMenuStrip = menuStrip;
+            MinimumSize = new Size(850, 400);
+            Name = "TerseForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Terse Notepad";
+            FormClosing += TerseForm_FormClosing;
+            menuStrip.ResumeLayout(false);
+            menuStrip.PerformLayout();
+            flowLayoutPanel.ResumeLayout(false);
+            flowLayoutPanel.PerformLayout();
+            panel1.ResumeLayout(false);
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -698,9 +662,8 @@
         private ToolStripSeparator toolStripSeparator1;
         private Label wordCountLabel;
         private ToolStripMenuItem darkModeMenuItem;
-        private ToolStripMenuItem vimModeToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator3;
         private ToolStripMenuItem reloadMenuItem;
-        private ToolStripSeparator toolStripSeparator4;        
+        private ToolStripSeparator toolStripSeparator4;
     }
 }

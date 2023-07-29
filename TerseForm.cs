@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace TerseNotepad
 {
@@ -46,7 +47,7 @@ namespace TerseNotepad
                 LoadFile(_settings.Filename, false);
             }
         }
-      
+
         private void LoadDefaultTerse()
         {
             _settings.Filename = "";
@@ -80,10 +81,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void textBox_TextChanged(object sender, EventArgs e)
         {
-            if (!_settings.VimMode)
-            {
-                collectScroll();
-            }
+            collectScroll();
         }
 
         private void collectScroll()
@@ -92,7 +90,7 @@ Use F2 - F11 to access additional dimensions.
             {
                 return;
             }
-            reloadMenuItem.Enabled = true;            
+            reloadMenuItem.Enabled = true;
             _model.Terse.setScroll(textBox.Text);
             if (textBox.Text.Length == 0)
             {
@@ -749,7 +747,7 @@ Use F2 - F11 to access additional dimensions.
             _settings.ZoomFactor = textBox.ZoomFactor;
             _settings.WordWrap = textBox.WordWrap;
             _settings.TreeView = treeView.Visible;
-            _settings.Theme = treeView.BackColor == Color.Black ? "Dark" : "Light";
+            _settings.Theme = darkModeMenuItem.Checked ? "Dark" : "Light";
             _settings.Save();
         }
 
@@ -940,15 +938,17 @@ Use F2 - F11 to access additional dimensions.
             textBox.WordWrap = wordWrapToolStripMenuItem.Checked;
             _settings.WordWrap = textBox.WordWrap;
         }
-        
+
         private void SetEditorTheme()
         {
             bool mode = _settings.DarkMode;
-            treeView.BackColor = mode ? Color.Black : Color.White;
-            treeView.ForeColor = mode ? Color.White : Color.Black;
-            textBox.BackColor = mode ? Color.Black : Color.White;
-            textBox.ForeColor = mode ? Color.White : Color.Black;
-            BackColor = mode ? Color.DeepSkyBlue : Color.DarkGray;
+            treeView.BackColor = mode ? _settings.Color1 : _settings.Color2;
+            treeView.ForeColor = mode ? _settings.Color2 : _settings.Color1;
+            textBox.BackColor = mode ? _settings.Color1 : _settings.Color2;
+            textBox.ForeColor = mode ? _settings.Color2 : _settings.Color1;
+            BackColor = mode ? _settings.Color3 : _settings.Color4;
+            menuStrip.BackColor = BackColor;
+            fileToolStripMenuItem.BackColor = BackColor;
         }
 
         private void darkModeMenuItem_Click(object sender, EventArgs e)
@@ -957,23 +957,6 @@ Use F2 - F11 to access additional dimensions.
             _settings.Save();
             SetEditorTheme();
         }
-
-        private void vimModeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!_settings.VimMode && vimModeToolStripMenuItem.Checked)
-            {
-                if (_settings.Filename.Length == 0)
-                {
-                    if (!ChooseSaveFilename())
-                    {
-                        MessageBox.Show("You must save the Terse doc before enabling VIM");
-                        vimModeToolStripMenuItem.Checked = false;
-                        return;
-                    }
-                }
-            }            
-        }
-
         private void lockToScrollMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             scrollLockUIUpdate();

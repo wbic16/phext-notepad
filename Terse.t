@@ -49,7 +49,7 @@ View
 Help
 ----
  * About: Display Program Version
-Bug List v0.2.2
+Bug List v0.2.3
 ---------------
 
 Bugs
@@ -87,6 +87,9 @@ Editor List
 -------------
 (c) 2022-2023 Will Bickford
 MIT License
+
+v0.2.3 (2023-07-28)
+➕ Added Color1-Color4 Customization (request submitted by Luke Whipple)
 
 v0.2.2 (2023-07-14)
 -------------------
