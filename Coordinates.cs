@@ -131,11 +131,6 @@
         public ShelfIndex Shelf { get; set; } = 0;
         public LibraryIndex Library { get; set; } = 0;
 
-        private static char[] _cl = new char[9]
-            {
-                'p', 'g', 's', 'y', 'h', 'e', 'w', 'i', 'm'
-            };
-
         public override string ToString()
         {
             return ToString(this);
@@ -147,15 +142,7 @@
         }
         public static string ToString(Coordinates c)
         {
-            return $"{_cl[0]}{c.Scroll}" +
-                   $"{_cl[1]}{c.Section}" +
-                   $"{_cl[2]}{c.Chapter}" +
-                   $"{_cl[3]}{c.Book}" +
-                   $"{_cl[4]}{c.Volume}" +
-                   $"{_cl[5]}{c.Collection}" +
-                   $"{_cl[6]}{c.Series}" +
-                   $"{_cl[7]}{c.Shelf}" +
-                   $"{_cl[8]}{c.Library}";
+            return $"{c.Library}.{c.Shelf}.{c.Series}/{c.Collection}.{c.Volume}.{c.Book}/{c.Chapter}.{c.Section}.{c.Scroll}";
         }
         public Coordinates GetRoot()
         {
@@ -282,12 +269,7 @@
 
         private short[] ParseCoordinateString(string coordinates)
         {
-            var pass1 = coordinates;
-            foreach (var c in _cl)
-            {
-                pass1 = pass1.Replace(c, '-');
-            }
-            var strings = pass1.Split('-', StringSplitOptions.RemoveEmptyEntries);
+            var strings = coordinates.Replace('.','/').Split('/', StringSplitOptions.RemoveEmptyEntries);
             var result = new List<short>();
             foreach (var s in strings)
             {
@@ -306,15 +288,15 @@
             {
                 return;
             }
-            Scroll = parts[0];
-            Section = parts[1];
-            Chapter = parts[2];
-            Book = parts[3];
+            Library = parts[0];
+            Shelf = parts[1];
+            Series = parts[2];
+            Collection = parts[3];
             Volume = parts[4];
-            Collection = parts[5];
-            Series = parts[6];
-            Shelf = parts[7];
-            Library = parts[8];
+            Book = parts[5];
+            Chapter = parts[6];
+            Section = parts[7];
+            Scroll = parts[8];
         }
 
         public bool IsValid()

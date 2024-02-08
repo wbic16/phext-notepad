@@ -143,24 +143,8 @@ Use F2 - F11 to access additional dimensions.
             _model.Terse.Coords.Line = 1;
             _priorLine = 1;
             _priorColumn = 1;
-            libraryID.Enabled = true;
-            libraryLabel.Enabled = true;
-            shelfID.Enabled = true;
-            shelfLabel.Enabled = true;
-            seriesID.Enabled = true;
-            seriesLabel.Enabled = true;
-            collectionID.Enabled = true;
-            collectionLabel.Enabled = true;
-            volumeID.Enabled = true;
-            volumeLabel.Enabled = true;
-            bookID.Enabled = true;
-            bookLabel.Enabled = true;
-            chapterID.Enabled = true;
-            chapterLabel.Enabled = true;
-            sectionID.Enabled = true;
-            sectionLabel.Enabled = true;
-            scrollID.Enabled = true;
-            scrollLabel.Enabled = true;
+            phextCoordinate.Enabled = true;
+            coordinateLabel.Enabled = true;
             UpdateUI($"Loaded {_settings.Filename}");
 
             if (treeView.Visible)
@@ -219,15 +203,6 @@ Use F2 - F11 to access additional dimensions.
             var menu = CreateRecentFilesMenu(_settings.RecentFile);
             recentToolStripMenuItem.DropDownItems.Clear();
             recentToolStripMenuItem.DropDownItems.AddRange(menu);
-            libraryLabel.Text = _settings.Dimension11;
-            shelfLabel.Text = _settings.Dimension10;
-            seriesLabel.Text = _settings.Dimension9;
-            collectionLabel.Text = _settings.Dimension8;
-            volumeLabel.Text = _settings.Dimension7;
-            bookLabel.Text = _settings.Dimension6;
-            chapterLabel.Text = _settings.Dimension5;
-            sectionLabel.Text = _settings.Dimension4;
-            scrollLabel.Text = _settings.Dimension3;
             showCoordinatesToolStripMenuItem.Checked = _settings.ShowCoordinates;
             SetEditorTheme();
 
@@ -399,15 +374,7 @@ Use F2 - F11 to access additional dimensions.
 
         private void UpdateUI(string action = "")
         {
-            libraryID.Text = _model.Terse.Coords.Library.ToString();
-            shelfID.Text = _model.Terse.Coords.Shelf.ToString();
-            seriesID.Text = _model.Terse.Coords.Series.ToString();
-            collectionID.Text = _model.Terse.Coords.Collection.ToString();
-            volumeID.Text = _model.Terse.Coords.Volume.ToString();
-            bookID.Text = _model.Terse.Coords.Book.ToString();
-            chapterID.Text = _model.Terse.Coords.Chapter.ToString();
-            sectionID.Text = _model.Terse.Coords.Section.ToString();
-            scrollID.Text = _model.Terse.Coords.Scroll.ToString();
+            phextCoordinate.Text = _model.Terse.Coords.ToString();
 
             textBox.Enabled = _checkout != null;
 
@@ -615,38 +582,26 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
+        private Coordinates GetPhextCoordinate()
+        {
+            var parts = phextCoordinate.Text.Replace('.', '/').Split('/');
+            if (parts.Length != 9)
+            {
+                return _model.Terse.Coords;
+            }
+
+            var result = new Coordinates();
+            result.Library = short.Parse(parts[0]);
+            result.Shelf = short.Parse(parts[1]);
+
+            return result;
+        }
+
         private void jumpButton_Click(object sender, EventArgs e)
         {
             collectScroll();
-            try
-            {
-                var update = new Coordinates
-                {
-                    Scroll = short.Parse(scrollID.Text),
-                    Section = short.Parse(sectionID.Text),
-                    Chapter = short.Parse(chapterID.Text),
-                    Book = short.Parse(bookID.Text),
-                    Volume = short.Parse(volumeID.Text),
-                    Collection = short.Parse(collectionID.Text),
-                    Series = short.Parse(seriesID.Text),
-                    Shelf = short.Parse(shelfID.Text),
-                    Library = short.Parse(libraryID.Text)
-                };
-                _model.Terse.Coords = update;
-                loadScroll();
-            }
-            catch
-            {
-                libraryID.Text = _model.Terse.Coords.Library.ToString();
-                shelfID.Text = _model.Terse.Coords.Shelf.ToString();
-                seriesID.Text = _model.Terse.Coords.Series.ToString();
-                collectionID.Text = _model.Terse.Coords.Collection.ToString();
-                volumeID.Text = _model.Terse.Coords.Volume.ToString();
-                bookID.Text = _model.Terse.Coords.Book.ToString();
-                chapterID.Text = _model.Terse.Coords.Chapter.ToString();
-                sectionID.Text = _model.Terse.Coords.Section.ToString();
-                scrollID.Text = _model.Terse.Coords.Scroll.ToString();
-            }
+            _model.Terse.Coords = GetPhextCoordinate();
+            loadScroll();
         }
 
         private TreeNode? getTreeNode(Coordinates coordinates)
@@ -727,15 +682,7 @@ Use F2 - F11 to access additional dimensions.
                 return;
             }
             _model.Coords = test.Clamp();
-            scrollID.Text = _model.Coords.Scroll.ToString();
-            sectionID.Text = _model.Coords.Section.ToString();
-            chapterID.Text = _model.Coords.Chapter.ToString();
-            bookID.Text = _model.Coords.Book.ToString();
-            volumeID.Text = _model.Coords.Volume.ToString();
-            collectionID.Text = _model.Coords.Collection.ToString();
-            seriesID.Text = _model.Coords.Series.ToString();
-            shelfID.Text = _model.Coords.Shelf.ToString();
-            libraryID.Text = _model.Coords.Library.ToString();
+            phextCoordinate.Text = _model.Coords.ToString();
             loadScroll();
             _checkout = new Coordinates(_model.Coords);
         }
@@ -843,83 +790,187 @@ Use F2 - F11 to access additional dimensions.
         private void libraryID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(libraryID, e);
+            UpDownHandler(TerseModel.LIBRARY_BREAK, e);
             jumpButton_Click(sender, e);
         }
 
         private void shelfID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(shelfID, e);
+            UpDownHandler(TerseModel.SHELF_BREAK, e);
             jumpButton_Click(sender, e);
         }
 
         private void seriesID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(seriesID, e);
+            UpDownHandler(TerseModel.SERIES_BREAK, e);
             jumpButton_Click(sender, e);
         }
 
         private void collectionID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(collectionID, e);
+            UpDownHandler(TerseModel.COLLECTION_BREAK, e);
             jumpButton_Click(sender, e);
         }
 
         private void volumeID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(volumeID, e);
+            UpDownHandler(TerseModel.VOLUME_BREAK, e);
             jumpButton_Click(sender, e);
         }
 
         private void bookID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(bookID, e);
+            UpDownHandler(TerseModel.BOOK_BREAK, e);
             jumpButton_Click(sender, e);
         }
 
         private void chapterID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(chapterID, e);
+            UpDownHandler(TerseModel.CHAPTER_BREAK, e);
             jumpButton_Click(sender, e);
         }
 
         private void sectionID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(sectionID, e);
+            UpDownHandler(TerseModel.SECTION_BREAK, e);
             jumpButton_Click(sender, e);
         }
 
-        private void BumpCoordinate(TextBox box, int amount)
+        private short GetSubCoordinate(char breakType)
         {
-            var value = int.Parse(box.Text) + amount;
-            if (value < 1) { value = 1; }
-            if (value > 9999) { value = 9999; }
-            box.Text = value.ToString();
+            var parts = phextCoordinate.Text.Split('/');
+            if (parts.Length != 3)
+            {
+                return 1;
+            }
+
+            int primary = -1;
+            if (breakType == TerseModel.LIBRARY_BREAK ||
+                breakType == TerseModel.SHELF_BREAK ||
+                breakType == TerseModel.SERIES_BREAK)
+            {
+                primary = 0;
+            }
+            if (breakType == TerseModel.COLLECTION_BREAK ||
+                breakType == TerseModel.VOLUME_BREAK ||
+                breakType == TerseModel.BOOK_BREAK)
+            {
+                primary = 1;
+            }
+            if (breakType == TerseModel.CHAPTER_BREAK ||
+                breakType == TerseModel.SECTION_BREAK ||
+                breakType == TerseModel.SCROLL_BREAK)
+            {
+                primary = 2;
+            }
+
+            if (primary == -1)
+            {
+                return 1;
+            }
+
+            var subparts = parts[primary].Split('.');
+            if (subparts.Length != 3)
+            {
+                return 1;
+            }
+
+            int subindex = -1;
+            if (breakType == TerseModel.LIBRARY_BREAK ||
+                breakType == TerseModel.COLLECTION_BREAK ||
+                breakType == TerseModel.CHAPTER_BREAK)
+            {
+                subindex = 0;
+            }
+            if (breakType == TerseModel.SHELF_BREAK ||
+                breakType == TerseModel.VOLUME_BREAK ||
+                breakType == TerseModel.SECTION_BREAK)
+            {
+                subindex = 1;
+            }
+            if (breakType == TerseModel.SERIES_BREAK ||
+                breakType == TerseModel.BOOK_BREAK ||
+                breakType == TerseModel.SCROLL_BREAK)
+            {
+                subindex = 2;
+            }
+            if (subindex == -1)
+            {
+                return 1;
+            }
+
+            return short.Parse(subparts[subindex]);
         }
 
-        private void UpDownHandler(TextBox box, KeyEventArgs e)
+        private string RebuildCoordinate(char breakType, short value)
+        {
+            Coordinates parts = GetPhextCoordinate();
+
+            switch (breakType)
+            {
+                case TerseModel.LIBRARY_BREAK:
+                    parts.Library = value;
+                    break;
+                case TerseModel.SHELF_BREAK:
+                    parts.Shelf = value;
+                    break;
+                case TerseModel.SERIES_BREAK:
+                    parts.Series = value;
+                    break;
+                case TerseModel.COLLECTION_BREAK:
+                    parts.Collection = value;
+                    break;
+                case TerseModel.VOLUME_BREAK:
+                    parts.Volume = value;
+                    break;
+                case TerseModel.BOOK_BREAK:
+                    parts.Book = value;
+                    break;
+                case TerseModel.CHAPTER_BREAK:
+                    parts.Chapter = value;
+                    break;
+                case TerseModel.SECTION_BREAK:
+                    parts.Section = value;
+                    break;
+                case TerseModel.SCROLL_BREAK:
+                    parts.Scroll = value;
+                    break;
+            }
+
+            return parts.ToString();
+        }
+
+        private void BumpCoordinate(char breakType, short amount)
+        {
+            short value = (short)(GetSubCoordinate(breakType) + amount);
+            if (value < 1) { value = 1; }
+            if (value > 999) { value = 999; }
+            phextCoordinate.Text = RebuildCoordinate(breakType, value);
+        }
+
+        private void UpDownHandler(char breakType, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Up)
             {
-                BumpCoordinate(box, -1);
+                BumpCoordinate(breakType, -1);
             }
             if (e.KeyCode == Keys.Down)
             {
-                BumpCoordinate(box, 1);
+                BumpCoordinate(breakType, 1);
             }
         }
 
         private void scrollID_KeyUp(object sender, KeyEventArgs e)
         {
             HandleHotkeys(sender, e);
-            UpDownHandler(scrollID, e);
+            UpDownHandler(TerseModel.SCROLL_BREAK, e);
             jumpButton_Click(sender, e);
         }
 

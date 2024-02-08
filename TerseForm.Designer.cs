@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             textBox = new RichTextBox();
-            libraryLabel = new Label();
+            coordinateLabel = new Label();
             menuStrip = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             closeToolStripMenuItem = new ToolStripMenuItem();
@@ -53,25 +53,10 @@
             helpToolStripMenuItem = new ToolStripMenuItem();
             defaultTerseToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
-            libraryID = new TextBox();
-            shelfLabel = new Label();
-            shelfID = new TextBox();
-            seriesLabel = new Label();
-            seriesID = new TextBox();
-            collectionLabel = new Label();
-            collectionID = new TextBox();
-            volumeLabel = new Label();
-            volumeID = new TextBox();
-            bookLabel = new Label();
-            bookID = new TextBox();
-            chapterLabel = new Label();
-            sectionLabel = new Label();
-            scrollLabel = new Label();
+            phextCoordinate = new TextBox();
             status = new Label();
-            chapterID = new TextBox();
-            sectionID = new TextBox();
-            scrollID = new TextBox();
             flowLayoutPanel = new FlowLayoutPanel();
+            button1 = new Button();
             wordCountLabel = new Label();
             treeView = new TreeView();
             panel1 = new Panel();
@@ -100,18 +85,18 @@
             textBox.KeyDown += textBox_KeyDown;
             textBox.KeyUp += textBox_KeyUp;
             // 
-            // libraryLabel
+            // coordinateLabel
             // 
-            libraryLabel.Anchor = AnchorStyles.Bottom;
-            libraryLabel.CausesValidation = false;
-            libraryLabel.Enabled = false;
-            libraryLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            libraryLabel.Location = new Point(3, 9);
-            libraryLabel.Name = "libraryLabel";
-            libraryLabel.Size = new Size(80, 20);
-            libraryLabel.TabIndex = 2;
-            libraryLabel.Text = "Library:";
-            libraryLabel.TextAlign = ContentAlignment.MiddleRight;
+            coordinateLabel.Anchor = AnchorStyles.Bottom;
+            coordinateLabel.CausesValidation = false;
+            coordinateLabel.Enabled = false;
+            coordinateLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
+            coordinateLabel.Location = new Point(3, 9);
+            coordinateLabel.Name = "coordinateLabel";
+            coordinateLabel.Size = new Size(100, 20);
+            coordinateLabel.TabIndex = 2;
+            coordinateLabel.Text = "Coordinate:";
+            coordinateLabel.TextAlign = ContentAlignment.MiddleRight;
             // 
             // menuStrip
             // 
@@ -223,12 +208,12 @@
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(177, 6);
+            toolStripSeparator3.Size = new Size(141, 6);
             // 
             // preferencesToolStripMenuItem
             // 
             preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            preferencesToolStripMenuItem.Size = new Size(180, 22);
+            preferencesToolStripMenuItem.Size = new Size(144, 22);
             preferencesToolStripMenuItem.Text = "&Preferences...";
             preferencesToolStripMenuItem.Click += preferencesToolStripMenuItem_Click;
             // 
@@ -300,268 +285,63 @@
             aboutToolStripMenuItem.Text = "&About";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
-            // libraryID
+            // phextCoordinate
             // 
-            libraryID.Anchor = AnchorStyles.Bottom;
-            libraryID.Enabled = false;
-            libraryID.Location = new Point(89, 3);
-            libraryID.Margin = new Padding(3, 3, 25, 3);
-            libraryID.MaxLength = 4;
-            libraryID.Name = "libraryID";
-            libraryID.Size = new Size(55, 23);
-            libraryID.TabIndex = 1;
-            libraryID.KeyUp += libraryID_KeyUp;
-            // 
-            // shelfLabel
-            // 
-            shelfLabel.Anchor = AnchorStyles.Bottom;
-            shelfLabel.CausesValidation = false;
-            shelfLabel.Enabled = false;
-            shelfLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            shelfLabel.Location = new Point(172, 9);
-            shelfLabel.Name = "shelfLabel";
-            shelfLabel.Size = new Size(80, 20);
-            shelfLabel.TabIndex = 2;
-            shelfLabel.Text = "Shelf:";
-            shelfLabel.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // shelfID
-            // 
-            shelfID.Anchor = AnchorStyles.Bottom;
-            shelfID.Enabled = false;
-            shelfID.Location = new Point(258, 3);
-            shelfID.Margin = new Padding(3, 3, 25, 3);
-            shelfID.MaxLength = 4;
-            shelfID.Name = "shelfID";
-            shelfID.Size = new Size(55, 23);
-            shelfID.TabIndex = 2;
-            shelfID.KeyUp += shelfID_KeyUp;
-            // 
-            // seriesLabel
-            // 
-            seriesLabel.Anchor = AnchorStyles.Bottom;
-            seriesLabel.CausesValidation = false;
-            seriesLabel.Enabled = false;
-            seriesLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            seriesLabel.Location = new Point(341, 9);
-            seriesLabel.Name = "seriesLabel";
-            seriesLabel.Size = new Size(80, 20);
-            seriesLabel.TabIndex = 2;
-            seriesLabel.Text = "Series:";
-            seriesLabel.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // seriesID
-            // 
-            seriesID.Anchor = AnchorStyles.Bottom;
-            seriesID.Enabled = false;
-            seriesID.Location = new Point(427, 3);
-            seriesID.Margin = new Padding(3, 3, 25, 3);
-            seriesID.MaxLength = 4;
-            seriesID.Name = "seriesID";
-            seriesID.Size = new Size(55, 23);
-            seriesID.TabIndex = 3;
-            seriesID.KeyUp += seriesID_KeyUp;
-            // 
-            // collectionLabel
-            // 
-            collectionLabel.Anchor = AnchorStyles.Bottom;
-            collectionLabel.CausesValidation = false;
-            collectionLabel.Enabled = false;
-            collectionLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            collectionLabel.Location = new Point(510, 9);
-            collectionLabel.Name = "collectionLabel";
-            collectionLabel.Size = new Size(80, 20);
-            collectionLabel.TabIndex = 2;
-            collectionLabel.Text = "Collection:";
-            collectionLabel.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // collectionID
-            // 
-            collectionID.Anchor = AnchorStyles.Bottom;
-            collectionID.Enabled = false;
-            collectionID.Location = new Point(596, 3);
-            collectionID.Margin = new Padding(3, 3, 25, 3);
-            collectionID.MaxLength = 4;
-            collectionID.Name = "collectionID";
-            collectionID.Size = new Size(55, 23);
-            collectionID.TabIndex = 4;
-            collectionID.KeyUp += collectionID_KeyUp;
-            // 
-            // volumeLabel
-            // 
-            volumeLabel.Anchor = AnchorStyles.Bottom;
-            volumeLabel.CausesValidation = false;
-            volumeLabel.Enabled = false;
-            volumeLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            volumeLabel.Location = new Point(679, 9);
-            volumeLabel.Name = "volumeLabel";
-            volumeLabel.Size = new Size(80, 20);
-            volumeLabel.TabIndex = 2;
-            volumeLabel.Text = "Volume:";
-            volumeLabel.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // volumeID
-            // 
-            volumeID.Anchor = AnchorStyles.Bottom;
-            volumeID.Enabled = false;
-            volumeID.Location = new Point(765, 3);
-            volumeID.Margin = new Padding(3, 3, 25, 3);
-            volumeID.MaxLength = 4;
-            volumeID.Name = "volumeID";
-            volumeID.Size = new Size(55, 23);
-            volumeID.TabIndex = 5;
-            volumeID.KeyUp += volumeID_KeyUp;
-            // 
-            // bookLabel
-            // 
-            bookLabel.Anchor = AnchorStyles.Bottom;
-            bookLabel.CausesValidation = false;
-            bookLabel.Enabled = false;
-            bookLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            bookLabel.Location = new Point(3, 38);
-            bookLabel.Name = "bookLabel";
-            bookLabel.Size = new Size(80, 20);
-            bookLabel.TabIndex = 2;
-            bookLabel.Text = "Book:";
-            bookLabel.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // bookID
-            // 
-            bookID.Anchor = AnchorStyles.Bottom;
-            bookID.Enabled = false;
-            bookID.Location = new Point(89, 32);
-            bookID.Margin = new Padding(3, 3, 25, 3);
-            bookID.MaxLength = 4;
-            bookID.Name = "bookID";
-            bookID.Size = new Size(55, 23);
-            bookID.TabIndex = 6;
-            bookID.KeyUp += bookID_KeyUp;
-            // 
-            // chapterLabel
-            // 
-            chapterLabel.Anchor = AnchorStyles.Bottom;
-            chapterLabel.CausesValidation = false;
-            chapterLabel.Enabled = false;
-            chapterLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            chapterLabel.Location = new Point(172, 38);
-            chapterLabel.Name = "chapterLabel";
-            chapterLabel.Size = new Size(80, 20);
-            chapterLabel.TabIndex = 2;
-            chapterLabel.Text = "Chapter:";
-            chapterLabel.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // sectionLabel
-            // 
-            sectionLabel.Anchor = AnchorStyles.Bottom;
-            sectionLabel.CausesValidation = false;
-            sectionLabel.Enabled = false;
-            sectionLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            sectionLabel.Location = new Point(341, 38);
-            sectionLabel.Name = "sectionLabel";
-            sectionLabel.Size = new Size(80, 20);
-            sectionLabel.TabIndex = 2;
-            sectionLabel.Text = "Section:";
-            sectionLabel.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // scrollLabel
-            // 
-            scrollLabel.Anchor = AnchorStyles.Bottom;
-            scrollLabel.CausesValidation = false;
-            scrollLabel.Enabled = false;
-            scrollLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            scrollLabel.Location = new Point(510, 38);
-            scrollLabel.Name = "scrollLabel";
-            scrollLabel.Size = new Size(80, 20);
-            scrollLabel.TabIndex = 2;
-            scrollLabel.Text = "Scroll:";
-            scrollLabel.TextAlign = ContentAlignment.MiddleRight;
+            phextCoordinate.Anchor = AnchorStyles.Bottom;
+            phextCoordinate.Enabled = false;
+            phextCoordinate.Location = new Point(109, 3);
+            phextCoordinate.Margin = new Padding(3, 3, 25, 3);
+            phextCoordinate.MaxLength = 64;
+            phextCoordinate.Name = "phextCoordinate";
+            phextCoordinate.Size = new Size(240, 23);
+            phextCoordinate.TabIndex = 1;
             // 
             // status
             // 
-            status.Anchor = AnchorStyles.Bottom;
+            status.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             status.CausesValidation = false;
             status.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            status.Location = new Point(679, 38);
+            status.Location = new Point(458, 9);
             status.Name = "status";
-            status.Size = new Size(230, 20);
+            status.Size = new Size(896, 20);
             status.TabIndex = 2;
             status.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // chapterID
-            // 
-            chapterID.Anchor = AnchorStyles.Bottom;
-            chapterID.Enabled = false;
-            chapterID.Location = new Point(258, 32);
-            chapterID.Margin = new Padding(3, 3, 25, 3);
-            chapterID.MaxLength = 4;
-            chapterID.Name = "chapterID";
-            chapterID.Size = new Size(55, 23);
-            chapterID.TabIndex = 7;
-            chapterID.KeyUp += chapterID_KeyUp;
-            // 
-            // sectionID
-            // 
-            sectionID.Anchor = AnchorStyles.Bottom;
-            sectionID.Enabled = false;
-            sectionID.Location = new Point(427, 32);
-            sectionID.Margin = new Padding(3, 3, 25, 3);
-            sectionID.MaxLength = 4;
-            sectionID.Name = "sectionID";
-            sectionID.Size = new Size(55, 23);
-            sectionID.TabIndex = 8;
-            sectionID.KeyUp += sectionID_KeyUp;
-            // 
-            // scrollID
-            // 
-            scrollID.Anchor = AnchorStyles.Bottom;
-            scrollID.Enabled = false;
-            scrollID.Location = new Point(596, 32);
-            scrollID.Margin = new Padding(3, 3, 25, 3);
-            scrollID.MaxLength = 4;
-            scrollID.Name = "scrollID";
-            scrollID.Size = new Size(55, 23);
-            scrollID.TabIndex = 9;
-            scrollID.KeyUp += scrollID_KeyUp;
-            // 
             // flowLayoutPanel
             // 
-            flowLayoutPanel.Controls.Add(libraryLabel);
-            flowLayoutPanel.Controls.Add(libraryID);
-            flowLayoutPanel.Controls.Add(shelfLabel);
-            flowLayoutPanel.Controls.Add(shelfID);
-            flowLayoutPanel.Controls.Add(seriesLabel);
-            flowLayoutPanel.Controls.Add(seriesID);
-            flowLayoutPanel.Controls.Add(collectionLabel);
-            flowLayoutPanel.Controls.Add(collectionID);
-            flowLayoutPanel.Controls.Add(volumeLabel);
-            flowLayoutPanel.Controls.Add(volumeID);
-            flowLayoutPanel.Controls.Add(wordCountLabel);
-            flowLayoutPanel.Controls.Add(bookLabel);
-            flowLayoutPanel.Controls.Add(bookID);
-            flowLayoutPanel.Controls.Add(chapterLabel);
-            flowLayoutPanel.Controls.Add(chapterID);
-            flowLayoutPanel.Controls.Add(sectionLabel);
-            flowLayoutPanel.Controls.Add(sectionID);
-            flowLayoutPanel.Controls.Add(scrollLabel);
-            flowLayoutPanel.Controls.Add(scrollID);
+            flowLayoutPanel.Controls.Add(coordinateLabel);
+            flowLayoutPanel.Controls.Add(phextCoordinate);
+            flowLayoutPanel.Controls.Add(button1);
             flowLayoutPanel.Controls.Add(status);
+            flowLayoutPanel.Controls.Add(wordCountLabel);
             flowLayoutPanel.Dock = DockStyle.Bottom;
             flowLayoutPanel.Location = new Point(0, 576);
-            flowLayoutPanel.MaximumSize = new Size(1100, 65);
+            flowLayoutPanel.MaximumSize = new Size(1400, 65);
             flowLayoutPanel.MinimumSize = new Size(925, 65);
             flowLayoutPanel.Name = "flowLayoutPanel";
-            flowLayoutPanel.Size = new Size(1100, 65);
+            flowLayoutPanel.Size = new Size(1384, 65);
             flowLayoutPanel.TabIndex = 11;
+            // 
+            // button1
+            // 
+            button1.ForeColor = Color.Black;
+            button1.Location = new Point(377, 3);
+            button1.Name = "button1";
+            button1.Size = new Size(75, 23);
+            button1.TabIndex = 4;
+            button1.Text = "Jump";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += jumpButton_Click;
             // 
             // wordCountLabel
             // 
-            wordCountLabel.Anchor = AnchorStyles.Bottom;
+            wordCountLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             wordCountLabel.CausesValidation = false;
             wordCountLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            wordCountLabel.Location = new Point(848, 9);
+            wordCountLabel.Location = new Point(3, 29);
             wordCountLabel.Name = "wordCountLabel";
-            wordCountLabel.Size = new Size(239, 20);
-            wordCountLabel.TabIndex = 10;
+            wordCountLabel.Size = new Size(1351, 20);
+            wordCountLabel.TabIndex = 3;
             wordCountLabel.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // treeView
@@ -604,7 +384,7 @@
             MinimumSize = new Size(850, 400);
             Name = "TerseForm";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Terse Notepad";
+            Text = "Phext Notepad";
             FormClosing += TerseForm_FormClosing;
             menuStrip.ResumeLayout(false);
             menuStrip.PerformLayout();
@@ -618,7 +398,7 @@
         #endregion
 
         private RichTextBox textBox;
-        private Label libraryLabel;
+        private Label coordinateLabel;
         private MenuStrip menuStrip;
         private ToolStripMenuItem fileToolStripMenuItem;
         private ToolStripMenuItem openToolStripMenuItem;
@@ -629,25 +409,8 @@
         private ToolStripMenuItem saveToolStripMenuItem;
         private ToolStripMenuItem viewToolStripMenuItem;
         private ToolStripMenuItem showCoordinatesToolStripMenuItem;
-        private TextBox libraryID;
-        private Label shelfLabel;
-        private TextBox shelfID;
-        private Label seriesLabel;
-        private TextBox seriesID;
-        private Label collectionLabel;
-        private TextBox collectionID;
-        private Label volumeLabel;
-        private TextBox volumeID;
-        private Label bookLabel;
-        private TextBox bookID;
-        private Label chapterLabel;
-        private Label sectionLabel;
-        private Label scrollLabel;
+        private TextBox phextCoordinate;
         private Label status;
-        private TextBox chapterID;
-        private TextBox sectionID;
-        private TextBox scrollID;
-        private VScrollBar scrollbar;
         private TreeView treeView;
         private FlowLayoutPanel flowLayoutPanel;
         private ToolStripMenuItem lockToScrollMenuItem;
@@ -660,10 +423,11 @@
         private ToolStripMenuItem recentToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripSeparator toolStripSeparator1;
-        private Label wordCountLabel;
         private ToolStripMenuItem darkModeMenuItem;
         private ToolStripSeparator toolStripSeparator3;
         private ToolStripMenuItem reloadMenuItem;
         private ToolStripSeparator toolStripSeparator4;
+        private Label wordCountLabel;
+        private Button button1;
     }
 }
