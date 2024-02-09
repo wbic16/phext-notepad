@@ -24,7 +24,9 @@
             Series = other.Series;
             Shelf = other.Shelf;
             Library = other.Library;
+            Intermediate = other.Intermediate;
         }
+        public bool Intermediate { get; set; } = false;
         public class ScrollIndex : TypedCoordinate
         {
             public ScrollIndex(short value) : base(value)
@@ -244,7 +246,7 @@
 
         public string EditorSummary(string action = "")
         {
-            var result = $"Ln: {Line}, Col: {Column}";
+            var result = $"LB: {Library}  SF: {Shelf}  SR: {Series}  /  CN: {Collection}  VM: {Volume}  BK: {Book}  /  CH: {Chapter}  SN: {Section}  SC: {Scroll}  -- Line: {Line}, Column: {Column}";
             if (action.Length > 0)
             {
                 result += $" {action}";
@@ -286,6 +288,7 @@
             var parts = ParseCoordinateString(coordinates);
             if (parts.Length != 9)
             {
+                Intermediate = true;
                 return;
             }
             Library = parts[0];
@@ -297,6 +300,7 @@
             Chapter = parts[6];
             Section = parts[7];
             Scroll = parts[8];
+            Intermediate = false;
         }
 
         public bool IsValid()

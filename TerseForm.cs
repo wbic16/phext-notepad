@@ -341,7 +341,7 @@ Use F2 - F11 to access additional dimensions.
             {
                 LoadFile(_settings.Filename, false);
             }
-            UpdateUI($"Saved ${_settings.Filename}");
+            UpdateUI($"Saved {_settings.Filename}");
         }
 
         private void textBox_SelectionChanged(object sender, EventArgs e)
@@ -379,7 +379,7 @@ Use F2 - F11 to access additional dimensions.
             textBox.Enabled = _checkout != null;
 
             status.Text = _model.Terse.EditorSummary(action);
-            wordCountLabel.Text = $"Doc: {FormatNumber(_model.WordCount)}, Scroll: {FormatNumber(_model.ScrollWordCount)}";
+            wordCountLabel.Text = $"Bytes: {_model.ByteCount}, Words (Total): {FormatNumber(_model.WordCount)}, Words (Page): {FormatNumber(_model.ScrollWordCount)}";
         }
 
         private bool ChooseSaveFilename()
@@ -590,9 +590,43 @@ Use F2 - F11 to access additional dimensions.
                 return _model.Terse.Coords;
             }
 
-            var result = new Coordinates();
-            result.Library = short.Parse(parts[0]);
-            result.Shelf = short.Parse(parts[1]);
+            var result = new Coordinates(true);
+            if (short.TryParse(parts[0], out short p0))
+                result.Library = p0;
+            else
+                result.Intermediate = true;
+            if (short.TryParse(parts[1], out short p1))
+                result.Shelf = p1;
+            else
+                result.Intermediate = true;
+            if (short.TryParse(parts[2], out short p2))
+                result.Series = p2;
+            else
+                result.Intermediate = true;
+            if (short.TryParse(parts[3], out short p3))
+                result.Collection = p3;
+            else
+                result.Intermediate = true;
+            if (short.TryParse(parts[4], out short p4))
+                result.Volume = p4;
+            else
+                result.Intermediate = true;
+            if (short.TryParse(parts[5], out short p5))
+                result.Book = p5;
+            else
+                result.Intermediate = true;
+            if (short.TryParse(parts[6], out short p6))
+                result.Chapter = p6;
+            else
+                result.Intermediate = true;
+            if (short.TryParse(parts[7], out short p7))
+                result.Section = p7;
+            else
+                result.Intermediate = true;
+            if (short.TryParse(parts[8], out short p8))
+                result.Scroll = p8;
+            else
+                result.Intermediate = true;
 
             return result;
         }
@@ -600,8 +634,13 @@ Use F2 - F11 to access additional dimensions.
         private void jumpButton_Click(object sender, EventArgs e)
         {
             collectScroll();
-            _model.Terse.Coords = GetPhextCoordinate();
-            loadScroll();
+            
+            var next = GetPhextCoordinate();
+            if (!next.Intermediate)
+            {
+                _model.Terse.Coords = next;
+                loadScroll();
+            }
         }
 
         private TreeNode? getTreeNode(Coordinates coordinates)
@@ -787,62 +826,6 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
-        private void libraryID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.LIBRARY_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
-        private void shelfID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.SHELF_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
-        private void seriesID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.SERIES_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
-        private void collectionID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.COLLECTION_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
-        private void volumeID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.VOLUME_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
-        private void bookID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.BOOK_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
-        private void chapterID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.CHAPTER_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
-        private void sectionID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.SECTION_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
         private short GetSubCoordinate(char breakType)
         {
             var parts = phextCoordinate.Text.Split('/');
@@ -967,13 +950,6 @@ Use F2 - F11 to access additional dimensions.
             }
         }
 
-        private void scrollID_KeyUp(object sender, KeyEventArgs e)
-        {
-            HandleHotkeys(sender, e);
-            UpDownHandler(TerseModel.SCROLL_BREAK, e);
-            jumpButton_Click(sender, e);
-        }
-
         private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var coordinates = treeView.SelectedNode.Name;
@@ -1047,6 +1023,16 @@ Use F2 - F11 to access additional dimensions.
             _settings.ShowCoordinates = showCoordinatesToolStripMenuItem.Checked;
             _settings.Save();
             LoadFile(_settings.Filename, false);
+        }
+
+        private void phextCoordinate_TextChanged(object sender, EventArgs e)
+        {
+            var prior = _model.Terse.Coords;
+            var test = GetPhextCoordinate();
+            if (!test.Intermediate && prior.ToString() != test.ToString())
+            {
+                jumpButton_Click(sender, e);
+            }
         }
     }
 }

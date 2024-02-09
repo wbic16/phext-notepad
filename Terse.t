@@ -63,17 +63,10 @@ Key
 🐛: Curiosity
 Roadmap
 
-v0.2.0
-------
- * Add Book, Volume, and Collection Dimensions
-
-v0.3.0
+v0.4.0
 ------
   * add multiple viewports
   * add tabs
-
-v0.4.0
-------
   * add zoomed UI
   * add Series, Shelf, and Library Dimensions
 
@@ -85,8 +78,15 @@ Editor List
 * Flownote: One infinite scroll [C++]
 * Dreamnote: A place for all of your notes [Rust]Release Notes
 -------------
-(c) 2022-2023 Will Bickford
+(c) 2022-2024 Phext, Inc.
 MIT License
+
+v0.3.1 (2024-02-08)
+➕ Improved Coordinate Editing, Byte Count, and Word Count Tracking
+➕ Updated Copyright to Phext, Inc.
+
+v0.3.0 (2024-02-07)
+➕ Rebranded as Phext Notepad
 
 v0.2.3 (2023-07-28)
 ➕ Added Color1-Color4 Customization (request submitted by Luke Whipple)

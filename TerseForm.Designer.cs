@@ -90,10 +90,10 @@
             coordinateLabel.Anchor = AnchorStyles.Bottom;
             coordinateLabel.CausesValidation = false;
             coordinateLabel.Enabled = false;
-            coordinateLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            coordinateLabel.Location = new Point(3, 9);
+            coordinateLabel.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
+            coordinateLabel.Location = new Point(3, 3);
             coordinateLabel.Name = "coordinateLabel";
-            coordinateLabel.Size = new Size(100, 20);
+            coordinateLabel.Size = new Size(114, 36);
             coordinateLabel.TabIndex = 2;
             coordinateLabel.Text = "Coordinate:";
             coordinateLabel.TextAlign = ContentAlignment.MiddleRight;
@@ -289,23 +289,25 @@
             // 
             phextCoordinate.Anchor = AnchorStyles.Bottom;
             phextCoordinate.Enabled = false;
-            phextCoordinate.Location = new Point(109, 3);
-            phextCoordinate.Margin = new Padding(3, 3, 25, 3);
+            phextCoordinate.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
+            phextCoordinate.Location = new Point(123, 3);
             phextCoordinate.MaxLength = 64;
             phextCoordinate.Name = "phextCoordinate";
-            phextCoordinate.Size = new Size(240, 23);
+            phextCoordinate.Size = new Size(265, 33);
             phextCoordinate.TabIndex = 1;
+            phextCoordinate.TextChanged += phextCoordinate_TextChanged;
             // 
             // status
             // 
-            status.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            status.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            status.BorderStyle = BorderStyle.FixedSingle;
             status.CausesValidation = false;
             status.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            status.Location = new Point(458, 9);
+            status.Location = new Point(475, 6);
             status.Name = "status";
-            status.Size = new Size(896, 20);
+            status.Size = new Size(896, 27);
             status.TabIndex = 2;
-            status.TextAlign = ContentAlignment.MiddleCenter;
+            status.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // flowLayoutPanel
             // 
@@ -324,10 +326,11 @@
             // 
             // button1
             // 
+            button1.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
             button1.ForeColor = Color.Black;
-            button1.Location = new Point(377, 3);
+            button1.Location = new Point(394, 3);
             button1.Name = "button1";
-            button1.Size = new Size(75, 23);
+            button1.Size = new Size(75, 33);
             button1.TabIndex = 4;
             button1.Text = "Jump";
             button1.UseVisualStyleBackColor = true;
@@ -336,13 +339,14 @@
             // wordCountLabel
             // 
             wordCountLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            wordCountLabel.BorderStyle = BorderStyle.FixedSingle;
             wordCountLabel.CausesValidation = false;
             wordCountLabel.Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point);
-            wordCountLabel.Location = new Point(3, 29);
+            wordCountLabel.Location = new Point(3, 39);
             wordCountLabel.Name = "wordCountLabel";
-            wordCountLabel.Size = new Size(1351, 20);
+            wordCountLabel.Size = new Size(1368, 23);
             wordCountLabel.TabIndex = 3;
-            wordCountLabel.TextAlign = ContentAlignment.MiddleCenter;
+            wordCountLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // treeView
             // 
@@ -354,7 +358,7 @@
             treeView.Location = new Point(3, 5);
             treeView.Name = "treeView";
             treeView.PathSeparator = "/";
-            treeView.Size = new Size(450, 547);
+            treeView.Size = new Size(450, 541);
             treeView.TabIndex = 29;
             treeView.AfterSelect += treeView_AfterSelect;
             treeView.DoubleClick += treeView_DoubleClick;

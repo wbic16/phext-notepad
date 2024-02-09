@@ -37,6 +37,14 @@ namespace TerseNotepad
             }
         }
 
+        public int ByteCount
+        {
+            get
+            {
+                return Terse.ByteCount;
+            }
+        }
+
         public int ScrollWordCount
         {
             get

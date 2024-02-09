@@ -121,6 +121,50 @@ namespace TerseNotepad
         public Dictionary<string, TreeNode> Cache = new();
         public int LeafCount { get; private set; } = 0;
         public int WordCount { get; private set; } = 0;
+        public int ByteCount {
+            get
+            {
+                int total = 0;
+                foreach (var lib_key in Root.Library.Keys)
+                {
+                    var library = Root.Library[lib_key];
+                    foreach (var shelf_key in library.Shelf.Keys)
+                    {
+                        var shelf = library.Shelf[shelf_key];
+                        foreach (var series_key in shelf.Series.Keys)
+                        {
+                            var series = shelf.Series[series_key];
+                            foreach (var collection_key in series.Collection.Keys)
+                            {
+                                var collection = series.Collection[collection_key];
+                                foreach (var volume_key in collection.Volume.Keys)
+                                {
+                                    var volume = collection.Volume[volume_key];
+                                    foreach (var book_key in volume.Book.Keys)
+                                    {
+                                        var book = volume.Book[book_key];
+                                        foreach (var chapter_key in book.Chapter.Keys)
+                                        {
+                                            var chapter = book.Chapter[chapter_key];
+                                            foreach (var section_key in chapter.Section.Keys)
+                                            {
+                                                var section = chapter.Section[section_key];
+                                                foreach (var scroll_key in section.Scroll.Keys)
+                                                {
+                                                    var scroll = section.Scroll[scroll_key];
+                                                    total += scroll.Text.Length;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                return total;
+            }
+        }
 
         public int ScrollWordCount
         {
