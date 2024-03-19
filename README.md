@@ -1,14 +1,14 @@
-Terse Notepad
+Phext Notepad
 -------------
-There's now a reference editor (v0.0.6) that you can use to explore the concept of multi-dimensional text. Be sure to open Terse.t after downloading a copy of trs.exe!
+phext notepad provides a reference implementation of 11 dimensional text in C#.
 
-Megatext File Format
----------------------
-The megatext file format (.t) provides modern systems with a large text space. This format is suitable for serializing many datasets, as it provides 11 dimensions of free-form text. Traditional editors only explore 2-dimensional text (columns and lines). Operating systems provide access to files and folders - providing access to a 4-dimensional text space.
+Phext-Based File Formats
+------------------------
+Plain hypertext (phext) provides modern systems with a large text space. This format is suitable for serializing many datasets, as it provides 11 dimensions of free-form text. Traditional editors only explore 2-dimensional text (columns and lines). Operating systems provide access to files and folders - providing access to a 4-dimensional text space.
 
 With 11 dimensions, we can efficiently refer to most of the information available on the Internet in 2022. Given that a vast majority of our capacity is used for video, it seems reasonable to assume that we will not need more than this for quite a long time.
 
-A single megatext file could easily require 1 yottabyte of storage, or as little as 100 bytes.
+A single phext file could easily require 1 yottabyte of storage, or as little as 100 bytes.
 
 Typical Source File
 -------------------
