@@ -1,11 +1,11 @@
-Terse Notepad
+Phext Notepad
 -------------
 
-Terse Notepad provides a reference implementation of multi-dimensional text using Lower ASCII dimension breaks. The format was created by Will Bickford, and is intended to assist humans with leaning into the Singularity.
+Phext Notepad provides a reference implementation of plain hierarchical text ("phext") using delimiters of unusual size. The format was created by Will Bickford, and is intended to assist humans with leaning into the Singularity.
 
 Knowledge Trees
 ---------------
-Terse files extend line breaks to additional dimensions. Everything that's great about text survives this transition. The .t format does not require any addressing or encoding rules. Scrolls provide you with infinite freedom to tinker and think. You can bundle up a set of scrolls and share them with others - while preserving the relational structure of your ideas.
+Phext formatted files extend line breaks to 9 additional dimensions. Everything that's great about text survives this transition. Phext does not require any addressing or encoding rules. Scrolls provide you with infinite freedom to tinker and think. You can bundle up a set of scrolls and share them with others - while preserving the relational structure of your ideas.
 
 High-Bandwidth I/O
 ------------------
@@ -21,23 +21,22 @@ If you typed at 120 wpm for 15,000 years (without rest), you would only hit 950 
 
 Machine Learning
 ----------------
-Terse files are well-suited for machine learning, as they provide structure and context free of parsing concerns. This makes Terse files very robust. If a page becomes corrupted, a parser can easily skip past it. Perhaps the best way to think about Terse files is to consider them an anonymous collection of scrolls that someone shipped to you.Documentation
+Phext is especially well-suited for machine learning, because the content and structure of ideas can be encoded in ways that are familiar to both humans and computers.Documentation
 -------------
 
 File
 ----
- * New: Create a Blank Terse File (Ctrl-N)
- * Open: Open an Existing Terse File (Ctrl-O)
- * Reload: Reloads the current Terse File (Ctrl-/)
+ * New: Create a Blank Phext File (Ctrl-N)
+ * Open: Open an Existing Phext File (Ctrl-O)
+ * Reload: Reloads the current Phext File (Ctrl-/)
  * Save: Write all scrolls to the current file (Ctrl-S)
  * Save As: Write all scrolls to a new file (Ctrl-Shift-S)
  * Recent: Provides a list of files in recently-used order
- * Exit: Leave the Terse?
+ * Exit: Quit the app
 
 Edit
 ----
- * Vim Mode: Toggles Scroll Editor in an External gVim Editor
- * Preferences: Open Terse.ini (Ctrl-,)
+ * Preferences: Open phext.ini (Ctrl-,)
 
 View
 ----
@@ -49,7 +48,7 @@ View
 Help
 ----
  * About: Display Program Version
-Bug List v0.2.3
+Bug List v0.3.1
 ---------------
 
 Bugs
@@ -68,7 +67,6 @@ v0.4.0
   * add multiple viewports
   * add tabs
   * add zoomed UI
-  * add Series, Shelf, and Library Dimensions
 
 Editor List
 -----------
