@@ -1,6 +1,6 @@
 Phext Notepad
 -------------
-phext notepad provides a reference implementation of 11 dimensional text in C#.
+phext notepad provides a reference implementation of 11 dimensional plain hypertext in C#. You can use this editor to test your tools and verify that your phext encoding is accurate. If you find any bugs in this implementation, please file a bug report!
 
 Phext-Based File Formats
 ------------------------
