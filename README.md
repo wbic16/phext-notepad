@@ -6,13 +6,13 @@ Phext-Based File Formats
 ------------------------
 Plain hypertext (phext) provides modern systems with a large text space. This format is suitable for serializing many datasets, as it provides 11 dimensions of free-form text. Traditional editors only explore 2-dimensional text (columns and lines). Operating systems provide access to files and folders - providing access to a 4-dimensional text space.
 
-With 11 dimensions, we can efficiently refer to most of the information available on the Internet in 2022. Given that a vast majority of our capacity is used for video, it seems reasonable to assume that we will not need more than this for quite a long time.
+With 11 dimensions, we can efficiently refer to most of the information available on the Internet in the 2020s. Given that a vast majority of our capacity is used for video, it seems reasonable to assume that we will not need more than this for quite a long time.
 
 A single phext file could easily require 1 yottabyte of storage, or as little as 100 bytes.
 
 Typical Source File
 -------------------
-A reasonable size for a C++ source file is perhaps 10 KB. With an average line length of 30 characters, you'd get 333 lines of source. For the x and n dimensions, we expect roughly N=100.
+A reasonable size for a C++ source file is perhaps 10 KB. With an average line length of 30 characters, you'd get 333 lines of source.
 
 Scaling Text
 ------------
@@ -32,14 +32,7 @@ As we add dimensions, we can encode more complex things. Below are some examples
 
 Formatting Conventions
 ----------------------
-Megatext files support escape sequences for compatibility with traditional editors.
-
-Special Dimensions
-------------------
-The first two dimensions are special. The comment plane (c) exists outside of the normal 11-dimensional text space. It can be used to annotate any text within the document (in place). The data dimension ignores the text space entirely, forming a one-dimensional byte array following the first occurrence of a \z byte. This can be used to append binary data to the end of a megatext file.
-
-* c = Comment (annotations, notes, footnotes)
-* z = Data Dimension (binary blobs)
+Aside from re-purposing nine historic ASCII control codes, phext retains full plain text compatibility. 
 
 Text Dimensions
 ---------------
@@ -100,14 +93,9 @@ Conforming editors must implement MORE COWBELL!
 Remapped Dimension Controls
 ---------------------------
 01: \m Library Break
-02: \z Binary Start
-05: \q Coordinates Start
-06: \k Coordinates End
 0A: \n Line Break
 0B: \v Vertical Tab
 0D: \r Carriage Return
-0E: \c Start Comment
-0F: \d End Comment
 17: \p Scroll Break
 18: \g Section Break
 19: \s Chapter Break
@@ -116,31 +104,6 @@ Remapped Dimension Controls
 1D: \e Collection Break
 1E: \w Series Break
 1F: \i Shelf Break
-
-Megatext Initialization Information
------------------------------------
-A .tii file describes the control code remapping available in your megatext files. The default .tii for conforming text editors can be tweaked to resolve compatibility issues with your system. Dimension controls are specified. If no change is specified, then historic behaviors for that character are assumed.
-
-{
-  "01": { "\\m": "++M;GWVUTSRZXY=0" },
-  "02": { "\\z": "D=1" },
-  "03": { "\\l": "EndOfLine" },
-  "04": { "\\eof": "EndOfFile" },
-  "05": { "\\j": "JumpStart" },
-  "06": { "\\u": "JumpEnd" },
-  "0A": { "\\n": "++Y;X=0" },
-  "0B": { "\\v": "++Y" },
-  "0E": { "\\c": "C=1" },
-  "0F": { "\\d": C=0" },
-  "17": { "\\p": "++Z;XY=0" },
-  "18": { "\\g": "++R;ZXY=0" },
-  "19": { "\\s": "++S;RZXY=0" },
-  "1A": { "\\o": "++T;SRZXY=0" },
-  "1C": { "\\h": "++U;TSRZXY=0" },
-  "1D": { "\\e": "++V;UTSRZXY=0" },
-  "1E": { "\\w": "++W;VUTSRZXY=0" },
-  "1F": { "\\i": "++I;WVUTSRZXY=0" }
-}
 
 Examples
 --------
