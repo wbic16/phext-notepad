@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <VersionPrefix>0.4.0</VersionPrefix>
+    <PackageIcon>Terse.png</PackageIcon>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <StartupObject>TerseNotepad.Program</StartupObject>
+    <ApplicationIcon>Terse.ico</ApplicationIcon>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyName>pn</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Terse.ico" />
+    <None Remove="Terse.t" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Terse.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Terse.ico" />
+    <EmbeddedResource Include="Terse.t" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Update="Terse.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
+
+
+
+
