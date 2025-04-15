@@ -2,6 +2,10 @@ Phext Notepad
 -------------
 phext notepad provides a reference implementation of 11 dimensional plain hypertext in C#. You can use this editor to test your tools and verify that your phext encoding is accurate. If you find any bugs in this implementation, please file a bug report!
 
+Historical Note
+---------------
+Phext Notepad was written before libphext-rs or libphext-node. It was the implementation I used to improve my ability to reason about sparse text volumes, prior to the creation of phext-native editors. It bridges the gap between 11D text and plain text. You should think of Phext Notepad as an historic artifact - a reference editor.
+
 Phext-Based File Formats
 ------------------------
 Plain hypertext (phext) provides modern systems with a large text space. This format is suitable for serializing many datasets, as it provides 11 dimensions of free-form text. Traditional editors only explore 2-dimensional text (columns and lines). Operating systems provide access to files and folders - providing access to a 4-dimensional text space.
