@@ -1,23 +1,23 @@
 ﻿using System.Text;
 
-namespace TerseNotepad
+namespace PhextNotepad
 {
-    public class TerseModel
+    public class PhextModel
     {
-        public TerseModel()
+        public PhextModel()
         {
             Coords.Reset();
         }
-        public TerseText Terse = new();
+        public PhextText Phext = new();
         public Coordinates Coords
         {
             get
             {
-                return Terse.Coords;
+                return Phext.Coords;
             }
             set
             {
-                Terse.Coords = value;
+                Phext.Coords = value;
             }
         }
 
@@ -25,7 +25,7 @@ namespace TerseNotepad
         {
             get
             {
-                return Terse.LeafCount;
+                return Phext.LeafCount;
             }
         }
 
@@ -33,7 +33,7 @@ namespace TerseNotepad
         {
             get
             {
-                return Terse.WordCount;
+                return Phext.WordCount;
             }
         }
 
@@ -41,7 +41,7 @@ namespace TerseNotepad
         {
             get
             {
-                return Terse.ByteCount;
+                return Phext.ByteCount;
             }
         }
 
@@ -49,7 +49,7 @@ namespace TerseNotepad
         {
             get
             {
-                return Terse.ScrollWordCount;
+                return Phext.ScrollWordCount;
             }
         }
 
@@ -68,17 +68,17 @@ namespace TerseNotepad
         public void Load(string data, bool showCoordinates, TreeView? treeView = null)
         {
             var charStream = data.ToCharArray();
-            Terse = new();
+            Phext = new();
             Coordinates local = new(true);
             var stage = new StringBuilder();
-            var sectionNode = Terse.GetSectionTreeRoot(local);
-            var chapterNode = Terse.GetChapterTreeRoot(local);
-            var bookNode = Terse.GetBookTreeRoot(local);
-            var volumeNode = Terse.GetVolumeTreeRoot(local);
-            var collectionNode = Terse.GetCollectionTreeRoot(local);
-            var seriesNode = Terse.GetSeriesTreeRoot(local);
-            var shelfNode = Terse.GetShelfTreeRoot(local);
-            var libraryNode = Terse.GetLibraryTreeRoot(local);
+            var sectionNode = Phext.GetSectionTreeRoot(local);
+            var chapterNode = Phext.GetChapterTreeRoot(local);
+            var bookNode = Phext.GetBookTreeRoot(local);
+            var volumeNode = Phext.GetVolumeTreeRoot(local);
+            var collectionNode = Phext.GetCollectionTreeRoot(local);
+            var seriesNode = Phext.GetSeriesTreeRoot(local);
+            var shelfNode = Phext.GetShelfTreeRoot(local);
+            var libraryNode = Phext.GetLibraryTreeRoot(local);
             for (int i = 0; i < charStream.Length; ++i)
             {
                 var next = charStream[i];
@@ -140,14 +140,14 @@ namespace TerseNotepad
                     if (sectionNode.Nodes.Count > 0)
                     {
                         chapterNode.Nodes.Add(sectionNode);
-                        Terse.SetSectionNode(sectionNode, local.GetSectionRoot());
+                        Phext.SetSectionNode(sectionNode, local.GetSectionRoot());
                     }
                     if (next == SECTION_BREAK)
                     {
                         ++local.Section;
                         local.Scroll = 1;
                     }
-                    sectionNode = Terse.GetSectionTreeRoot(local);
+                    sectionNode = Phext.GetSectionTreeRoot(local);
                 }
 
                 if (dimensions_broken >= 3)
@@ -155,7 +155,7 @@ namespace TerseNotepad
                     if (chapterNode.Nodes.Count > 0)
                     {
                         bookNode.Nodes.Add(chapterNode);
-                        Terse.SetChapterNode(chapterNode, local.GetChapterRoot());
+                        Phext.SetChapterNode(chapterNode, local.GetChapterRoot());
                     }
                     if (next == CHAPTER_BREAK)
                     {
@@ -163,8 +163,8 @@ namespace TerseNotepad
                         local.Section = 1;
                         local.Scroll = 1;
                     }
-                    sectionNode = Terse.GetSectionTreeRoot(local);
-                    chapterNode = Terse.GetChapterTreeRoot(local);
+                    sectionNode = Phext.GetSectionTreeRoot(local);
+                    chapterNode = Phext.GetChapterTreeRoot(local);
                 }
 
                 if (dimensions_broken >= 4)
@@ -172,7 +172,7 @@ namespace TerseNotepad
                     if (bookNode.Nodes.Count > 0)
                     {
                         volumeNode.Nodes.Add(bookNode);
-                        Terse.SetBookNode(bookNode, local.GetBookRoot());
+                        Phext.SetBookNode(bookNode, local.GetBookRoot());
                     }
                     if (next == BOOK_BREAK)
                     {
@@ -181,9 +181,9 @@ namespace TerseNotepad
                         local.Section = 1;
                         local.Scroll = 1;
                     }
-                    sectionNode = Terse.GetSectionTreeRoot(local);
-                    chapterNode = Terse.GetChapterTreeRoot(local);
-                    bookNode = Terse.GetBookTreeRoot(local);
+                    sectionNode = Phext.GetSectionTreeRoot(local);
+                    chapterNode = Phext.GetChapterTreeRoot(local);
+                    bookNode = Phext.GetBookTreeRoot(local);
                 }
 
                 if (dimensions_broken >= 5)
@@ -191,7 +191,7 @@ namespace TerseNotepad
                     if (volumeNode.Nodes.Count > 0)
                     {
                         collectionNode.Nodes.Add(volumeNode);
-                        Terse.SetVolumeNode(volumeNode, local.GetVolumeRoot());
+                        Phext.SetVolumeNode(volumeNode, local.GetVolumeRoot());
                     }
                     if (next == VOLUME_BREAK)
                     {
@@ -201,10 +201,10 @@ namespace TerseNotepad
                         local.Section = 1;
                         local.Scroll = 1;
                     }
-                    sectionNode = Terse.GetSectionTreeRoot(local);
-                    chapterNode = Terse.GetChapterTreeRoot(local);
-                    bookNode = Terse.GetBookTreeRoot(local);
-                    volumeNode = Terse.GetVolumeTreeRoot(local);
+                    sectionNode = Phext.GetSectionTreeRoot(local);
+                    chapterNode = Phext.GetChapterTreeRoot(local);
+                    bookNode = Phext.GetBookTreeRoot(local);
+                    volumeNode = Phext.GetVolumeTreeRoot(local);
                 }
 
                 if (dimensions_broken >= 6)
@@ -212,7 +212,7 @@ namespace TerseNotepad
                     if (collectionNode.Nodes.Count > 0)
                     {
                         seriesNode.Nodes.Add(collectionNode);
-                        Terse.SetCollectionNode(collectionNode, local.GetCollectionRoot());
+                        Phext.SetCollectionNode(collectionNode, local.GetCollectionRoot());
                     }
                     if (next == COLLECTION_BREAK)
                     {
@@ -223,11 +223,11 @@ namespace TerseNotepad
                         local.Section = 1;
                         local.Scroll = 1;
                     }
-                    sectionNode = Terse.GetSectionTreeRoot(local);
-                    chapterNode = Terse.GetChapterTreeRoot(local);
-                    bookNode = Terse.GetBookTreeRoot(local);
-                    volumeNode = Terse.GetVolumeTreeRoot(local);
-                    collectionNode = Terse.GetCollectionTreeRoot(local);
+                    sectionNode = Phext.GetSectionTreeRoot(local);
+                    chapterNode = Phext.GetChapterTreeRoot(local);
+                    bookNode = Phext.GetBookTreeRoot(local);
+                    volumeNode = Phext.GetVolumeTreeRoot(local);
+                    collectionNode = Phext.GetCollectionTreeRoot(local);
                 }
 
                 if (dimensions_broken >= 7)
@@ -235,7 +235,7 @@ namespace TerseNotepad
                     if (seriesNode.Nodes.Count > 0)
                     {
                         shelfNode.Nodes.Add(seriesNode);
-                        Terse.SetSeriesNode(seriesNode, local.GetSeriesRoot());
+                        Phext.SetSeriesNode(seriesNode, local.GetSeriesRoot());
                     }
                     if (next == SERIES_BREAK)
                     {
@@ -247,12 +247,12 @@ namespace TerseNotepad
                         local.Section = 1;
                         local.Scroll = 1;
                     }
-                    sectionNode = Terse.GetSectionTreeRoot(local);
-                    chapterNode = Terse.GetChapterTreeRoot(local);
-                    bookNode = Terse.GetBookTreeRoot(local);
-                    volumeNode = Terse.GetVolumeTreeRoot(local);
-                    collectionNode = Terse.GetCollectionTreeRoot(local);
-                    seriesNode = Terse.GetSeriesTreeRoot(local);
+                    sectionNode = Phext.GetSectionTreeRoot(local);
+                    chapterNode = Phext.GetChapterTreeRoot(local);
+                    bookNode = Phext.GetBookTreeRoot(local);
+                    volumeNode = Phext.GetVolumeTreeRoot(local);
+                    collectionNode = Phext.GetCollectionTreeRoot(local);
+                    seriesNode = Phext.GetSeriesTreeRoot(local);
                 }
 
                 if (dimensions_broken >= 8)
@@ -260,7 +260,7 @@ namespace TerseNotepad
                     if (shelfNode.Nodes.Count > 0)
                     {
                         libraryNode.Nodes.Add(shelfNode);
-                        Terse.SetShelfNode(shelfNode, local.GetShelfRoot());
+                        Phext.SetShelfNode(shelfNode, local.GetShelfRoot());
                     }
                     if (next == SHELF_BREAK)
                     {
@@ -273,13 +273,13 @@ namespace TerseNotepad
                         local.Section = 1;
                         local.Scroll = 1;
                     }
-                    sectionNode = Terse.GetSectionTreeRoot(local);
-                    chapterNode = Terse.GetChapterTreeRoot(local);
-                    bookNode = Terse.GetBookTreeRoot(local);
-                    volumeNode = Terse.GetVolumeTreeRoot(local);
-                    collectionNode = Terse.GetCollectionTreeRoot(local);
-                    seriesNode = Terse.GetSeriesTreeRoot(local);
-                    shelfNode = Terse.GetShelfTreeRoot(local);
+                    sectionNode = Phext.GetSectionTreeRoot(local);
+                    chapterNode = Phext.GetChapterTreeRoot(local);
+                    bookNode = Phext.GetBookTreeRoot(local);
+                    volumeNode = Phext.GetVolumeTreeRoot(local);
+                    collectionNode = Phext.GetCollectionTreeRoot(local);
+                    seriesNode = Phext.GetSeriesTreeRoot(local);
+                    shelfNode = Phext.GetShelfTreeRoot(local);
                 }
 
                 if (dimensions_broken >= 9)
@@ -287,7 +287,7 @@ namespace TerseNotepad
                     if (libraryNode.Nodes.Count > 0)
                     {
                         treeView?.Nodes.Add(libraryNode);
-                        Terse.SetLibraryNode(libraryNode, local.GetLibraryRoot());
+                        Phext.SetLibraryNode(libraryNode, local.GetLibraryRoot());
                     }
                     if (next == LIBRARY_BREAK)
                     {
@@ -301,14 +301,14 @@ namespace TerseNotepad
                         local.Section = 1;
                         local.Scroll = 1;
                     }
-                    sectionNode = Terse.GetSectionTreeRoot(local);
-                    chapterNode = Terse.GetChapterTreeRoot(local);
-                    bookNode = Terse.GetBookTreeRoot(local);
-                    volumeNode = Terse.GetVolumeTreeRoot(local);
-                    collectionNode = Terse.GetCollectionTreeRoot(local);
-                    seriesNode = Terse.GetSeriesTreeRoot(local);
-                    shelfNode = Terse.GetShelfTreeRoot(local);
-                    libraryNode = Terse.GetLibraryTreeRoot(local);
+                    sectionNode = Phext.GetSectionTreeRoot(local);
+                    chapterNode = Phext.GetChapterTreeRoot(local);
+                    bookNode = Phext.GetBookTreeRoot(local);
+                    volumeNode = Phext.GetVolumeTreeRoot(local);
+                    collectionNode = Phext.GetCollectionTreeRoot(local);
+                    seriesNode = Phext.GetSeriesTreeRoot(local);
+                    shelfNode = Phext.GetShelfTreeRoot(local);
+                    libraryNode = Phext.GetLibraryTreeRoot(local);
                 }
             }
 
@@ -320,42 +320,42 @@ namespace TerseNotepad
             if (sectionNode.Nodes.Count > 0)
             {
                 chapterNode.Nodes.Add(sectionNode);
-                Terse.SetSectionNode(sectionNode, local);
+                Phext.SetSectionNode(sectionNode, local);
             }
             if (chapterNode.Nodes.Count > 0)
             {
                 bookNode.Nodes.Add(chapterNode);
-                Terse.SetChapterNode(chapterNode, local);
+                Phext.SetChapterNode(chapterNode, local);
             }
             if (bookNode.Nodes.Count > 0)
             {
                 volumeNode.Nodes.Add(bookNode);
-                Terse.SetBookNode(bookNode, local);
+                Phext.SetBookNode(bookNode, local);
             }
             if (volumeNode.Nodes.Count > 0)
             {
                 collectionNode.Nodes.Add(volumeNode);
-                Terse.SetVolumeNode(volumeNode, local);
+                Phext.SetVolumeNode(volumeNode, local);
             }
             if (collectionNode.Nodes.Count > 0)
             {
                 seriesNode.Nodes.Add(collectionNode);
-                Terse.SetCollectionNode(collectionNode, local);
+                Phext.SetCollectionNode(collectionNode, local);
             }
             if (seriesNode.Nodes.Count > 0)
             {
                 shelfNode.Nodes.Add(seriesNode);
-                Terse.SetSeriesNode(seriesNode, local);
+                Phext.SetSeriesNode(seriesNode, local);
             }
             if (shelfNode.Nodes.Count > 0)
             {
                 libraryNode.Nodes.Add(shelfNode);
-                Terse.SetShelfNode(shelfNode, local);
+                Phext.SetShelfNode(shelfNode, local);
             }
             if (libraryNode.Nodes.Count > 0)
             {
                 treeView?.Nodes.Add(libraryNode);
-                Terse.SetLibraryNode(libraryNode, local);
+                Phext.SetLibraryNode(libraryNode, local);
             }
             Coords.Reset();
         }
@@ -368,8 +368,8 @@ namespace TerseNotepad
                 var key = local.ToString();
                 var line = GetScrollSummary(local, scroll);
                 var scrollNode = node?.Nodes.Add(key, (showCoordinates ? $"{key}! {line}" : line));
-                Terse.Coords = local;
-                Terse.setScroll(scroll, scrollNode);
+                Phext.Coords = local;
+                Phext.setScroll(scroll, scrollNode);
             }
         }
 
@@ -388,7 +388,7 @@ namespace TerseNotepad
         {
             StringBuilder collector = new();
             Coordinates local = new(true);
-            foreach (var library_index in Terse.Root.Library.Keys)
+            foreach (var library_index in Phext.Root.Library.Keys)
             {
                 while (local.Library < library_index)
                 {
@@ -403,7 +403,7 @@ namespace TerseNotepad
                     local.Section = 1;
                     local.Scroll = 1;
                 }
-                Serialize_Library(collector, Terse.Root.Library[library_index], local);
+                Serialize_Library(collector, Phext.Root.Library[library_index], local);
             }
             return collector.ToString();
         }
@@ -558,15 +558,15 @@ namespace TerseNotepad
 
         public TreeNode? Find(Coordinates coordinates)
         {
-            return Terse.Find(coordinates);
+            return Phext.Find(coordinates);
         }
 
         public TreeNode CreateNode(TreeNode sectionNode, string line, bool showKey)
         {
             var key = Coords.ToString();
             var scrollNode = sectionNode.Nodes.Add(key, (showKey ? $"{key}: {line}" : line));
-            Terse.Section.Node = scrollNode;
-            Terse.Cache[scrollNode.Name] = scrollNode;
+            Phext.Section.Node = scrollNode;
+            Phext.Cache[scrollNode.Name] = scrollNode;
             return scrollNode;
         }
     }

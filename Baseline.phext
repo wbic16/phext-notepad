@@ -48,12 +48,14 @@ View
 Help
 ----
  * About: Display Program Version
-Bug List v0.3.1
+Bug List v0.3.2
 ---------------
 
 Bugs
 ----
 🐛 Unicode glyphs aren't fixed width with Font = Cascadia Code
+🐛 Ctrl-S is buggy
+🐛 Fonts render strangely after pasting some UTF8 glyphs
 
 Key
 ---
@@ -70,14 +72,17 @@ v0.4.0
 
 Editor List
 -----------
-* TRSH: The Terse-Native Shell [C]
-* Terse Notepad: Reference Editor [C#]
+* phext-shell: The phext-native shell [Rust]
+* Phext Notepad: Reference Editor [C#]
 * Web Terse: Web-based single .html file editor [JS]
 * Flownote: One infinite scroll [C++]
 * Dreamnote: A place for all of your notes [Rust]Release Notes
 -------------
-(c) 2022-2024 Phext, Inc.
+(c) 2022-2025 Phext, Inc.
 MIT License
+
+v0.3.2 (2025-05-18)
+➕ Renamed internals from Terse to Phext to improve Codex edit performance
 
 v0.3.1 (2024-02-08)
 ➕ Improved Coordinate Editing, Byte Count, and Word Count Tracking

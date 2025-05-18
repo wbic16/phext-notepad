@@ -10,7 +10,7 @@ Let's review what text files are from first-principles:
 
 What might text in higher dimensions look like? How would we make sense of
 it? Why does it even matter? These are questions you should ponder as you
-study what Terse Text can help you do.
+study what Phext can help you do.
 
 Side note: The PC industry settled on variable-width text because most lines
 are blank. You can think of early-return line breaks as a form of very cheap
@@ -19,7 +19,7 @@ an average line length of 48 bytes. But the longest lines are 80 characters
 (counting new lines). So without line breaks we would need 7,600 bytes. We've
 achieved a 40% compression ratio simply by using line breaks.
 
-This becomes especially important for higher-dimensional datasets in Terse.
+This becomes especially important for higher-dimensional datasets in Phext.
 
 History Lesson
 --------------
@@ -80,7 +80,7 @@ took them for granted and did the best we could.
 
 The AGI Era
 -----------
-Terse Text is designed for 2040 and beyond. It is assumed that humanity will
+Phext is designed for 2040 and beyond. It is assumed that humanity will
 be using systems that routinely store petabytes of data and that we will
 have brain interfaces which allow us to interact with our computers in
 hyperspace. Computer screens will seem antiquated by then.
@@ -118,18 +118,18 @@ write 100 GB/sec of compressed text.
 
 This gives us access to a text space of 50 million pages. If we break this
 text space up into manageable chunks, we will need a space that is 100 x 100
-x 100 x 50 characters. This corresponds to the first 4 dimensions of Terse
+x 100 x 50 characters. This corresponds to the first 4 dimensions of Phext
 (Columns, Lines, Scrolls, and Sections).
 
-But Terse doesn't stop there. We intend for this format to be the text
-format for the AGI age. So we turned the dial up to 11. This should give us
+But Phext doesn't stop there. I intend for this format to be the text
+format for the ASI age. So I turned the dial up to 11. This should give us
 enough flexibility to manage very complex interactions with our computers.
 
 File Format Design
 ------------------
-Terse files are meant to be plain text extended to 11 dimensions.
+Phexts are meant to be plain text extended to 11 dimensions.
 
-Terse repurposes some historic ASCII control codes (0x01 - 0x1F) to provide
+Phext repurposes some historic ASCII control codes (0x01 - 0x1F) to provide
 users with up to 11 dimensions of free-form text. All other characters not
 listed here are standard UTF-8 text.
 
