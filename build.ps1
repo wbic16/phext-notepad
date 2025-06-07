@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 param(
    [string] $version,
-   [string] $app = "TerseNotepad",
+   [string] $app = "PhextNotepad",
    [switch] $force
 )
 if (-not $version) {
@@ -19,8 +19,8 @@ if (-not ($csproj -match "$version")) {
    Write-Host "Patching $app.csproj..."
    $csproj | Out-File -Encoding utf8 "$app.csproj"
 }
-$terse = Get-Content -raw "Terse.t"
-if (-not ($terse -match "v$version")) {
+$phext = Get-Content -raw "Baseline.phext"
+if (-not ($phext -match "v$version")) {
    Write-Host "Error: You need to document the changes first."
    git diff
    exit 1

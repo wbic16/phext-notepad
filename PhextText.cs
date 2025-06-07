@@ -1,21 +1,21 @@
 ﻿using static System.Collections.Specialized.BitVector32;
-using static TerseNotepad.Coordinates;
+using static PhextNotepad.Coordinates;
 
-namespace TerseNotepad
+namespace PhextNotepad
 {
     public class ScrollNode
     {
         public TreeNode Node { get; set; } = new();
         public string Text { get; set; } = string.Empty;
     };
-    public interface ITerseNode<T, S>
+    public interface IPhextNode<T, S>
         where T : notnull
     {
         public TreeNode Node { get; set; }
         public SortedDictionary<T, S> Children { get; set; }
         public char Delimiter { get; }
     };
-    public class SectionNode : ITerseNode<ScrollIndex, ScrollNode>
+    public class SectionNode : IPhextNode<ScrollIndex, ScrollNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<ScrollIndex, ScrollNode> Scroll { get; set; } = new();
@@ -24,9 +24,9 @@ namespace TerseNotepad
             get { return Scroll; }
             set { Scroll = value; }
         }
-        public char Delimiter { get { return TerseModel.SECTION_BREAK; } }
+        public char Delimiter { get { return PhextModel.SECTION_BREAK; } }
     };
-    public class ChapterNode : ITerseNode<SectionIndex, SectionNode>
+    public class ChapterNode : IPhextNode<SectionIndex, SectionNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<SectionIndex, SectionNode> Section { get; set; } = new();
@@ -35,9 +35,9 @@ namespace TerseNotepad
             get { return Section; }
             set { Section = value; }
         }
-        public char Delimiter { get { return TerseModel.CHAPTER_BREAK; } }
+        public char Delimiter { get { return PhextModel.CHAPTER_BREAK; } }
     };
-    public class BookNode : ITerseNode<ChapterIndex, ChapterNode>
+    public class BookNode : IPhextNode<ChapterIndex, ChapterNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<ChapterIndex, ChapterNode> Chapter { get; set; } = new();
@@ -46,10 +46,10 @@ namespace TerseNotepad
             get { return Chapter; }
             set { Chapter = value; }
         }
-        public char Delimiter { get { return TerseModel.BOOK_BREAK; } }
+        public char Delimiter { get { return PhextModel.BOOK_BREAK; } }
     };
 
-    public class VolumeNode : ITerseNode<BookIndex, BookNode>
+    public class VolumeNode : IPhextNode<BookIndex, BookNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<BookIndex, BookNode> Book { get; set; } = new();
@@ -58,10 +58,10 @@ namespace TerseNotepad
             get { return Book; }
             set { Book = value; }
         }
-        public char Delimiter { get { return TerseModel.VOLUME_BREAK; } }
+        public char Delimiter { get { return PhextModel.VOLUME_BREAK; } }
     };
 
-    public class CollectionNode : ITerseNode<VolumeIndex, VolumeNode>
+    public class CollectionNode : IPhextNode<VolumeIndex, VolumeNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<VolumeIndex, VolumeNode> Volume { get; set; } = new();
@@ -70,10 +70,10 @@ namespace TerseNotepad
             get { return Volume; }
             set { Volume = value; }
         }
-        public char Delimiter { get { return TerseModel.COLLECTION_BREAK; } }
+        public char Delimiter { get { return PhextModel.COLLECTION_BREAK; } }
     };
 
-    public class SeriesNode : ITerseNode<CollectionIndex, CollectionNode>
+    public class SeriesNode : IPhextNode<CollectionIndex, CollectionNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<CollectionIndex, CollectionNode> Collection { get; set; } = new();
@@ -82,10 +82,10 @@ namespace TerseNotepad
             get { return Collection; }
             set { Collection = value; }
         }
-        public char Delimiter { get { return TerseModel.SERIES_BREAK; } }
+        public char Delimiter { get { return PhextModel.SERIES_BREAK; } }
     };
 
-    public class ShelfNode : ITerseNode<SeriesIndex, SeriesNode>
+    public class ShelfNode : IPhextNode<SeriesIndex, SeriesNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<SeriesIndex, SeriesNode> Series { get; set; } = new();
@@ -94,10 +94,10 @@ namespace TerseNotepad
             get { return Series; }
             set { Series = value; }
         }
-        public char Delimiter { get { return TerseModel.SHELF_BREAK; } }
+        public char Delimiter { get { return PhextModel.SHELF_BREAK; } }
     };
 
-    public class LibraryNode : ITerseNode<ShelfIndex, ShelfNode>
+    public class LibraryNode : IPhextNode<ShelfIndex, ShelfNode>
     {
         public TreeNode Node { get; set; } = new();
         public SortedDictionary<ShelfIndex, ShelfNode> Shelf { get; set; } = new();
@@ -106,7 +106,7 @@ namespace TerseNotepad
             get { return Shelf; }
             set { Shelf = value; }
         }
-        public char Delimiter { get { return TerseModel.LIBRARY_BREAK; } }
+        public char Delimiter { get { return PhextModel.LIBRARY_BREAK; } }
     };
 
     public class RootNode
@@ -114,7 +114,7 @@ namespace TerseNotepad
         public SortedDictionary<LibraryIndex, LibraryNode> Library { get; set; } = new();
     };
 
-    public class TerseText
+    public class PhextText
     {
         public Coordinates Coords = new();
         public RootNode Root = new();
@@ -324,11 +324,11 @@ namespace TerseNotepad
             for (int i = 0; i < array.Length; ++i)
             {
                 var ch = array[i];
-                if (TerseModel.IsBreakCharacter(ch))
+                if (PhextModel.IsBreakCharacter(ch))
                 {
                     breaking = true;
                 }
-                if (TerseModel.IsTextCharacter(ch) && breaking)
+                if (PhextModel.IsTextCharacter(ch) && breaking)
                 {
                     breaking = false;
                     ++words;

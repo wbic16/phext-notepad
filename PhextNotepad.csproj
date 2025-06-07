@@ -1,31 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <PlatformTarget>x64</PlatformTarget>
     <VersionPrefix>0.4.0</VersionPrefix>
-    <PackageIcon>Terse.png</PackageIcon>
+    <PackageIcon>Phext.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <StartupObject>TerseNotepad.Program</StartupObject>
-    <ApplicationIcon>Terse.ico</ApplicationIcon>
+    <StartupObject>PhextNotepad.Program</StartupObject>
+    <ApplicationIcon>Phext.ico</ApplicationIcon>
     <SignAssembly>True</SignAssembly>
-    <AssemblyName>pn</AssemblyName>
+    <AssemblyName>trs</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Terse.ico" />
-    <None Remove="Terse.t" />
+    <None Remove="Phext.ico" />
+    <None Remove="Baseline.phext" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Terse.ico" />
+    <Content Include="Phext.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Terse.ico" />
-    <EmbeddedResource Include="Terse.t" />
+    <EmbeddedResource Include="Phext.ico" />
+    <EmbeddedResource Include="Baseline.phext" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,7 +43,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Update="Terse.png">
+    <None Update="Phext.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
