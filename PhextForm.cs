@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Windows.Forms;
 
 namespace PhextNotepad
@@ -8,6 +9,7 @@ namespace PhextNotepad
     {
         private static readonly string PHEXT_FILTER = "Phext (*.phext)|*.phext|All files (*.*)|*.*";
         private PhextModel _model = new();
+        private static readonly HttpClient _http = new HttpClient();
 
         // Vim Integration
         [DllImport("USER32.DLL")]
@@ -73,9 +75,9 @@ namespace PhextNotepad
             }
             MessageBox.Show($@"Phext Notepad
 
-A reference editor for multi-dimensional text.
+A reference editor for Plain Hypertext.
 
-Use F2 - F11 to access additional dimensions.
+Contact me (Will Bickford) at x.com/wbic16 for more info!
 ", $"Phext Notepad {version.Major}.{version.Minor}.{version.Build}");
         }
 
@@ -635,7 +637,7 @@ Use F2 - F11 to access additional dimensions.
         private void jumpButton_Click(object sender, EventArgs e)
         {
             collectScroll();
-            
+
             var next = GetPhextCoordinate();
             if (!next.Intermediate)
             {
@@ -1035,5 +1037,62 @@ Use F2 - F11 to access additional dimensions.
                 jumpButton_Click(sender, e);
             }
         }
+
+        private string composeRemoteUrl(string action, string content = "")
+        {
+            // http://127.0.0.1:1337/api/v2/select?p=choose-your-own-adventure&c=1.1.1/1.1.1/1.1.2
+            // http://127.0.0.1:1337/api/v2/update?p=choose-your-own-adventure&c=1.1.1/1.1.1/1.1.2&s=content
+            var endpoint = sqHost.Text;
+            var coordinate = phextCoordinate.Text;
+            var phext = Uri.EscapeDataString(sqPhext.Text);
+            var url = $"{endpoint}/{action}?p={phext}&c={coordinate}";
+            if (content.Length > 0)
+            {
+                url += $"&s={Uri.EscapeDataString(content)}";
+            }
+            return url;
+        }
+
+        private async void pullButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var url = composeRemoteUrl("select");
+                if (url != null && url.Length > 0)
+                {
+                    UpdateUI("Pulling...");
+                    var content = await _http.GetStringAsync(url);
+                    textBox.Text = content;
+                    SyncEditorState();
+                    UpdateUI("Pull OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error pulling from remote: {ex.Message}", "Pull Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UpdateUI("Pull Failure");
+            }
+        }
+
+        private async void pushButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                UpdateUI("Pushing...");
+                var url = composeRemoteUrl("update", textBox.Text);
+                if (url != null && url.Length > 0)
+                {
+                    var ignored = await _http.GetStringAsync(url);
+                    UpdateUI("Push OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error pushing to remote: {ex.Message}", "Push Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UpdateUI("Push Failure");
+            }
+        }
+
+        
     }
 }
