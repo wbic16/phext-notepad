@@ -65,6 +65,11 @@ namespace PhextNotepad
         public const char SHELF_BREAK = '\x1F';
         public const char LIBRARY_BREAK = '\x01';
 
+        public string getHierarchicalChecksum()
+        {
+            return Phext.HierarchicalChecksum;
+        }
+
         public void Load(string data, bool showCoordinates, TreeView? treeView = null)
         {
             var charStream = data.ToCharArray();

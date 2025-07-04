@@ -1038,6 +1038,10 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             }
         }
 
+        private string computePhextHierarchicalChecksum()
+        {
+            return _model.getHierarchicalChecksum();
+        }
         private string composeRemoteUrl(string action, string content = "")
         {
             // http://127.0.0.1:1337/api/v2/select?p=choose-your-own-adventure&c=1.1.1/1.1.1/1.1.2
@@ -1093,6 +1097,25 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             }
         }
 
-        
+        private async void syncButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var hash = computePhextHierarchicalChecksum();
+                var url = composeRemoteUrl("delta", hash);
+                if (url != null && url.Length > 0)
+                {
+                    UpdateUI("Pulling...");
+                    var content = await _http.GetStringAsync(url);
+                    LoadData(content, true);
+                    UpdateUI("Sync OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error pulling from remote: {ex.Message}", "Pull Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UpdateUI("Sync Failure");
+            }
+        }
     }
 }

@@ -1,5 +1,7 @@
-﻿using static System.Collections.Specialized.BitVector32;
+﻿using System.IO.Hashing;
+using System.Text;
 using static PhextNotepad.Coordinates;
+using static System.Collections.Specialized.BitVector32;
 
 namespace PhextNotepad
 {
@@ -121,6 +123,103 @@ namespace PhextNotepad
         public Dictionary<string, TreeNode> Cache = new();
         public int LeafCount { get; private set; } = 0;
         public int WordCount { get; private set; } = 0;
+        private XxHash128 _hasher = new XxHash128();
+
+        public string HierarchicalChecksum
+        {
+            get
+            {
+                string result = "";
+                Coordinates walker = new();
+                foreach (var lib_key in Root.Library.Keys)
+                {
+                    var library = Root.Library[lib_key];
+                    while (walker.Library < lib_key)
+                    {
+                        walker.LibraryBreak();
+                        result += PhextModel.LIBRARY_BREAK;
+                    }
+                    foreach (var shelf_key in library.Shelf.Keys)
+                    {
+                        while (walker.Shelf < shelf_key)
+                        {
+                            walker.ShelfBreak();
+                            result += PhextModel.SHELF_BREAK;
+                        }
+                        var shelf = library.Shelf[shelf_key];
+                        foreach (var series_key in shelf.Series.Keys)
+                        {
+                            while (walker.Series < series_key)
+                            {
+                                walker.SeriesBreak();
+                                result += PhextModel.SERIES_BREAK;
+                            }
+                            var series = shelf.Series[series_key];
+                            foreach (var collection_key in series.Collection.Keys)
+                            {
+                                while (walker.Collection < collection_key)
+                                {
+                                    walker.CollectionBreak();
+                                    result += PhextModel.COLLECTION_BREAK;
+                                }
+                                var collection = series.Collection[collection_key];
+                                foreach (var volume_key in collection.Volume.Keys)
+                                {
+                                    while (walker.Volume < volume_key)
+                                    {
+                                        walker.VolumeBreak();
+                                        result += PhextModel.VOLUME_BREAK;
+                                    }
+                                    var volume = collection.Volume[volume_key];
+                                    foreach (var book_key in volume.Book.Keys)
+                                    {
+                                        while (walker.Book < book_key)
+                                        {
+                                            walker.BookBreak();
+                                            result += PhextModel.BOOK_BREAK;
+                                        }
+                                        var book = volume.Book[book_key];
+                                        foreach (var chapter_key in book.Chapter.Keys)
+                                        {
+                                            while (walker.Chapter < chapter_key)
+                                            {
+                                                walker.ChapterBreak();
+                                                result += PhextModel.CHAPTER_BREAK;
+                                            }
+                                            var chapter = book.Chapter[chapter_key];
+                                            foreach (var section_key in chapter.Section.Keys)
+                                            {
+                                                while (walker.Section < section_key)
+                                                {
+                                                    walker.SectionBreak();
+                                                    result += PhextModel.SECTION_BREAK;
+                                                }
+                                                var section = chapter.Section[section_key];
+                                                foreach (var scroll_key in section.Scroll.Keys)
+                                                {
+                                                    while (walker.Scroll < scroll_key)
+                                                    {
+                                                        walker.ScrollBreak();
+                                                        result += PhextModel.SCROLL_BREAK;
+                                                    }
+                                                    var scroll = section.Scroll[scroll_key];
+                                                    _hasher.Reset();
+                                                    _hasher.Append(Encoding.UTF8.GetBytes(scroll.Text));
+
+                                                    result += _hasher.GetCurrentHashAsUInt128().ToString("x32");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return result;
+            }
+        }
         public int ByteCount {
             get
             {

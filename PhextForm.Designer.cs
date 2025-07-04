@@ -65,6 +65,7 @@
             sqPhext = new TextBox();
             treeView = new TreeView();
             panel1 = new Panel();
+            syncButton = new Button();
             menuStrip.SuspendLayout();
             flowLayoutPanel.SuspendLayout();
             panel1.SuspendLayout();
@@ -451,6 +452,7 @@
             panel1.Controls.Add(phextCoordinate);
             panel1.Controls.Add(coordinateLabel);
             panel1.Controls.Add(textBox);
+            panel1.Controls.Add(syncButton);
             panel1.Controls.Add(pushButton);
             panel1.Controls.Add(treeView);
             panel1.Dock = DockStyle.Fill;
@@ -459,6 +461,19 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(2564, 1246);
             panel1.TabIndex = 30;
+            // 
+            // syncButton
+            // 
+            syncButton.Font = new Font("Segoe UI", 12F);
+            syncButton.ForeColor = Color.Black;
+            syncButton.Location = new Point(2410, 1171);
+            syncButton.Margin = new Padding(6);
+            syncButton.Name = "syncButton";
+            syncButton.Size = new Size(139, 58);
+            syncButton.TabIndex = 4;
+            syncButton.Text = "Sync";
+            syncButton.UseVisualStyleBackColor = true;
+            syncButton.Click += syncButton_Click;
             // 
             // PhextForm
             // 
@@ -525,5 +540,6 @@
         private Button loadButton;
         private Button pushButton;
         private TextBox sqPhext;
+        private Button syncButton;
     }
 }

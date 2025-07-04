@@ -26,6 +26,87 @@
             Library = other.Library;
             Intermediate = other.Intermediate;
         }
+
+        public void LibraryBreak()
+        {
+            Library++;
+            Shelf = 1;
+            Series = 1;
+            Collection = 1;
+            Volume = 1;
+            Book = 1;
+            Chapter = 1;
+            Section = 1;
+            Scroll = 1;
+        }
+
+        public void ShelfBreak()
+        {
+            Shelf++;
+            Series = 1;
+            Collection = 1;
+            Volume = 1;
+            Book = 1;
+            Chapter = 1;
+            Section = 1;
+            Scroll = 1;
+        }
+
+        public void SeriesBreak()
+        {
+            Series++;
+            Collection = 1;
+            Volume = 1;
+            Book = 1;
+            Chapter = 1;
+            Section = 1;
+            Scroll = 1;
+        }
+
+        public void CollectionBreak()
+        {
+            Collection++;
+            Volume = 1;
+            Book = 1;
+            Chapter = 1;
+            Section = 1;
+            Scroll = 1;
+        }
+
+        public void VolumeBreak()
+        {
+            Volume++;
+            Book = 1;
+            Chapter = 1;
+            Section = 1;
+            Scroll = 1;
+        }
+
+        public void BookBreak()
+        {
+            Book++;
+            Chapter = 1;
+            Section = 1;
+            Scroll = 1;
+        }
+
+        public void ChapterBreak()
+        {
+            Chapter++;
+            Section = 1;
+            Scroll = 1;
+        }
+
+        public void SectionBreak()
+        {
+            Section++;
+            Scroll = 1;
+        }
+
+        public void ScrollBreak()
+        {
+            Scroll++;
+        }
         public bool Intermediate { get; set; } = false;
         public class ScrollIndex : TypedCoordinate
         {
@@ -121,17 +202,17 @@
 
         public static readonly short SZERO = 0;
 
-        public int Column { get; set; } = 0;
-        public int Line { get; set; } = 0;
-        public ScrollIndex Scroll { get; set; } = 0;
-        public SectionIndex Section { get; set; } = 0;
-        public ChapterIndex Chapter { get; set; } = 0;
-        public BookIndex Book { get; set; } = 0;
-        public VolumeIndex Volume { get; set; } = 0;
-        public CollectionIndex Collection { get; set; } = 0;
-        public SeriesIndex Series { get; set; } = 0;
-        public ShelfIndex Shelf { get; set; } = 0;
-        public LibraryIndex Library { get; set; } = 0;
+        public int Column { get; set; } = 1;
+        public int Line { get; set; } = 1;
+        public ScrollIndex Scroll { get; set; } = 1;
+        public SectionIndex Section { get; set; } = 1;
+        public ChapterIndex Chapter { get; set; } = 1;
+        public BookIndex Book { get; set; } = 1;
+        public VolumeIndex Volume { get; set; } = 1;
+        public CollectionIndex Collection { get; set; } = 1;
+        public SeriesIndex Series { get; set; } = 1;
+        public ShelfIndex Shelf { get; set; } = 1;
+        public LibraryIndex Library { get; set; } = 1;
 
         public override string ToString()
         {
