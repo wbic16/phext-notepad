@@ -349,6 +349,7 @@
             // 
             // jumpButton
             // 
+            jumpButton.Anchor = AnchorStyles.Bottom;
             jumpButton.Font = new Font("Segoe UI", 12F);
             jumpButton.ForeColor = Color.Black;
             jumpButton.Location = new Point(725, 1175);
@@ -388,6 +389,7 @@
             // 
             // loadButton
             // 
+            loadButton.Anchor = AnchorStyles.Bottom;
             loadButton.Font = new Font("Segoe UI", 12F);
             loadButton.ForeColor = Color.Black;
             loadButton.Location = new Point(2110, 1171);
@@ -401,6 +403,7 @@
             // 
             // pushButton
             // 
+            pushButton.Anchor = AnchorStyles.Bottom;
             pushButton.Font = new Font("Segoe UI", 12F);
             pushButton.ForeColor = Color.Black;
             pushButton.Location = new Point(2261, 1171);
@@ -464,6 +467,7 @@
             // 
             // syncButton
             // 
+            syncButton.Anchor = AnchorStyles.Bottom;
             syncButton.Font = new Font("Segoe UI", 12F);
             syncButton.ForeColor = Color.Black;
             syncButton.Location = new Point(2410, 1171);

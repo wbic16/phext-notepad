@@ -142,9 +142,13 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             textBox.SuspendLayout();
             _checkout = new Coordinates(_model.Coords);
             textBox.Text = _model.Phext.getScroll();
-            _model.Phext.Coords.Line = 1;
-            _priorLine = 1;
-            _priorColumn = 1;
+            String[] test = textBox.Text.Split("\n");
+            if (test.Count() < _model.Phext.Coords.Line)
+            {
+                _model.Phext.Coords.Line = 1;
+                _priorLine = 1;
+                _priorColumn = 1;
+            }
             phextCoordinate.Enabled = true;
             coordinateLabel.Enabled = true;
             UpdateUI($"Loaded {_settings.Filename}");
@@ -405,6 +409,17 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
         private void textBox_KeyUp(object sender, KeyEventArgs e)
         {
             Coordinates delta = new();
+            delta.Library = 0;
+            delta.Shelf = 0;
+            delta.Series = 0;
+            delta.Collection = 0;
+            delta.Volume = 0;
+            delta.Book = 0;
+            delta.Chapter = 0;
+            delta.Section = 0;
+            delta.Scroll = 0;
+            delta.Line = 0;
+            delta.Column = 0;
 
             HandleHotkeys(sender, e);
             if (e.Handled)
