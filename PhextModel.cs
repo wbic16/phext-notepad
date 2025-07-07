@@ -84,6 +84,7 @@ namespace PhextNotepad
             {
                 Phext = new();
             }
+            PendingScrolls.Clear();
             Coordinates local = new(true);
             var stage = new StringBuilder();
             var sectionNode = Phext.GetSectionTreeRoot(local);
@@ -359,7 +360,7 @@ namespace PhextNotepad
                 InsertResult result = new()
                 {
                     PushToSQ = true,
-                    Coord = local,
+                    Coord = new(local),
                     Scroll = prior
                 };
                 return result;

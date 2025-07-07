@@ -10,6 +10,7 @@ namespace PhextNotepad
         private static readonly string PHEXT_FILTER = "Phext (*.phext)|*.phext|All files (*.*)|*.*";
         private PhextModel _model = new();
         private static readonly HttpClient _http = new HttpClient();
+        private bool _syncing = false;
 
         // Vim Integration
         [DllImport("USER32.DLL")]
@@ -290,11 +291,14 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 treeView.Nodes.Clear();
             }
             _model.Load(data, _settings.ShowCoordinates, treeView, resetPhext);
-            if (_model.PendingScrolls.Count() > 0)
+            if (_model.PendingScrolls.Count() > 0 && _syncing)
             {
-                foreach (var (key, value) in _model.PendingScrolls)
+                var list = _model.PendingScrolls.ToList();
+                foreach (var (key, value) in list)
                 {
-                    await pushScroll(key.ToString(), value);
+                    string syncKey = new(key.ToString());
+                    string syncValue = new(value);
+                    await pushScroll(syncKey, syncValue);
                 }
             }
             treeView.ExpandAll();
@@ -1146,13 +1150,16 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             try
             {
                 var hash = computePhextHierarchicalChecksum();
-                var url = composeRemoteUrl("delta", hash);
+                var coordinate = phextCoordinate.Text;
+                var url = composeRemoteUrl("delta", coordinate, hash);
                 if (url != null && url.Length > 0)
                 {
                     UpdateUI("Pulling...");
+                    _syncing = true;
                     var content = await _http.GetStringAsync(url);
                     LoadData(content, true, false);
-                    
+                    _syncing = false;
+
                     // Hack to re-render the treeView
                     SaveCurrentFile(false, true);
                     UpdateUI("Sync OK");
