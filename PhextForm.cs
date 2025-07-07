@@ -281,12 +281,22 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             return num.ToString("#,0");
         }
 
-        private void LoadData(string data, bool resetView)
+        private async void LoadData(string data, bool resetView, bool resetPhext = true)
         {
             treeView.SuspendLayout();
             treeView.BeginUpdate();
-            treeView.Nodes.Clear();
-            _model.Load(data, _settings.ShowCoordinates, treeView);
+            if (resetPhext)
+            {
+                treeView.Nodes.Clear();
+            }
+            _model.Load(data, _settings.ShowCoordinates, treeView, resetPhext);
+            if (_model.PendingScrolls.Count() > 0)
+            {
+                foreach (var (key, value) in _model.PendingScrolls)
+                {
+                    await pushScroll(key.ToString(), value);
+                }
+            }
             treeView.ExpandAll();
             treeView.EndUpdate();
             treeView.ResumeLayout();
@@ -1057,12 +1067,11 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
         {
             return _model.getHierarchicalChecksum();
         }
-        private string composeRemoteUrl(string action, string content = "")
+        private string composeRemoteUrl(string action, string coordinate, string content = "")
         {
             // http://127.0.0.1:1337/api/v2/select?p=choose-your-own-adventure&c=1.1.1/1.1.1/1.1.2
             // http://127.0.0.1:1337/api/v2/update?p=choose-your-own-adventure&c=1.1.1/1.1.1/1.1.2&s=content
-            var endpoint = sqHost.Text;
-            var coordinate = phextCoordinate.Text;
+            var endpoint = sqHost.Text;            
             var phext = Uri.EscapeDataString(sqPhext.Text);
             var url = $"{endpoint}/{action}?p={phext}&c={coordinate}";
             if (content.Length > 0)
@@ -1076,7 +1085,8 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
         {
             try
             {
-                var url = composeRemoteUrl("select");
+                var coordinate = phextCoordinate.Text;
+                var url = composeRemoteUrl("select", coordinate);
                 if (url != null && url.Length > 0)
                 {
                     UpdateUI("Pulling...");
@@ -1098,10 +1108,10 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             try
             {
                 UpdateUI("Pushing...");
-                var url = composeRemoteUrl("update", textBox.Text);
-                if (url != null && url.Length > 0)
+                var coordinate = phextCoordinate.Text;
+                var worked = await pushScroll(coordinate, textBox.Text);
+                if (worked)
                 {
-                    var ignored = await _http.GetStringAsync(url);
                     UpdateUI("Push OK");
                 }
             }
@@ -1110,6 +1120,25 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 MessageBox.Show($"Error pushing to remote: {ex.Message}", "Push Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 UpdateUI("Push Failure");
             }
+        }
+
+        private async Task<bool> pushScroll(string coordinate, string scroll)
+        {
+            try
+            {
+                var url = composeRemoteUrl("update", coordinate, scroll);
+                if (url != null && url.Length > 0)
+                {
+                    var ignored = await _http.GetStringAsync(url);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error pushing to remote: {ex.Message}", "Push Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }        
+
+            return false;
         }
 
         private async void syncButton_Click(object sender, EventArgs e)
@@ -1122,7 +1151,10 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 {
                     UpdateUI("Pulling...");
                     var content = await _http.GetStringAsync(url);
-                    LoadData(content, true);
+                    LoadData(content, true, false);
+                    
+                    // Hack to re-render the treeView
+                    SaveCurrentFile(false, true);
                     UpdateUI("Sync OK");
                 }
             }

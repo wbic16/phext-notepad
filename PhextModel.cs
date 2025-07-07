@@ -2,6 +2,12 @@
 
 namespace PhextNotepad
 {
+    public class InsertResult
+    {
+        public bool PushToSQ { get; set; } = false;
+        public Coordinates Coord { get; set; } = new();
+        public string Scroll { get; set; } = string.Empty;
+    }
     public class PhextModel
     {
         public PhextModel()
@@ -9,6 +15,7 @@ namespace PhextNotepad
             Coords.Reset();
         }
         public PhextText Phext = new();
+        public Dictionary<Coordinates, string> PendingScrolls = new();
         public Coordinates Coords
         {
             get
@@ -70,10 +77,13 @@ namespace PhextNotepad
             return Phext.HierarchicalChecksum;
         }
 
-        public void Load(string data, bool showCoordinates, TreeView? treeView = null)
+        public void Load(string data, bool showCoordinates, TreeView? treeView = null, bool resetPhext = true)
         {
             var charStream = data.ToCharArray();
-            Phext = new();
+            if (resetPhext)
+            {
+                Phext = new();
+            }
             Coordinates local = new(true);
             var stage = new StringBuilder();
             var sectionNode = Phext.GetSectionTreeRoot(local);
@@ -131,12 +141,16 @@ namespace PhextNotepad
                 {
                     if (stage.Length > 0)
                     {
-                        insertScroll(stage, local, sectionNode, showCoordinates);
+                        var result = insertScroll(stage, local, sectionNode, showCoordinates);
+                        if (result != null && result.PushToSQ)
+                        {
+                            PendingScrolls[result.Coord] = result.Scroll;
+                        }
                         stage.Clear();
                     }
                     if (next == SCROLL_BREAK)
                     {
-                        ++local.Scroll;
+                        local.ScrollBreak();
                     }
                 }
 
@@ -149,8 +163,7 @@ namespace PhextNotepad
                     }
                     if (next == SECTION_BREAK)
                     {
-                        ++local.Section;
-                        local.Scroll = 1;
+                        local.SectionBreak();
                     }
                     sectionNode = Phext.GetSectionTreeRoot(local);
                 }
@@ -164,9 +177,7 @@ namespace PhextNotepad
                     }
                     if (next == CHAPTER_BREAK)
                     {
-                        ++local.Chapter;
-                        local.Section = 1;
-                        local.Scroll = 1;
+                        local.ChapterBreak();
                     }
                     sectionNode = Phext.GetSectionTreeRoot(local);
                     chapterNode = Phext.GetChapterTreeRoot(local);
@@ -181,10 +192,7 @@ namespace PhextNotepad
                     }
                     if (next == BOOK_BREAK)
                     {
-                        ++local.Book;
-                        local.Chapter = 1;
-                        local.Section = 1;
-                        local.Scroll = 1;
+                        local.BookBreak();
                     }
                     sectionNode = Phext.GetSectionTreeRoot(local);
                     chapterNode = Phext.GetChapterTreeRoot(local);
@@ -200,11 +208,7 @@ namespace PhextNotepad
                     }
                     if (next == VOLUME_BREAK)
                     {
-                        ++local.Volume;
-                        local.Book = 1;
-                        local.Chapter = 1;
-                        local.Section = 1;
-                        local.Scroll = 1;
+                        local.VolumeBreak();
                     }
                     sectionNode = Phext.GetSectionTreeRoot(local);
                     chapterNode = Phext.GetChapterTreeRoot(local);
@@ -221,12 +225,7 @@ namespace PhextNotepad
                     }
                     if (next == COLLECTION_BREAK)
                     {
-                        ++local.Collection;
-                        local.Volume = 1;
-                        local.Book = 1;
-                        local.Chapter = 1;
-                        local.Section = 1;
-                        local.Scroll = 1;
+                        local.CollectionBreak();
                     }
                     sectionNode = Phext.GetSectionTreeRoot(local);
                     chapterNode = Phext.GetChapterTreeRoot(local);
@@ -244,13 +243,7 @@ namespace PhextNotepad
                     }
                     if (next == SERIES_BREAK)
                     {
-                        ++local.Series;
-                        local.Collection = 1;
-                        local.Volume = 1;
-                        local.Book = 1;
-                        local.Chapter = 1;
-                        local.Section = 1;
-                        local.Scroll = 1;
+                        local.SeriesBreak();
                     }
                     sectionNode = Phext.GetSectionTreeRoot(local);
                     chapterNode = Phext.GetChapterTreeRoot(local);
@@ -269,14 +262,7 @@ namespace PhextNotepad
                     }
                     if (next == SHELF_BREAK)
                     {
-                        ++local.Shelf;
-                        local.Series = 1;
-                        local.Collection = 1;
-                        local.Volume = 1;
-                        local.Book = 1;
-                        local.Chapter = 1;
-                        local.Section = 1;
-                        local.Scroll = 1;
+                        local.ShelfBreak();
                     }
                     sectionNode = Phext.GetSectionTreeRoot(local);
                     chapterNode = Phext.GetChapterTreeRoot(local);
@@ -296,15 +282,7 @@ namespace PhextNotepad
                     }
                     if (next == LIBRARY_BREAK)
                     {
-                        ++local.Library;
-                        local.Shelf = 1;
-                        local.Series = 1;
-                        local.Collection = 1;
-                        local.Volume = 1;
-                        local.Book = 1;
-                        local.Chapter = 1;
-                        local.Section = 1;
-                        local.Scroll = 1;
+                        local.LibraryBreak();
                     }
                     sectionNode = Phext.GetSectionTreeRoot(local);
                     chapterNode = Phext.GetChapterTreeRoot(local);
@@ -319,7 +297,11 @@ namespace PhextNotepad
 
             if (stage.Length > 0)
             {
-                insertScroll(stage, local, sectionNode, showCoordinates);
+                var result = insertScroll(stage, local, sectionNode, showCoordinates);
+                if (result != null && result.PushToSQ)
+                {
+                    PendingScrolls[result.Coord] = result.Scroll;
+                }
                 stage.Clear();
             }
             if (sectionNode.Nodes.Count > 0)
@@ -365,9 +347,24 @@ namespace PhextNotepad
             Coords.Reset();
         }
 
-        private void insertScroll(StringBuilder stage, Coordinates local, TreeNode? node, bool showCoordinates)
+
+        private InsertResult? insertScroll(StringBuilder stage, Coordinates local, TreeNode? node, bool showCoordinates)
         {
             var scroll = stage.ToString();
+            if (scroll == "---sq:Scroll-Missing---")
+            {
+                // hack to patch missing scrolls back to SQ
+                Phext.Coords = local;
+                var prior = Phext.getScroll();
+                InsertResult result = new()
+                {
+                    PushToSQ = true,
+                    Coord = local,
+                    Scroll = prior
+                };
+                return result;
+            }
+
             if (scroll.Length > 0)
             {
                 var key = local.ToString();
@@ -376,6 +373,8 @@ namespace PhextNotepad
                 Phext.Coords = local;
                 Phext.setScroll(scroll, scrollNode);
             }
+
+            return null;
         }
 
         public static string GetScrollSummary(Coordinates coords, string scroll)
