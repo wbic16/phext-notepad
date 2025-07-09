@@ -1130,10 +1130,11 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
         {
             try
             {
-                var url = composeRemoteUrl("update", coordinate, scroll);
+                var url = composeRemoteUrl("update", coordinate);
                 if (url != null && url.Length > 0)
                 {
-                    var ignored = await _http.GetStringAsync(url);
+                    var content = new StringContent(scroll, System.Text.Encoding.UTF8, "application/phext");
+                    var ignored = await _http.PostAsync(url, content);
                     return true;
                 }
             }
