@@ -7,7 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <PlatformTarget>x64</PlatformTarget>
-    <VersionPrefix>0.4.1</VersionPrefix>
+    <VersionPrefix>0.4.2</VersionPrefix>
     <PackageIcon>Phext.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <StartupObject>PhextNotepad.Program</StartupObject>

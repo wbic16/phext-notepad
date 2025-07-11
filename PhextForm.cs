@@ -1152,13 +1152,15 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             {
                 var hash = computePhextHierarchicalChecksum();
                 var coordinate = phextCoordinate.Text;
-                var url = composeRemoteUrl("delta", coordinate, hash);
+                var url = composeRemoteUrl("delta", coordinate);
                 if (url != null && url.Length > 0)
                 {
-                    UpdateUI("Pulling...");
+                    UpdateUI("Syncing...");
                     _syncing = true;
-                    var content = await _http.GetStringAsync(url);
-                    LoadData(content, true, false);
+                    var content = new StringContent(hash, System.Text.Encoding.UTF8, "application/phext");
+                    var handle = await _http.PostAsync(url, content);
+                    var response = await handle.Content.ReadAsStringAsync();
+                    LoadData(response, true, false);
                     _syncing = false;
 
                     // Hack to re-render the treeView
