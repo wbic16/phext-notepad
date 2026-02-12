@@ -211,6 +211,7 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             recentToolStripMenuItem.DropDownItems.Clear();
             recentToolStripMenuItem.DropDownItems.AddRange(menu);
             showCoordinatesToolStripMenuItem.Checked = _settings.ShowCoordinates;
+            showTreeViewToolStripMenuItem.Checked = _settings.TreeView;
             SetEditorTheme();
 
             if (!File.Exists(_settings.IniFilePath))
@@ -262,6 +263,7 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 _checkout = null;
                 var data = File.ReadAllText(filename);
                 _settings.Filename = filename;
+                syncRemoteFromFilename(filename);
                 LoadData(data, resetView);
                 UpdateUI($"{filename}");
             }
@@ -1075,7 +1077,7 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
         {
             // http://127.0.0.1:1337/api/v2/select?p=choose-your-own-adventure&c=1.1.1/1.1.1/1.1.2
             // http://127.0.0.1:1337/api/v2/update?p=choose-your-own-adventure&c=1.1.1/1.1.1/1.1.2&s=content
-            var endpoint = sqHost.Text;            
+            var endpoint = sqHost.Text;
             var phext = Uri.EscapeDataString(sqPhext.Text);
             var url = $"{endpoint}/{action}?p={phext}&c={coordinate}";
             if (content.Length > 0)
@@ -1083,6 +1085,59 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 url += $"&s={Uri.EscapeDataString(content)}";
             }
             return url;
+        }
+
+        private void applyApiKey(HttpRequestMessage request)
+        {
+            var key = sqApiKey.Text.Trim();
+            if (key.Length > 0)
+            {
+                request.Headers.Add("X-SQ-API-Key", key);
+            }
+        }
+
+        private async Task<string> remoteGet(string url)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            applyApiKey(request);
+            var response = await _http.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        private async Task<HttpResponseMessage> remotePost(string url, string body, string mediaType = "application/phext")
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
+            applyApiKey(request);
+            request.Content = new StringContent(body, System.Text.Encoding.UTF8, mediaType);
+            return await _http.SendAsync(request);
+        }
+
+        private void syncFilenameFromRemote()
+        {
+            var phextName = sqPhext.Text.Trim();
+            if (phextName.Length == 0) { return; }
+
+            // If we have a current local file, update it to match the remote phext name
+            var dir = _settings.Filename.Length > 0
+                ? Path.GetDirectoryName(_settings.Filename) ?? ""
+                : "";
+            var newFilename = phextName.EndsWith(".phext") ? phextName : $"{phextName}.phext";
+            if (dir.Length > 0)
+            {
+                newFilename = Path.Combine(dir, newFilename);
+            }
+            _settings.Filename = newFilename;
+        }
+
+        private void syncRemoteFromFilename(string filename)
+        {
+            if (filename == null || filename.Length == 0) { return; }
+            var stem = Path.GetFileNameWithoutExtension(filename);
+            if (stem.Length > 0)
+            {
+                sqPhext.Text = stem;
+            }
         }
 
         private async void pullButton_Click(object sender, EventArgs e)
@@ -1094,9 +1149,10 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 if (url != null && url.Length > 0)
                 {
                     UpdateUI("Pulling...");
-                    var content = await _http.GetStringAsync(url);
+                    var content = await remoteGet(url);
                     textBox.Text = content;
                     SyncEditorState();
+                    syncFilenameFromRemote();
                     UpdateUI("Pull OK");
                 }
             }
@@ -1133,15 +1189,14 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 var url = composeRemoteUrl("update", coordinate);
                 if (url != null && url.Length > 0)
                 {
-                    var content = new StringContent(scroll, System.Text.Encoding.UTF8, "application/phext");
-                    var ignored = await _http.PostAsync(url, content);
+                    var ignored = await remotePost(url, scroll);
                     return true;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error pushing to remote: {ex.Message}", "Push Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }        
+            }
 
             return false;
         }
@@ -1157,14 +1212,14 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 {
                     UpdateUI("Syncing...");
                     _syncing = true;
-                    var content = new StringContent(hash, System.Text.Encoding.UTF8, "application/phext");
-                    var handle = await _http.PostAsync(url, content);
+                    var handle = await remotePost(url, hash);
                     var response = await handle.Content.ReadAsStringAsync();
                     LoadData(response, true, false);
                     _syncing = false;
 
                     // Hack to re-render the treeView
                     SaveCurrentFile(false, true);
+                    syncFilenameFromRemote();
                     UpdateUI("Sync OK");
                 }
             }
@@ -1173,6 +1228,18 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 MessageBox.Show($"Error pulling from remote: {ex.Message}", "Pull Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 UpdateUI("Sync Failure");
             }
+        }
+
+        private void labelApiKey_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("The API key is used to authenticate with the SQ API for remote synchronization. It should be kept secret and only shared with trusted parties. To generate an API key, use the 'Generate API Key' button in the SQ application. Once generated, copy the API key and paste it into this field to enable authenticated requests to the SQ API.", "API Key Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void showTreeViewToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            _settings.TreeView = showTreeViewToolStripMenuItem.Checked;
+            _settings.Save();
+            LoadFile(_settings.Filename, false);
         }
     }
 }

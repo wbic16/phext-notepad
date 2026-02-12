@@ -50,12 +50,15 @@
             wordWrapToolStripMenuItem = new ToolStripMenuItem();
             darkModeMenuItem = new ToolStripMenuItem();
             showCoordinatesToolStripMenuItem = new ToolStripMenuItem();
+            showTreeViewToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             defaultPhextToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             phextCoordinate = new TextBox();
             status = new Label();
             flowLayoutPanel = new FlowLayoutPanel();
+            labelApiKey = new Label();
+            sqApiKey = new TextBox();
             wordCountLabel = new Label();
             jumpButton = new Button();
             label1 = new Label();
@@ -80,11 +83,11 @@
             textBox.Cursor = Cursors.IBeam;
             textBox.Font = new Font("Cascadia Code", 11F);
             textBox.ForeColor = Color.WhiteSmoke;
-            textBox.Location = new Point(852, 11);
-            textBox.Margin = new Padding(6);
+            textBox.Location = new Point(655, 9);
+            textBox.Margin = new Padding(5);
             textBox.MaxLength = 100000000;
             textBox.Name = "textBox";
-            textBox.Size = new Size(1700, 1150);
+            textBox.Size = new Size(1309, 898);
             textBox.TabIndex = 0;
             textBox.Text = "";
             textBox.SelectionChanged += textBox_SelectionChanged;
@@ -98,10 +101,10 @@
             coordinateLabel.CausesValidation = false;
             coordinateLabel.Enabled = false;
             coordinateLabel.Font = new Font("Segoe UI", 14.25F);
-            coordinateLabel.Location = new Point(15, 1170);
-            coordinateLabel.Margin = new Padding(6, 0, 6, 0);
+            coordinateLabel.Location = new Point(12, 913);
+            coordinateLabel.Margin = new Padding(5, 0, 5, 0);
             coordinateLabel.Name = "coordinateLabel";
-            coordinateLabel.Size = new Size(217, 63);
+            coordinateLabel.Size = new Size(167, 49);
             coordinateLabel.TabIndex = 2;
             coordinateLabel.Text = "Coordinate:";
             coordinateLabel.TextAlign = ContentAlignment.BottomCenter;
@@ -113,8 +116,8 @@
             menuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem, viewToolStripMenuItem, helpToolStripMenuItem });
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
-            menuStrip.Padding = new Padding(11, 4, 0, 4);
-            menuStrip.Size = new Size(2564, 44);
+            menuStrip.Padding = new Padding(8, 3, 0, 3);
+            menuStrip.Size = new Size(1972, 35);
             menuStrip.TabIndex = 3;
             menuStrip.Text = "menuStrip1";
             // 
@@ -124,7 +127,7 @@
             fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { closeToolStripMenuItem, openToolStripMenuItem, reloadMenuItem, toolStripSeparator4, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator2, recentToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
             fileToolStripMenuItem.ForeColor = SystemColors.ControlText;
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            fileToolStripMenuItem.Size = new Size(71, 36);
+            fileToolStripMenuItem.Size = new Size(54, 29);
             fileToolStripMenuItem.Text = "&File";
             // 
             // closeToolStripMenuItem
@@ -132,7 +135,7 @@
             closeToolStripMenuItem.BackColor = SystemColors.Menu;
             closeToolStripMenuItem.ForeColor = SystemColors.ControlText;
             closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            closeToolStripMenuItem.Size = new Size(244, 44);
+            closeToolStripMenuItem.Size = new Size(188, 34);
             closeToolStripMenuItem.Text = "&New";
             closeToolStripMenuItem.Click += newToolStripMenuItem_Click;
             // 
@@ -141,7 +144,7 @@
             openToolStripMenuItem.BackColor = SystemColors.Menu;
             openToolStripMenuItem.ForeColor = SystemColors.ControlText;
             openToolStripMenuItem.Name = "openToolStripMenuItem";
-            openToolStripMenuItem.Size = new Size(244, 44);
+            openToolStripMenuItem.Size = new Size(188, 34);
             openToolStripMenuItem.Text = "&Open...";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
@@ -149,21 +152,21 @@
             // 
             reloadMenuItem.Enabled = false;
             reloadMenuItem.Name = "reloadMenuItem";
-            reloadMenuItem.Size = new Size(244, 44);
+            reloadMenuItem.Size = new Size(188, 34);
             reloadMenuItem.Text = "Re&load";
             reloadMenuItem.Click += reloadMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(241, 6);
+            toolStripSeparator4.Size = new Size(185, 6);
             // 
             // saveToolStripMenuItem
             // 
             saveToolStripMenuItem.BackColor = SystemColors.Menu;
             saveToolStripMenuItem.ForeColor = SystemColors.ControlText;
             saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            saveToolStripMenuItem.Size = new Size(244, 44);
+            saveToolStripMenuItem.Size = new Size(188, 34);
             saveToolStripMenuItem.Text = "&Save";
             saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
             // 
@@ -172,7 +175,7 @@
             saveAsToolStripMenuItem.BackColor = SystemColors.Menu;
             saveAsToolStripMenuItem.ForeColor = SystemColors.ControlText;
             saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            saveAsToolStripMenuItem.Size = new Size(244, 44);
+            saveAsToolStripMenuItem.Size = new Size(188, 34);
             saveAsToolStripMenuItem.Text = "Save &As...";
             saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
             // 
@@ -181,14 +184,14 @@
             toolStripSeparator2.BackColor = Color.Black;
             toolStripSeparator2.ForeColor = Color.Black;
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(241, 6);
+            toolStripSeparator2.Size = new Size(185, 6);
             // 
             // recentToolStripMenuItem
             // 
             recentToolStripMenuItem.BackColor = SystemColors.Menu;
             recentToolStripMenuItem.ForeColor = SystemColors.ControlText;
             recentToolStripMenuItem.Name = "recentToolStripMenuItem";
-            recentToolStripMenuItem.Size = new Size(244, 44);
+            recentToolStripMenuItem.Size = new Size(188, 34);
             recentToolStripMenuItem.Text = "&Recent";
             // 
             // toolStripSeparator1
@@ -196,14 +199,14 @@
             toolStripSeparator1.BackColor = Color.Black;
             toolStripSeparator1.ForeColor = Color.Black;
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(241, 6);
+            toolStripSeparator1.Size = new Size(185, 6);
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.BackColor = SystemColors.Menu;
             exitToolStripMenuItem.ForeColor = SystemColors.ControlText;
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(244, 44);
+            exitToolStripMenuItem.Size = new Size(188, 34);
             exitToolStripMenuItem.Text = "E&xit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -212,34 +215,34 @@
             editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripSeparator3, preferencesToolStripMenuItem });
             editToolStripMenuItem.ForeColor = SystemColors.ControlText;
             editToolStripMenuItem.Name = "editToolStripMenuItem";
-            editToolStripMenuItem.Size = new Size(74, 36);
+            editToolStripMenuItem.Size = new Size(58, 29);
             editToolStripMenuItem.Text = "&Edit";
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(283, 6);
+            toolStripSeparator3.Size = new Size(213, 6);
             // 
             // preferencesToolStripMenuItem
             // 
             preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            preferencesToolStripMenuItem.Size = new Size(286, 44);
+            preferencesToolStripMenuItem.Size = new Size(216, 34);
             preferencesToolStripMenuItem.Text = "&Preferences...";
             preferencesToolStripMenuItem.Click += preferencesToolStripMenuItem_Click;
             // 
             // viewToolStripMenuItem
             // 
-            viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { lockToScrollMenuItem, wordWrapToolStripMenuItem, darkModeMenuItem, showCoordinatesToolStripMenuItem });
+            viewToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { lockToScrollMenuItem, wordWrapToolStripMenuItem, darkModeMenuItem, showCoordinatesToolStripMenuItem, showTreeViewToolStripMenuItem });
             viewToolStripMenuItem.ForeColor = SystemColors.ControlText;
             viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            viewToolStripMenuItem.Size = new Size(85, 36);
+            viewToolStripMenuItem.Size = new Size(65, 29);
             viewToolStripMenuItem.Text = "&View";
             // 
             // lockToScrollMenuItem
             // 
             lockToScrollMenuItem.CheckOnClick = true;
             lockToScrollMenuItem.Name = "lockToScrollMenuItem";
-            lockToScrollMenuItem.Size = new Size(340, 44);
+            lockToScrollMenuItem.Size = new Size(270, 34);
             lockToScrollMenuItem.Text = "&Lock to Scroll";
             lockToScrollMenuItem.CheckedChanged += lockToScrollMenuItem_CheckedChanged;
             // 
@@ -249,7 +252,7 @@
             wordWrapToolStripMenuItem.CheckOnClick = true;
             wordWrapToolStripMenuItem.CheckState = CheckState.Checked;
             wordWrapToolStripMenuItem.Name = "wordWrapToolStripMenuItem";
-            wordWrapToolStripMenuItem.Size = new Size(340, 44);
+            wordWrapToolStripMenuItem.Size = new Size(270, 34);
             wordWrapToolStripMenuItem.Text = "&Word Wrap";
             wordWrapToolStripMenuItem.Click += wordWrapToolStripMenuItem_Click;
             // 
@@ -259,7 +262,7 @@
             darkModeMenuItem.CheckOnClick = true;
             darkModeMenuItem.CheckState = CheckState.Checked;
             darkModeMenuItem.Name = "darkModeMenuItem";
-            darkModeMenuItem.Size = new Size(340, 44);
+            darkModeMenuItem.Size = new Size(270, 34);
             darkModeMenuItem.Text = "Dark &Mode";
             darkModeMenuItem.Click += darkModeMenuItem_Click;
             // 
@@ -269,29 +272,39 @@
             showCoordinatesToolStripMenuItem.CheckOnClick = true;
             showCoordinatesToolStripMenuItem.CheckState = CheckState.Checked;
             showCoordinatesToolStripMenuItem.Name = "showCoordinatesToolStripMenuItem";
-            showCoordinatesToolStripMenuItem.Size = new Size(340, 44);
+            showCoordinatesToolStripMenuItem.Size = new Size(270, 34);
             showCoordinatesToolStripMenuItem.Text = "&Show Coordinates";
             showCoordinatesToolStripMenuItem.CheckedChanged += showCoordinatesToolStripMenuItem_CheckedChanged;
+            // 
+            // showTreeViewToolStripMenuItem
+            // 
+            showTreeViewToolStripMenuItem.Checked = true;
+            showTreeViewToolStripMenuItem.CheckOnClick = true;
+            showTreeViewToolStripMenuItem.CheckState = CheckState.Checked;
+            showTreeViewToolStripMenuItem.Name = "showTreeViewToolStripMenuItem";
+            showTreeViewToolStripMenuItem.Size = new Size(270, 34);
+            showTreeViewToolStripMenuItem.Text = "Show Tree View";
+            showTreeViewToolStripMenuItem.CheckedChanged += showTreeViewToolStripMenuItem_CheckedChanged;
             // 
             // helpToolStripMenuItem
             // 
             helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { defaultPhextToolStripMenuItem, aboutToolStripMenuItem });
             helpToolStripMenuItem.ForeColor = SystemColors.ControlText;
             helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            helpToolStripMenuItem.Size = new Size(84, 36);
+            helpToolStripMenuItem.Size = new Size(65, 29);
             helpToolStripMenuItem.Text = "&Help";
             // 
             // defaultPhextToolStripMenuItem
             // 
             defaultPhextToolStripMenuItem.Name = "defaultPhextToolStripMenuItem";
-            defaultPhextToolStripMenuItem.Size = new Size(243, 44);
+            defaultPhextToolStripMenuItem.Size = new Size(185, 34);
             defaultPhextToolStripMenuItem.Text = "&Contents";
             defaultPhextToolStripMenuItem.Click += defaultPhextToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new Size(243, 44);
+            aboutToolStripMenuItem.Size = new Size(185, 34);
             aboutToolStripMenuItem.Text = "&About";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
@@ -300,11 +313,11 @@
             phextCoordinate.Anchor = AnchorStyles.Bottom;
             phextCoordinate.Enabled = false;
             phextCoordinate.Font = new Font("Segoe UI", 14.25F);
-            phextCoordinate.Location = new Point(244, 1175);
-            phextCoordinate.Margin = new Padding(6);
+            phextCoordinate.Location = new Point(188, 917);
+            phextCoordinate.Margin = new Padding(5);
             phextCoordinate.MaxLength = 64;
             phextCoordinate.Name = "phextCoordinate";
-            phextCoordinate.Size = new Size(469, 58);
+            phextCoordinate.Size = new Size(362, 45);
             phextCoordinate.TabIndex = 1;
             phextCoordinate.TextChanged += phextCoordinate_TextChanged;
             // 
@@ -314,25 +327,54 @@
             status.BorderStyle = BorderStyle.FixedSingle;
             status.CausesValidation = false;
             status.Font = new Font("Segoe UI", 11F);
-            status.Location = new Point(6, 0);
-            status.Margin = new Padding(6, 0, 6, 0);
+            status.Location = new Point(852, 6);
+            status.Margin = new Padding(5, 0, 5, 0);
             status.Name = "status";
-            status.Size = new Size(1662, 55);
+            status.Size = new Size(1106, 43);
             status.TabIndex = 2;
             status.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // flowLayoutPanel
             // 
+            flowLayoutPanel.Controls.Add(labelApiKey);
+            flowLayoutPanel.Controls.Add(sqApiKey);
             flowLayoutPanel.Controls.Add(status);
             flowLayoutPanel.Controls.Add(wordCountLabel);
             flowLayoutPanel.Dock = DockStyle.Bottom;
-            flowLayoutPanel.Location = new Point(0, 1290);
-            flowLayoutPanel.Margin = new Padding(6);
-            flowLayoutPanel.MaximumSize = new Size(2600, 139);
-            flowLayoutPanel.MinimumSize = new Size(1718, 139);
+            flowLayoutPanel.Location = new Point(0, 1007);
+            flowLayoutPanel.Margin = new Padding(5);
+            flowLayoutPanel.MaximumSize = new Size(2000, 109);
+            flowLayoutPanel.MinimumSize = new Size(1322, 109);
             flowLayoutPanel.Name = "flowLayoutPanel";
-            flowLayoutPanel.Size = new Size(2564, 139);
+            flowLayoutPanel.Size = new Size(1972, 109);
             flowLayoutPanel.TabIndex = 11;
+            // 
+            // labelApiKey
+            // 
+            labelApiKey.Anchor = AnchorStyles.Bottom;
+            labelApiKey.CausesValidation = false;
+            labelApiKey.Enabled = false;
+            labelApiKey.Font = new Font("Segoe UI", 14.25F);
+            labelApiKey.Location = new Point(5, 6);
+            labelApiKey.Margin = new Padding(5, 0, 5, 0);
+            labelApiKey.Name = "labelApiKey";
+            labelApiKey.Size = new Size(104, 49);
+            labelApiKey.TabIndex = 2;
+            labelApiKey.Text = "Token:";
+            labelApiKey.TextAlign = ContentAlignment.BottomCenter;
+            labelApiKey.Click += labelApiKey_Click;
+            // 
+            // sqApiKey
+            // 
+            sqApiKey.Anchor = AnchorStyles.Bottom;
+            sqApiKey.Font = new Font("Segoe UI", 14.25F);
+            sqApiKey.Location = new Point(119, 5);
+            sqApiKey.Margin = new Padding(5);
+            sqApiKey.MaxLength = 128;
+            sqApiKey.Name = "sqApiKey";
+            sqApiKey.Size = new Size(723, 45);
+            sqApiKey.TabIndex = 1;
+            sqApiKey.UseSystemPasswordChar = true;
             // 
             // wordCountLabel
             // 
@@ -340,10 +382,10 @@
             wordCountLabel.BorderStyle = BorderStyle.FixedSingle;
             wordCountLabel.CausesValidation = false;
             wordCountLabel.Font = new Font("Segoe UI", 11F);
-            wordCountLabel.Location = new Point(6, 55);
-            wordCountLabel.Margin = new Padding(6, 0, 6, 0);
+            wordCountLabel.Location = new Point(5, 55);
+            wordCountLabel.Margin = new Padding(5, 0, 5, 0);
             wordCountLabel.Name = "wordCountLabel";
-            wordCountLabel.Size = new Size(2539, 47);
+            wordCountLabel.Size = new Size(1954, 37);
             wordCountLabel.TabIndex = 3;
             wordCountLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
@@ -352,10 +394,10 @@
             jumpButton.Anchor = AnchorStyles.Bottom;
             jumpButton.Font = new Font("Segoe UI", 12F);
             jumpButton.ForeColor = Color.Black;
-            jumpButton.Location = new Point(725, 1175);
-            jumpButton.Margin = new Padding(6);
+            jumpButton.Location = new Point(558, 917);
+            jumpButton.Margin = new Padding(5);
             jumpButton.Name = "jumpButton";
-            jumpButton.Size = new Size(115, 58);
+            jumpButton.Size = new Size(88, 45);
             jumpButton.TabIndex = 4;
             jumpButton.Text = "Jump";
             jumpButton.UseVisualStyleBackColor = true;
@@ -367,10 +409,10 @@
             label1.CausesValidation = false;
             label1.Enabled = false;
             label1.Font = new Font("Segoe UI", 14.25F);
-            label1.Location = new Point(852, 1169);
-            label1.Margin = new Padding(6, 0, 6, 0);
+            label1.Location = new Point(655, 912);
+            label1.Margin = new Padding(5, 0, 5, 0);
             label1.Name = "label1";
-            label1.Size = new Size(181, 63);
+            label1.Size = new Size(139, 49);
             label1.TabIndex = 2;
             label1.Text = "SQ Host:";
             label1.TextAlign = ContentAlignment.BottomCenter;
@@ -379,23 +421,23 @@
             // 
             sqHost.Anchor = AnchorStyles.Bottom;
             sqHost.Font = new Font("Segoe UI", 14.25F);
-            sqHost.Location = new Point(1045, 1170);
-            sqHost.Margin = new Padding(6);
+            sqHost.Location = new Point(804, 913);
+            sqHost.Margin = new Padding(5);
             sqHost.MaxLength = 64;
             sqHost.Name = "sqHost";
-            sqHost.Size = new Size(691, 58);
+            sqHost.Size = new Size(597, 45);
             sqHost.TabIndex = 1;
-            sqHost.Text = "http://127.0.0.1:1337/api/v2";
+            sqHost.Text = "https://sq.mirrorborn.us/api/v2";
             // 
             // loadButton
             // 
             loadButton.Anchor = AnchorStyles.Bottom;
             loadButton.Font = new Font("Segoe UI", 12F);
             loadButton.ForeColor = Color.Black;
-            loadButton.Location = new Point(2110, 1171);
-            loadButton.Margin = new Padding(6);
+            loadButton.Location = new Point(1623, 914);
+            loadButton.Margin = new Padding(5);
             loadButton.Name = "loadButton";
-            loadButton.Size = new Size(139, 58);
+            loadButton.Size = new Size(107, 45);
             loadButton.TabIndex = 4;
             loadButton.Text = "Pull";
             loadButton.UseVisualStyleBackColor = true;
@@ -406,10 +448,10 @@
             pushButton.Anchor = AnchorStyles.Bottom;
             pushButton.Font = new Font("Segoe UI", 12F);
             pushButton.ForeColor = Color.Black;
-            pushButton.Location = new Point(2261, 1171);
-            pushButton.Margin = new Padding(6);
+            pushButton.Location = new Point(1739, 914);
+            pushButton.Margin = new Padding(5);
             pushButton.Name = "pushButton";
-            pushButton.Size = new Size(139, 58);
+            pushButton.Size = new Size(107, 45);
             pushButton.TabIndex = 4;
             pushButton.Text = "Push";
             pushButton.UseVisualStyleBackColor = true;
@@ -419,13 +461,13 @@
             // 
             sqPhext.Anchor = AnchorStyles.Bottom;
             sqPhext.Font = new Font("Segoe UI", 14.25F);
-            sqPhext.Location = new Point(1748, 1170);
-            sqPhext.Margin = new Padding(6);
+            sqPhext.Location = new Point(1432, 914);
+            sqPhext.Margin = new Padding(5);
             sqPhext.MaxLength = 64;
             sqPhext.Name = "sqPhext";
-            sqPhext.Size = new Size(350, 58);
+            sqPhext.Size = new Size(170, 45);
             sqPhext.TabIndex = 1;
-            sqPhext.Text = "index";
+            sqPhext.Text = "BASE";
             sqPhext.TextChanged += phextCoordinate_TextChanged;
             // 
             // treeView
@@ -435,11 +477,11 @@
             treeView.BorderStyle = BorderStyle.FixedSingle;
             treeView.ForeColor = Color.White;
             treeView.HideSelection = false;
-            treeView.Location = new Point(6, 11);
-            treeView.Margin = new Padding(6);
+            treeView.Location = new Point(5, 9);
+            treeView.Margin = new Padding(5);
             treeView.Name = "treeView";
             treeView.PathSeparator = "/";
-            treeView.Size = new Size(834, 1150);
+            treeView.Size = new Size(642, 898);
             treeView.TabIndex = 29;
             treeView.AfterSelect += treeView_AfterSelect;
             treeView.DoubleClick += treeView_DoubleClick;
@@ -459,10 +501,10 @@
             panel1.Controls.Add(pushButton);
             panel1.Controls.Add(treeView);
             panel1.Dock = DockStyle.Fill;
-            panel1.Location = new Point(0, 44);
-            panel1.Margin = new Padding(6);
+            panel1.Location = new Point(0, 35);
+            panel1.Margin = new Padding(5);
             panel1.Name = "panel1";
-            panel1.Size = new Size(2564, 1246);
+            panel1.Size = new Size(1972, 972);
             panel1.TabIndex = 30;
             // 
             // syncButton
@@ -470,10 +512,10 @@
             syncButton.Anchor = AnchorStyles.Bottom;
             syncButton.Font = new Font("Segoe UI", 12F);
             syncButton.ForeColor = Color.Black;
-            syncButton.Location = new Point(2410, 1171);
-            syncButton.Margin = new Padding(6);
+            syncButton.Location = new Point(1854, 914);
+            syncButton.Margin = new Padding(5);
             syncButton.Name = "syncButton";
-            syncButton.Size = new Size(139, 58);
+            syncButton.Size = new Size(107, 45);
             syncButton.TabIndex = 4;
             syncButton.Text = "Sync";
             syncButton.UseVisualStyleBackColor = true;
@@ -481,17 +523,17 @@
             // 
             // PhextForm
             // 
-            AutoScaleDimensions = new SizeF(13F, 32F);
+            AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ControlDark;
-            ClientSize = new Size(2564, 1429);
+            ClientSize = new Size(1972, 1116);
             Controls.Add(panel1);
             Controls.Add(flowLayoutPanel);
             Controls.Add(menuStrip);
             ForeColor = Color.White;
             MainMenuStrip = menuStrip;
-            Margin = new Padding(6);
-            MinimumSize = new Size(1556, 773);
+            Margin = new Padding(5);
+            MinimumSize = new Size(1202, 616);
             Name = "PhextForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Phext Notepad";
@@ -499,6 +541,7 @@
             menuStrip.ResumeLayout(false);
             menuStrip.PerformLayout();
             flowLayoutPanel.ResumeLayout(false);
+            flowLayoutPanel.PerformLayout();
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ResumeLayout(false);
@@ -544,6 +587,9 @@
         private Button loadButton;
         private Button pushButton;
         private TextBox sqPhext;
+        private Label labelApiKey;
+        private TextBox sqApiKey;
         private Button syncButton;
+        private ToolStripMenuItem showTreeViewToolStripMenuItem;
     }
 }
