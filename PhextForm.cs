@@ -11,6 +11,7 @@ namespace PhextNotepad
         private PhextModel _model = new();
         private static readonly HttpClient _http = new HttpClient();
         private bool _syncing = false;
+        private bool _applyingTreeView = false;
 
         // Vim Integration
         [DllImport("USER32.DLL")]
@@ -118,7 +119,9 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                     TreeNode sectionNode;
                     if (parent.Text.StartsWith("Chapter"))
                     {
-                        sectionNode = parent.Nodes.Add($"Section {_model.Phext.Coords.Section}");
+                        var sectionName = _model.Phext.Coords.GetSectionRoot().ToString();
+                        sectionNode = parent.Nodes.Add(sectionName, $"Section {_model.Phext.Coords.Section}");
+                        _model.Phext.Cache[sectionName] = sectionNode;
                     }
                     else
                     {
@@ -156,6 +159,7 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
 
             if (treeView.Visible)
             {
+                treeView.Enabled = true;
                 var id = $"{_model.Coords}";
                 var node = treeView.Nodes.Find(id, true);
                 if (node != null && node.Length >= 1)
@@ -204,14 +208,13 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
         {
             _settings.Reload();
             LoadFonts();
-            treeView.Visible = _settings.TreeView;
+            SetTreeViewEnabled(_settings.TreeView);
             textBox.WordWrap = _settings.WordWrap;
             textBox.ZoomFactor = _settings.ZoomFactor;
             var menu = CreateRecentFilesMenu(_settings.RecentFile);
             recentToolStripMenuItem.DropDownItems.Clear();
             recentToolStripMenuItem.DropDownItems.AddRange(menu);
             showCoordinatesToolStripMenuItem.Checked = _settings.ShowCoordinates;
-            showTreeViewToolStripMenuItem.Checked = _settings.TreeView;
             SetEditorTheme();
 
             if (!File.Exists(_settings.IniFilePath))
@@ -689,8 +692,13 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                 return null;
             }
 
-            // todo: rewrite from scratch using new idioms
-            return null;
+            var section = _model.Find(coords.GetSectionRoot());
+            if (section != null)
+            {
+                return section;
+            }
+
+            return _model.Find(coords.GetChapterRoot());
         }
 
         // pre: the UI always shows the selected node...
@@ -1025,18 +1033,43 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
 
         private void scrollLockUIUpdate()
         {
-            treeView.Visible = !lockToScrollMenuItem.Checked;
-            _settings.TreeView = treeView.Visible;
+            SetTreeViewEnabled(!lockToScrollMenuItem.Checked);
+        }
 
-            if (lockToScrollMenuItem.Checked)
+        private void SetTreeViewEnabled(bool show)
+        {
+            treeView.Visible = show;
+            treeView.Enabled = show;
+            _settings.TreeView = show;
+            LayoutEditorAroundTree(show);
+
+            if (_applyingTreeView || showTreeViewToolStripMenuItem.Checked == show)
             {
-                textBox.Left = 0;
-                textBox.Width = Width - 24;
+                return;
             }
-            else
+
+            _applyingTreeView = true;
+            try
+            {
+                showTreeViewToolStripMenuItem.Checked = show;
+            }
+            finally
+            {
+                _applyingTreeView = false;
+            }
+        }
+
+        private void LayoutEditorAroundTree(bool show)
+        {
+            if (show)
             {
                 textBox.Left = treeView.Right;
                 textBox.Width = Width - treeView.Width - 24;
+            }
+            else
+            {
+                textBox.Left = 0;
+                textBox.Width = Width - 24;
             }
         }
 
@@ -1237,9 +1270,13 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
 
         private void showTreeViewToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
-            _settings.TreeView = showTreeViewToolStripMenuItem.Checked;
+            if (_applyingTreeView)
+            {
+                return;
+            }
+
+            SetTreeViewEnabled(showTreeViewToolStripMenuItem.Checked);
             _settings.Save();
-            LoadFile(_settings.Filename, false);
         }
     }
 }

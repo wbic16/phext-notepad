@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <None Remove="Phext.ico" />
-    <None Remove="Baseline.phext" />
+    <None Remove="baseline.phext" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,7 +27,9 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Phext.ico" />
-    <EmbeddedResource Include="Baseline.phext" />
+    <EmbeddedResource Include="baseline.phext">
+      <LogicalName>PhextNotepad.Baseline.phext</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
