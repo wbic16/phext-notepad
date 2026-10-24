@@ -1,6 +1,10 @@
 # Publishes Phext Notepad as a ClickOnce installer (setup.exe plus the
-# deployment folder). Windows-only: the .NET SDK's GenerateLauncher task
-# and the ClickOnce bootstrapper do not run on Linux.
+# deployment folder). Windows-only: the launcher and setup.exe bootstrapper
+# do not run on Linux.
+#
+# setup.exe comes from the GenerateBootstrapper task. That task is not
+# implemented in `dotnet msbuild` (error MSB4803). The publish below calls
+# Visual Studio's MSBuild.exe instead.
 #
 # Called by .github/workflows/publish-clickonce.yml.
 # Local check of the version and URL only:
@@ -17,6 +21,9 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+# PowerShell 7 otherwise turns a native non-zero exit into its own error
+# before this script can print the MSBuild line that actually failed.
+$PSNativeCommandUseErrorActionPreference = $false
 
 $RepoRoot = $PSScriptRoot
 Set-Location $RepoRoot
@@ -86,6 +93,75 @@ function Write-GitHubOutput {
     if ($env:GITHUB_OUTPUT) {
         Add-Content -Path $env:GITHUB_OUTPUT -Value "$Name=$Value"
     }
+}
+
+function Write-BuildError {
+    param([string]$Message)
+    $flat = ($Message -replace '\s+', ' ').Trim()
+    if ($flat.Length -gt 500) {
+        $flat = $flat.Substring(0, 500) + "..."
+    }
+    Write-Host "::error::$flat"
+    throw $Message
+}
+
+function Find-VisualStudioMsBuild {
+    $vswhereList = @()
+    if (${env:ProgramFiles(x86)}) {
+        $vswhereList += Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
+    }
+    if ($env:ProgramFiles) {
+        $vswhereList += Join-Path $env:ProgramFiles "Microsoft Visual Studio\Installer\vswhere.exe"
+    }
+
+    foreach ($vswhere in $vswhereList) {
+        if (-not (Test-Path $vswhere)) {
+            continue
+        }
+        Write-Host "vswhere: $vswhere"
+        $found = @(& $vswhere -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe")
+        $exe = $found |
+            Where-Object { $_ -and (Test-Path $_) } |
+            Select-Object -First 1
+        if ($exe) {
+            return $exe.ToString().Trim()
+        }
+    }
+    return $null
+}
+
+function Invoke-MsBuild {
+    param(
+        [string]$MsBuild,
+        [string[]]$Arguments,
+        [string]$What
+    )
+
+    Write-Host $What
+    Write-Host "MSBuild: $MsBuild"
+    $captured = New-Object System.Collections.Generic.List[string]
+    & $MsBuild @Arguments 2>&1 | ForEach-Object {
+        $line = "$_"
+        Write-Host $line
+        $captured.Add($line)
+    }
+    $code = $LASTEXITCODE
+    if ($code -eq 0) {
+        return
+    }
+
+    $errorLines = @($captured | Where-Object { $_ -match ': error |error MSB' })
+    $first = if ($errorLines.Count -gt 0) {
+        $errorLines[0].Trim()
+    } else {
+        "No 'error ' line was captured. Read the MSBuild log above this message."
+    }
+    $hint = ""
+    $joined = $captured -join "`n"
+    if ($joined -match 'MSB4803') {
+        $hint = " MSB4803 means GenerateBootstrapper ran on dotnet msbuild. setup.exe requires Visual Studio's MSBuild.exe (the .NET Framework one)."
+    }
+    Write-BuildError "$What failed with exit code $code. $first$hint"
 }
 
 function Find-BootstrapperSdk {
@@ -176,12 +252,18 @@ if ($ResolveOnly) {
 }
 
 if (-not $IsWindows) {
-    throw "ClickOnce publish uses Windows-only tools (GenerateLauncher and setup.exe). Run this on windows-latest."
+    Write-BuildError "ClickOnce publish uses Windows-only tools (GenerateLauncher and setup.exe). Run this on windows-latest."
 }
+
+$msbuild = Find-VisualStudioMsBuild
+if (-not $msbuild) {
+    Write-BuildError "Could not find Visual Studio MSBuild.exe. dotnet msbuild cannot create setup.exe: GenerateBootstrapper fails with MSB4803 on the .NET Core version of MSBuild. The runner needs Visual Studio (or Build Tools) with MSBuild installed."
+}
+Write-Host "Using Visual Studio MSBuild: $msbuild"
 
 $bootstrapperSdk = Find-BootstrapperSdk
 if (-not $bootstrapperSdk) {
-    throw "Could not find the ClickOnce bootstrapper (Engine\setup.bin). The Windows runner needs the Visual Studio ClickOnce bootstrapper SDK."
+    Write-BuildError "Could not find the ClickOnce bootstrapper (Engine\setup.bin). Visual Studio's MSBuild was found at $msbuild, but setup.exe also needs the ClickOnce Bootstrapper SDK."
 }
 Write-Host "Bootstrapper SDK: $bootstrapperSdk"
 
@@ -211,11 +293,9 @@ $commonProps = @(
     "-p:DebugSymbols=false"
 )
 
-Write-Host "Restoring..."
-& dotnet restore (Join-Path $RepoRoot "PhextNotepad.csproj") -r win-x64 @commonProps
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet restore failed with exit code $LASTEXITCODE."
-}
+$project = Join-Path $RepoRoot "PhextNotepad.csproj"
+$restoreArgs = @($project, "-t:Restore", "-v:m", "-nologo") + $commonProps
+Invoke-MsBuild -MsBuild $msbuild -Arguments $restoreArgs -What "Restoring"
 
 $publishProps = $commonProps + @(
     "-p:PublishDir=$publishDir",
@@ -238,11 +318,8 @@ else {
     $publishProps += "-p:SignManifests=false"
 }
 
-Write-Host "Publishing ClickOnce..."
-& dotnet msbuild (Join-Path $RepoRoot "PhextNotepad.csproj") -t:Publish @publishProps
-if ($LASTEXITCODE -ne 0) {
-    throw "ClickOnce publish failed with exit code $LASTEXITCODE."
-}
+$publishArgs = @($project, "-t:Publish") + $publishProps
+Invoke-MsBuild -MsBuild $msbuild -Arguments $publishArgs -What "Publishing ClickOnce"
 
 if ($signed) {
     Remove-Item -Path "Cert:\CurrentUser\My\$thumbprint" -Force -ErrorAction SilentlyContinue
@@ -272,16 +349,16 @@ signed=$signed
 $setupPath = Join-Path $publishDir "setup.exe"
 $manifest = Get-ChildItem -Path $publishDir -Filter "*.application" | Select-Object -First 1
 if (-not (Test-Path $setupPath)) {
-    throw "Publish did not produce setup.exe."
+    Write-BuildError "Publish did not produce setup.exe. Visual Studio MSBuild ran, but the ClickOnce bootstrapper did not write setup.exe next to the .application file."
 }
 if (-not $manifest) {
-    throw "Publish did not produce a .application deployment manifest."
+    Write-BuildError "Publish did not produce a .application deployment manifest."
 }
 
 $manifestText = Get-Content -Raw $manifest.FullName
 $urlMarker = $resolvedInstallUrl.TrimEnd("/")
 if ($manifestText -notlike "*$urlMarker*") {
-    throw "Deployment manifest $($manifest.Name) does not mention $resolvedInstallUrl, so updates would look in the wrong place."
+    Write-BuildError "Deployment manifest $($manifest.Name) does not mention $resolvedInstallUrl, so updates would look in the wrong place."
 }
 
 $setupBytes = [IO.File]::ReadAllBytes($setupPath)
@@ -291,7 +368,7 @@ $oddCount = $setupBytes.Length - 1
 if ($oddCount % 2 -eq 1) { $oddCount-- }
 $asUnicodeOdd = [Text.Encoding]::Unicode.GetString($setupBytes, 1, $oddCount)
 if ($asAscii -notlike "*$urlMarker*" -and $asUnicode -notlike "*$urlMarker*" -and $asUnicodeOdd -notlike "*$urlMarker*") {
-    throw "setup.exe does not contain $resolvedInstallUrl. The bootstrapper would not know where to download the app."
+    Write-BuildError "setup.exe does not contain $resolvedInstallUrl. The bootstrapper would not know where to download the app."
 }
 
 Write-Host "Published files:"

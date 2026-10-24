@@ -47,6 +47,8 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      # publish-clickonce.ps1 calls Visual Studio MSBuild.exe.
+      # dotnet msbuild fails with MSB4803 and never writes setup.exe.
       - name: Publish ClickOnce
         id: publish
         shell: pwsh
