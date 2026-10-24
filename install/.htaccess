@@ -1,0 +1,4 @@
+# Used when this folder is copied to Apache. GitHub Pages ignores it.
+AddType application/x-ms-application .application
+AddType application/x-ms-manifest .manifest
+AddType application/octet-stream .deploy

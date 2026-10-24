@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install Phext Notepad</title>
+  <link rel="icon" href="Phext.png">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1c1915;
+      --muted: #4a453c;
+      --paper: #f7f4ee;
+      --card: #fffdf8;
+      --line: #e4ddd0;
+      --button: #1f4fd8;
+      --button-ink: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Calibri, sans-serif;
+      font-size: 1.125rem;
+      line-height: 1.5;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    main {
+      max-width: 38rem;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+    img.logo {
+      width: 64px;
+      height: 64px;
+    }
+    h1 {
+      font-size: 2rem;
+      line-height: 1.2;
+      margin: 0.75rem 0 0.5rem;
+    }
+    p { margin: 0.75rem 0; }
+    .lede { font-size: 1.25rem; }
+    a.download {
+      display: inline-block;
+      margin: 1.25rem 0 0.5rem;
+      padding: 0.9rem 1.4rem;
+      background: var(--button);
+      color: var(--button-ink);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.25rem;
+      border-radius: 8px;
+    }
+    a.download:focus, a.download:hover { outline: 3px solid #9db4ff; }
+    ol { padding-left: 1.25rem; }
+    li { margin: 0.55rem 0; }
+    .note {
+      margin-top: 1.5rem;
+      padding: 1rem 1.1rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    a { color: #1a3fad; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src="Phext.png" alt="">
+    <h1>Install Phext Notepad</h1>
+    <p class="lede">A free Windows text editor for phext files. You do not need a GitHub account.</p>
+    <p><a class="download" href="setup.exe">Download Phext Notepad</a></p>
+    <p>This is for a 64-bit Windows 10 or Windows 11 PC. The download is a file named <strong>setup.exe</strong>.</p>
+    <h2>After it downloads</h2>
+    <ol>
+      <li>Open <strong>setup.exe</strong>.</li>
+      <li>If Windows says it protected your PC, click <strong>More info</strong>, then <strong>Run anyway</strong>. Windows does that when it does not already trust the publisher.</li>
+      <li>If a window says the publisher is unknown, click <strong>Install</strong>.</li>
+      <li>Open Phext Notepad from the Start menu or the desktop shortcut.</li>
+    </ol>
+    <div class="note">
+      <p>You need an internet connection the first time. setup.exe downloads the app and installs it for you. It does not ask you to install .NET yourself.</p>
+      <p>The next time a new version is published, Phext Notepad asks to update when you open it.</p>
+      <p>Source code and issues: <a href="https://github.com/wbic16/phext-notepad">github.com/wbic16/phext-notepad</a>.</p>
+    </div>
+  </main>
+</body>
+</html>

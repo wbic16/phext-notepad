@@ -3,3 +3,6 @@
 obj/
 bin/
 *.sln
+artifacts/
+*.pfx
+*.b64.txt

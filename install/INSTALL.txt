@@ -1,0 +1,19 @@
+Phext Notepad for Windows
+=========================
+
+You do not need a GitHub account.
+
+1. Double-click setup.exe.
+2. If Windows says "Windows protected your PC", click More info, then Run anyway.
+   Windows does that when it does not already trust the publisher.
+3. If a window says the publisher is unknown, click Install.
+4. Open Phext Notepad from the Start menu or the desktop shortcut.
+
+setup.exe needs an internet connection. It downloads the app and installs it.
+You do not install .NET yourself.
+
+This is for 64-bit Windows 10 or Windows 11.
+
+When a newer version is published, Phext Notepad asks to update the next time you open it.
+
+The install page is https://wbic16.github.io/phext-notepad/

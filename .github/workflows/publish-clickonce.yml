@@ -1,0 +1,115 @@
+# Builds the Windows ClickOnce installer and publishes it.
+#
+# Tag pushes work as soon as this file is in the tagged commit (merge to exo,
+# then tag). The Actions "Run workflow" button only appears after this file
+# is also on the repository default branch. See docs/publishing.md.
+
+name: Publish ClickOnce
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version as MAJOR.MINOR.PATCH (blank uses VersionPrefix in the project)"
+        required: false
+        type: string
+      install_url:
+        description: "Install and update URL (blank uses the CLICKONCE_INSTALL_URL variable, or GitHub Pages)"
+        required: false
+        type: string
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: clickonce-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build installer
+    runs-on: windows-latest
+    outputs:
+      install_url: ${{ steps.publish.outputs.install_url }}
+      version: ${{ steps.publish.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish ClickOnce
+        id: publish
+        shell: pwsh
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+          DOTNET_NOLOGO: "1"
+          CLICKONCE_INSTALL_URL: ${{ vars.CLICKONCE_INSTALL_URL }}
+          CLICKONCE_PFX_BASE64: ${{ secrets.CLICKONCE_PFX_BASE64 }}
+          CLICKONCE_PFX_PASSWORD: ${{ secrets.CLICKONCE_PFX_PASSWORD }}
+        run: >
+          ./publish-clickonce.ps1
+          -Version "${{ inputs.version }}"
+          -InstallUrl "${{ inputs.install_url }}"
+          -Revision ${{ github.run_number }}
+
+      - name: Upload setup zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhextNotepad-Setup
+          path: |
+            artifacts/PhextNotepad-Setup.zip
+            artifacts/PhextNotepad-ClickOnce.zip
+          if-no-files-found: error
+
+      - name: Attach zips to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/PhextNotepad-Setup.zip
+            artifacts/PhextNotepad-ClickOnce.zip
+          body: |
+            ## Install
+
+            Open this page on a Windows PC and click **Download Phext Notepad**. You do not need a GitHub account.
+
+            ${{ steps.publish.outputs.install_url }}
+
+            The download is `setup.exe`. If Windows says it protected your PC, click **More info**, then **Run anyway**. If a window says the publisher is unknown, click **Install**.
+
+            `PhextNotepad-Setup.zip` is that same `setup.exe` plus a short instruction file. The app updates itself from the page above the next time you open it.
+
+            ClickOnce version: `${{ steps.publish.outputs.version }}`
+
+      - name: Upload GitHub Pages site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/clickonce
+
+  deploy:
+    name: Deploy install page
+    needs: publish
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
