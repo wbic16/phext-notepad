@@ -11,7 +11,9 @@ namespace PhextNotepad
         private PhextModel _model = new();
         private static readonly HttpClient _http = new HttpClient();
         private bool _syncing = false;
-        private bool _applyingTreeView = false;
+        private int _applyingTreeView = 0;
+        private bool _splitterReady = false;
+        private int _treeSplitDistance = 642;
 
         // Vim Integration
         [DllImport("USER32.DLL")]
@@ -27,6 +29,18 @@ namespace PhextNotepad
         public PhextForm(string[] args)
         {
             InitializeComponent();
+
+            try
+            {
+                editorSplit.Panel1MinSize = 120;
+                editorSplit.Panel2MinSize = 160;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // Min sizes are retried once the split has a real width.
+            }
+            _treeSplitDistance = _settings.TreeSplitDistance;
+            ApplySplitterDistance();
 
             lockToScrollMenuItem.Checked = Control.IsKeyLocked(Keys.Scroll);
             LoadFonts();
@@ -208,6 +222,7 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
         {
             _settings.Reload();
             LoadFonts();
+            _treeSplitDistance = _settings.TreeSplitDistance;
             SetTreeViewEnabled(_settings.TreeView);
             textBox.WordWrap = _settings.WordWrap;
             textBox.ZoomFactor = _settings.ZoomFactor;
@@ -774,7 +789,12 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             _settings.Coords = _model.Phext.Coords.ToString();
             _settings.ZoomFactor = textBox.ZoomFactor;
             _settings.WordWrap = textBox.WordWrap;
-            _settings.TreeView = treeView.Visible;
+            if (!editorSplit.Panel1Collapsed)
+            {
+                RememberSplitterDistance();
+            }
+            _settings.TreeView = !editorSplit.Panel1Collapsed;
+            _settings.TreeSplitDistance = _treeSplitDistance;
             _settings.Theme = darkModeMenuItem.Checked ? "Dark" : "Light";
             _settings.Save();
         }
@@ -1033,44 +1053,137 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
 
         private void scrollLockUIUpdate()
         {
-            SetTreeViewEnabled(!lockToScrollMenuItem.Checked);
+            bool show = !lockToScrollMenuItem.Checked;
+            if (!show)
+            {
+                RememberSplitterDistance();
+            }
+            SetTreeViewEnabled(show);
         }
 
         private void SetTreeViewEnabled(bool show)
         {
-            treeView.Visible = show;
-            treeView.Enabled = show;
-            _settings.TreeView = show;
-            LayoutEditorAroundTree(show);
-
-            if (_applyingTreeView || showTreeViewToolStripMenuItem.Checked == show)
-            {
-                return;
-            }
-
-            _applyingTreeView = true;
+            // Collapse and restore both raise SplitterMoved. Hold the guard across
+            // the whole change so that event cannot replace the saved distance.
+            _applyingTreeView++;
             try
             {
-                showTreeViewToolStripMenuItem.Checked = show;
+                if (show)
+                {
+                    editorSplit.Panel1Collapsed = false;
+                    treeView.Visible = true;
+                    treeView.Enabled = true;
+                    ApplySplitterDistance();
+                }
+                else
+                {
+                    treeView.Enabled = false;
+                    editorSplit.Panel1Collapsed = true;
+                    treeView.Visible = false;
+                }
+                _settings.TreeView = show;
+
+                if (showTreeViewToolStripMenuItem.Checked != show)
+                {
+                    showTreeViewToolStripMenuItem.Checked = show;
+                }
             }
             finally
             {
-                _applyingTreeView = false;
+                _applyingTreeView--;
             }
         }
 
-        private void LayoutEditorAroundTree(bool show)
+        private void RememberSplitterDistance()
         {
-            if (show)
+            // Before the first show, SplitterDistance is still the designer default.
+            // Keep the value loaded from settings until the user actually moves it.
+            if (!_splitterReady || editorSplit.Panel1Collapsed || editorSplit.Width <= 0)
             {
-                textBox.Left = treeView.Right;
-                textBox.Width = Width - treeView.Width - 24;
+                return;
             }
-            else
+            _treeSplitDistance = editorSplit.SplitterDistance;
+        }
+
+        private void ApplySplitterDistance()
+        {
+            if (editorSplit.Width <= editorSplit.SplitterWidth)
             {
-                textBox.Left = 0;
-                textBox.Width = Width - 24;
+                return;
             }
+            try
+            {
+                if (editorSplit.Panel1MinSize < 120)
+                {
+                    editorSplit.Panel1MinSize = 120;
+                }
+                if (editorSplit.Panel2MinSize < 160)
+                {
+                    editorSplit.Panel2MinSize = 160;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return;
+            }
+            catch (InvalidOperationException)
+            {
+                return;
+            }
+            if (editorSplit.Panel1Collapsed)
+            {
+                return;
+            }
+            int available = editorSplit.Width - editorSplit.SplitterWidth;
+            int min = editorSplit.Panel1MinSize;
+            int max = available - editorSplit.Panel2MinSize;
+            if (max < min)
+            {
+                return;
+            }
+            int distance = _treeSplitDistance;
+            if (distance < min)
+            {
+                distance = min;
+            }
+            if (distance > max)
+            {
+                distance = max;
+            }
+            if (editorSplit.SplitterDistance == distance)
+            {
+                return;
+            }
+            _applyingTreeView++;
+            try
+            {
+                editorSplit.SplitterDistance = distance;
+            }
+            catch (InvalidOperationException)
+            {
+                // The split container is not wide enough yet; OnShown retries.
+            }
+            finally
+            {
+                _applyingTreeView--;
+            }
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            ApplySplitterDistance();
+            _splitterReady = true;
+        }
+
+        private void editorSplit_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+            if (_applyingTreeView > 0 || !_splitterReady || editorSplit.Panel1Collapsed)
+            {
+                return;
+            }
+            RememberSplitterDistance();
+            _settings.TreeSplitDistance = _treeSplitDistance;
         }
 
         private void reloadMenuItem_Click(object sender, EventArgs e)
@@ -1270,12 +1383,17 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
 
         private void showTreeViewToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
-            if (_applyingTreeView)
+            if (_applyingTreeView > 0)
             {
                 return;
             }
 
+            if (!showTreeViewToolStripMenuItem.Checked)
+            {
+                RememberSplitterDistance();
+            }
             SetTreeViewEnabled(showTreeViewToolStripMenuItem.Checked);
+            _settings.TreeSplitDistance = _treeSplitDistance;
             _settings.Save();
         }
     }
