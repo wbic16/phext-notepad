@@ -115,8 +115,16 @@ GitHub Pages does not let you set custom MIME types. `setup.exe` downloads the a
 
 `install/web.config` and `install/.htaccess` are copied into the site for IIS and Apache. Point `CLICKONCE_INSTALL_URL` at that copy and publish again.
 
+## If a publish fails
+
+Re-running a failed Actions job checks out the same tag, so it builds the same scripts and fails the same way. Merge the fix into `exo` first, then move the tag onto that commit (or push a new tag) so the workflow file that runs is the fixed one.
+
+`setup.exe` is created by MSBuild's `GenerateBootstrapper` task. `dotnet msbuild` stops with **MSB4803** ("The task GenerateBootstrapper is not supported on the .NET Core version of MSBuild") and does not produce an installer. The script calls Visual Studio's `MSBuild.exe` instead. A failure is also written as a GitHub Actions error annotation that quotes the first `error` line from MSBuild.
+
+The v0.4.4 tag's first run failed this way: https://github.com/wbic16/phext-notepad/actions/runs/40057451929
+
 ## Local notes
 
 `pwsh ./publish-clickonce.ps1 -ResolveOnly -Version 0.4.5 -Revision 3` prints the version and URL and does not build.
 
-A full publish has to be on Windows. `dotnet build` works on Linux. `dotnet msbuild -t:Publish` with this profile stops on Linux at the Windows-only `GenerateLauncher` task, before `setup.exe` exists.
+A full publish has to be on Windows, using Visual Studio's MSBuild. `dotnet build` works on Linux. `dotnet msbuild -t:Publish` does not produce `setup.exe`.
