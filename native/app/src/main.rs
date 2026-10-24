@@ -18,7 +18,7 @@ use phext_notepad_core::zoom::OutlineNode;
 use phext_notepad_core::{parse_coordinate, Document, Prefs, Theme, ZoomLevel};
 
 const MENU_H: i32 = 28;
-const COORD_H: i32 = 76;
+const COORD_H: i32 = 100;
 const STEP_H: i32 = 32;
 const STATUS_H: i32 = 24;
 const GRIP: i32 = 6;
@@ -44,7 +44,7 @@ enum Ui {
     About,
     TreePick { clicks: i32 },
     Buffer,
-    ArmCommit,
+    CoordCommit,
     Nudge(usize, i32),
     Splitter { x: i32, release: bool },
     Relayout,
@@ -178,14 +178,6 @@ fn menu_label(name: &str) -> String {
         .collect()
 }
 
-fn arm_triplet(text: &str) -> bool {
-    let parts: Vec<&str> = text.trim().split('.').collect();
-    parts.len() == 3
-        && parts.iter().all(|part| {
-            !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit())
-        })
-}
-
 fn with_phext(mut path: PathBuf) -> PathBuf {
     let missing = path
         .extension()
@@ -218,8 +210,10 @@ struct Notepad {
     zoom_out: button::Button,
     zoom_in: button::Button,
     level_buttons: [button::Button; 3],
+    coord_label: frame::Frame,
+    coordinate: input::Input,
+    coord_error: frame::Frame,
     arm_labels: [frame::Frame; 3],
-    arms: [input::Input; 3],
     minus: [button::Button; 3],
     plus: [button::Button; 3],
     dim_labels: [frame::Frame; 3],
@@ -239,6 +233,8 @@ struct Notepad {
     tree_key: String,
     tx: app::Sender<Ui>,
     last_caret: i32,
+    coord_was_focused: bool,
+    coord_select_pending: bool,
     dark: bool,
     quitting: bool,
 }
@@ -278,32 +274,45 @@ impl Notepad {
             button.set_tooltip(LEVELS[index].arm_title());
         }
 
+        let mut coord_label = frame::Frame::new(0, 0, 100, 26, "Coordinate");
+        coord_label.set_align(Align::Left | Align::Inside);
+        coord_label.set_frame(FrameType::NoBox);
+        coord_label.set_label_size(14);
+
+        let mut coordinate = input::Input::new(0, 0, 10, 28, "");
+        coordinate.set_text_font(Font::Courier);
+        coordinate.set_text_size(16);
+        coordinate.set_maximum_size(128);
+        coordinate.set_tooltip(
+            "Type or paste a coordinate such as 1.2.3/4.5.6/7.8.9, then press Enter",
+        );
+        // set_callback keeps FLTK's own key handling. A custom handle()
+        // would replace it, and the coordinate box would ignore typing and paste.
+        coordinate.set_trigger(enums_trigger());
+        let tx_field = tx.clone();
+        coordinate.set_callback(move |_| {
+            let _ = tx_field.send(Ui::CoordCommit);
+        });
+
+        let mut coord_error = frame::Frame::new(0, 0, 10, 18, "");
+        coord_error.set_align(Align::Left | Align::Inside);
+        coord_error.set_frame(FrameType::NoBox);
+        coord_error.set_label_size(12);
+
         let mut arm_labels = [
             frame::Frame::new(0, 0, 10, 16, "library.shelf.series"),
             frame::Frame::new(0, 0, 10, 16, "collection.volume.book"),
             frame::Frame::new(0, 0, 10, 16, "chapter.section.scroll"),
         ];
-        let mut arms = [
-            input::Input::new(0, 0, 10, 26, ""),
-            input::Input::new(0, 0, 10, 26, ""),
-            input::Input::new(0, 0, 10, 26, ""),
-        ];
         for (index, label) in arm_labels.iter_mut().enumerate() {
             label.set_align(Align::Left | Align::Inside);
             label.set_frame(FrameType::NoBox);
             label.set_label_size(12);
-            label.set_label_color(Color::from_rgb(ARM_RGB[index].0, ARM_RGB[index].1, ARM_RGB[index].2));
-        }
-        for field in arms.iter_mut() {
-            field.set_text_font(Font::Courier);
-            field.set_text_size(16);
-            // set_callback keeps FLTK's own key handling. A custom handle()
-            // would replace it, and the coordinate boxes would ignore typing.
-            field.set_trigger(enums_trigger());
-            let tx_field = tx.clone();
-            field.set_callback(move |_| {
-                let _ = tx_field.send(Ui::ArmCommit);
-            });
+            label.set_label_color(Color::from_rgb(
+                ARM_RGB[index].0,
+                ARM_RGB[index].1,
+                ARM_RGB[index].2,
+            ));
         }
 
         let mut minus = [
@@ -428,8 +437,10 @@ impl Notepad {
             zoom_out,
             zoom_in,
             level_buttons,
+            coord_label,
+            coordinate,
+            coord_error,
             arm_labels,
-            arms,
             minus,
             plus,
             dim_labels,
@@ -449,6 +460,8 @@ impl Notepad {
             tree_key: String::new(),
             tx,
             last_caret: -1,
+            coord_was_focused: false,
+            coord_select_pending: false,
             dark: false,
             quitting: false,
         };
@@ -492,12 +505,16 @@ impl Notepad {
         self.editor.set_selection_color(colors.select);
         self.status.set_color(colors.window);
         self.status.set_label_color(colors.muted);
-        for field in &mut self.arms {
-            field.set_color(colors.paper);
-            field.set_text_color(colors.ink);
-            field.set_cursor_color(colors.ink);
-            field.set_selection_color(colors.select);
-        }
+        self.coord_label.set_label_color(colors.ink);
+        self.coordinate.set_color(colors.paper);
+        self.coordinate.set_text_color(colors.ink);
+        self.coordinate.set_cursor_color(colors.ink);
+        self.coordinate.set_selection_color(colors.select);
+        self.coord_error.set_label_color(if self.dark {
+            Color::from_rgb(255, 140, 130)
+        } else {
+            Color::from_rgb(176, 32, 32)
+        });
         self.wind.redraw();
     }
 
@@ -517,13 +534,18 @@ impl Notepad {
         self.zoom_in.resize(zoom_in_x, MENU_H + 2, 72, 26);
         self.crumbs.resize(8, MENU_H + 4, (zoom_out_x - 16).max(40), 22);
 
-        let gap = 8;
-        let field_w = ((width - gap * 4) / 3).max(80);
+        let coord_y = MENU_H + 32;
+        self.coord_label.resize(8, coord_y, 100, 28);
+        self.coordinate
+            .resize(112, coord_y, (width - 124).max(160), 28);
+
+        let legend_y = coord_y + 30;
+        let legend_w = ((width - 24) / 3).max(40);
         for index in 0..3 {
-            let x = gap + index as i32 * (field_w + gap);
-            self.arm_labels[index].resize(x, MENU_H + 30, field_w, 16);
-            self.arms[index].resize(x, MENU_H + 46, field_w, 26);
+            self.arm_labels[index].resize(8 + index as i32 * legend_w, legend_y, legend_w - 8, 16);
         }
+        self.coord_error
+            .resize(8, legend_y + 16, (width - 16).max(40), 20);
 
         let step_y = MENU_H + COORD_H;
         let mut x = 8;
@@ -580,10 +602,8 @@ impl Notepad {
         }
         self.crumbs.set_label(&crumb);
 
+        self.sync_coordinate_field(&view.coordinate);
         for (index, arm) in view.arms.iter().enumerate() {
-            if self.arms[index].value() != arm.text {
-                self.arms[index].set_value(&arm.text);
-            }
             let (red, green, blue) = ARM_RGB[index];
             let color = if arm.active {
                 Color::from_rgb(red, green, blue)
@@ -654,6 +674,59 @@ impl Notepad {
         }
         self.outline_title.set_label(title);
         self.filling.store(false, Ordering::Relaxed);
+    }
+
+    fn sync_coordinate_field(&mut self, canonical: &str) {
+        let typed = self.coordinate.value();
+        if self.coordinate.has_focus() && typed != canonical {
+            match parse_coordinate(&typed) {
+                Some(parsed) if format!("{parsed}") == canonical => {}
+                _ => return,
+            }
+        }
+        if typed != canonical {
+            self.coordinate.set_value(canonical);
+            if self.coordinate.has_focus() {
+                self.select_coordinate_text();
+            }
+        }
+        self.coord_error.set_label("");
+    }
+
+    fn select_coordinate_text(&mut self) {
+        let len = self.coordinate.value().len() as i32;
+        // The one-argument position call also moves the mark. Place the
+        // cursor at the end, then the mark at the start, so the whole
+        // address is selected and a paste replaces it.
+        let _ = self.coordinate.set_position(len);
+        let _ = self.coordinate.set_mark(0);
+    }
+
+    fn note_coordinate_focus(&mut self) {
+        let focused = self.coordinate.has_focus();
+        let event = app::event();
+        if focused && !self.coord_was_focused {
+            // A click focuses on mouse-down and then places the caret. Wait
+            // for mouse-up before selecting, so that click does not undo it.
+            // Tab and other focus changes select immediately.
+            self.coord_select_pending = event == Event::Push || event == Event::Released;
+            if !self.coord_select_pending {
+                self.select_coordinate_text();
+            }
+        }
+        if focused && self.coord_select_pending && event == Event::Released {
+            self.select_coordinate_text();
+            self.coord_select_pending = false;
+        }
+        if !focused {
+            self.coord_select_pending = false;
+        }
+        self.coord_was_focused = focused;
+        let draft_ok = focused && parse_coordinate(&self.coordinate.value()).is_some();
+        if draft_ok && !self.coord_error.label().is_empty() {
+            self.coord_error.set_label("");
+            self.coord_error.redraw();
+        }
     }
 
     fn note_caret(&mut self) {
@@ -933,7 +1006,7 @@ impl Notepad {
                     env!("CARGO_PKG_VERSION")
                 ));
             }
-            Ui::ArmCommit => self.commit_arms(),
+            Ui::CoordCommit => self.commit_coordinate(),
             Ui::Nudge(index, delta) => {
                 let name = self
                     .doc
@@ -982,22 +1055,17 @@ impl Notepad {
         }
     }
 
-    fn commit_arms(&mut self) {
-        let parts: Vec<String> = self.arms.iter().map(|field| field.value()).collect();
-        if !parts.iter().all(|part| arm_triplet(part)) {
-            self.doc.set_message("Use three numbers in each box, like 1.1.1");
-            self.update_status();
-            return;
-        }
-        let address = format!("{}/{}/{}", parts[0].trim(), parts[1].trim(), parts[2].trim());
+    fn commit_coordinate(&mut self) {
+        let address = self.coordinate.value();
         match self.doc.jump(&address) {
             Ok(()) => {
+                self.coord_error.set_label("");
                 self.persist();
                 self.refresh();
             }
             Err(err) => {
-                self.doc.set_message(err);
-                self.update_status();
+                self.coord_error.set_label(&err);
+                self.coord_error.redraw();
             }
         }
     }
@@ -1283,6 +1351,7 @@ fn main() {
     notepad.layout();
     notepad.refresh();
     while running.wait() {
+        notepad.note_coordinate_focus();
         notepad.note_caret();
         while let Some(message) = rx.recv() {
             notepad.handle(message);

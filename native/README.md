@@ -20,7 +20,7 @@ The lattice memory-map and sentron panel are not in this editor. Notepad holds t
 ## What it does
 
 - New, open, and save `.phext` files, plus the embedded baseline
-- Coordinate bar: `library.shelf.series / collection.volume.book / chapter.section.scroll`
+- Coordinate box: shows the full address, such as `1.2.3/4.5.6/7.8.9`. Type or paste one and press Enter. A bad address stays in the box and shows an error under it. The tree follows the address at the current zoom. Steppers still nudge the zoomed arm.
 - Outline of the arm you are zoomed to, side by side with the scroll editor
 - Draggable splitter. Hiding the tree gives the editor the whole row. The width is kept while the tree is hidden, and both are saved.
 - Three zoom levels. The tree and the coordinate bar follow the current level. Double-click a row to zoom in.
