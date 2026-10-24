@@ -4,6 +4,8 @@
 //! phext itself stays in `phext-notepad-core` (libphext for the bytes). No
 //! web view and no extra crates.
 
+#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
+
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};

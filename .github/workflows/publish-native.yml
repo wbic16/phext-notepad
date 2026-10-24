@@ -116,14 +116,15 @@ jobs:
           cp "target/release/${bin}" "dist/${bin}"
           if [ "${{ runner.os }}" = "Windows" ]; then
             archive="${name}.zip"
-            tar -a -cf "dist/${archive}" -C dist "$bin"
+            # Git's tar writes a tar archive even when the name ends in .zip.
+            powershell.exe -NoProfile -Command "Compress-Archive -LiteralPath 'dist/${bin}' -DestinationPath 'dist/${archive}' -Force"
           else
             archive="${name}.tar.gz"
             tar -czf "dist/${archive}" -C dist "$bin"
           fi
           echo "ARCHIVE_NAME=${archive}" >> "$GITHUB_ENV"
           echo "ARCHIVE_PATH=native/dist/${archive}" >> "$GITHUB_ENV"
-          ls -lh "target/release/${bin}" "dist/${archive}"
+          ls -l "target/release/${bin}" "dist/${archive}"
 
       - name: Upload the archive
         uses: actions/upload-artifact@v4
