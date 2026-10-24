@@ -1,0 +1,135 @@
+# Unsigned Windows, macOS, and Linux builds of the Tauri Phext Notepad.
+#
+# Tag pushes work as soon as this file is in the tagged commit (merge to exo,
+# then tag). The Actions "Run workflow" button only appears after this file
+# is also on the repository default branch. See docs/native-publishing.md.
+#
+# Code signing is deferred. The plug-in point is the env block on the
+# tauri-action step. Leave the Apple secrets empty and the build stays
+# unsigned. Do not add Azure Trusted Signing.
+
+name: Publish native builds
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [exo]
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+concurrency:
+  group: native-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Test phext model
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Test document, zoom, and outline
+        working-directory: native
+        run: cargo test -p phext-notepad-core
+
+  publish:
+    name: Build ${{ matrix.platform }}
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            bundles: deb,appimage
+            rust_targets: ""
+          - platform: macos-latest
+            bundles: dmg,app
+            rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
+            extra_args: --target universal-apple-darwin
+          - platform: windows-latest
+            bundles: nsis,msi
+            rust_targets: ""
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - name: Set the app version from the tag
+        shell: bash
+        working-directory: native
+        run: node scripts/set-version.mjs "${GITHUB_REF_NAME#v}"
+
+      - name: Install the Tauri CLI
+        working-directory: native
+        run: npm ci
+
+      # Unsigned build. macOS signing and notarization turn on by themselves
+      # when these repository secrets exist (Settings → Secrets → Actions).
+      # Windows Authenticode is not wired; add bundle.windows.signCommand in
+      # native/src-tauri/tauri.conf.json when there is a certificate.
+      # APPLE_CERTIFICATE is the .p12, base64, one line.
+      # APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
+      # APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID.
+      - name: Build and attach release assets
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: native
+          tagName: ${{ github.ref_name }}
+          releaseName: Phext Notepad ${{ github.ref_name }}
+          releaseDraft: false
+          prerelease: false
+          retryAttempts: 3
+          uploadUpdaterJson: false
+          uploadWorkflowArtifacts: true
+          args: --bundles ${{ matrix.bundles }} ${{ matrix.extra_args }}
+          releaseBody: |
+            ## Install
+
+            Open this page and choose Windows, macOS, or Linux. You do not need a GitHub account.
+
+            https://wbic16.github.io/phext-notepad/
+
+            The files on this release are unsigned native builds:
+
+            - Windows: the NSIS setup exe and the `.msi`
+            - macOS: a universal `.dmg` (Apple silicon and Intel) and the app
+            - Linux: `.deb` and `.AppImage`
+
+            Windows may say it protected your PC. Choose **More info**, then **Run anyway**. macOS may say the developer cannot be verified. Right-click the app, choose **Open**, then **Open** again.
+
+            Code signing is not part of this release. The publish workflow has a place for an Apple Developer ID certificate; Windows Authenticode is not wired up, and this project does not use Azure signing.
+
+            The Windows ClickOnce installer, when that publish succeeds, is still the **Download for Windows** button on the page above.

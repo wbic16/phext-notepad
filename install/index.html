@@ -26,7 +26,7 @@
       background: var(--paper);
     }
     main {
-      max-width: 38rem;
+      max-width: 40rem;
       margin: 0 auto;
       padding: 2.5rem 1.25rem 4rem;
     }
@@ -39,18 +39,24 @@
       line-height: 1.2;
       margin: 0.75rem 0 0.5rem;
     }
+    h2 { margin: 2rem 0 0.5rem; font-size: 1.4rem; }
     p { margin: 0.75rem 0; }
     .lede { font-size: 1.25rem; }
     a.download {
       display: inline-block;
-      margin: 1.25rem 0 0.5rem;
-      padding: 0.9rem 1.4rem;
+      margin: 0.4rem 0.5rem 0.4rem 0;
+      padding: 0.85rem 1.2rem;
       background: var(--button);
       color: var(--button-ink);
       text-decoration: none;
       font-weight: 700;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       border-radius: 8px;
+    }
+    a.download.secondary {
+      background: transparent;
+      color: var(--button);
+      border: 2px solid var(--button);
     }
     a.download:focus, a.download:hover { outline: 3px solid #9db4ff; }
     ol { padding-left: 1.25rem; }
@@ -69,21 +75,77 @@
   <main>
     <img class="logo" src="Phext.png" alt="">
     <h1>Install Phext Notepad</h1>
-    <p class="lede">A free Windows text editor for phext files. You do not need a GitHub account.</p>
-    <p><a class="download" href="setup.exe">Download Phext Notepad</a></p>
-    <p>This is for a 64-bit Windows 10 or Windows 11 PC. The download is a file named <strong>setup.exe</strong>.</p>
-    <h2>After it downloads</h2>
+    <p class="lede">A free editor for phext files on Windows, macOS, and Linux. You do not need a GitHub account.</p>
+
+    <h2>Windows</h2>
+    <p>This installer is for a 64-bit Windows 10 or Windows 11 PC. It keeps itself up to date.</p>
+    <p><a class="download" href="setup.exe">Download for Windows</a></p>
+    <p>The download is a file named <strong>setup.exe</strong>.</p>
     <ol>
       <li>Open <strong>setup.exe</strong>.</li>
       <li>If Windows says it protected your PC, click <strong>More info</strong>, then <strong>Run anyway</strong>. Windows does that when it does not already trust the publisher.</li>
       <li>If a window says the publisher is unknown, click <strong>Install</strong>.</li>
       <li>Open Phext Notepad from the Start menu or the desktop shortcut.</li>
     </ol>
+    <p><a class="download secondary" id="download-windows-native" href="https://github.com/wbic16/phext-notepad/releases/latest">Native Windows installer</a></p>
+    <p>The native installer is a separate build. It does not update itself. Use it when you want the same app as the macOS and Linux builds.</p>
+
+    <h2>macOS</h2>
+    <p>This is a disk image for Apple silicon and Intel Macs.</p>
+    <p><a class="download" id="download-mac" href="https://github.com/wbic16/phext-notepad/releases/latest">Download for macOS</a></p>
+    <ol>
+      <li>Open the <strong>.dmg</strong> file and drag Phext Notepad to Applications.</li>
+      <li>The app is not signed yet. If macOS says the developer cannot be verified, right-click the app, choose <strong>Open</strong>, then choose <strong>Open</strong> again.</li>
+    </ol>
+
+    <h2>Linux</h2>
+    <p>Use the AppImage on most desktops, or the <strong>.deb</strong> package on Debian and Ubuntu.</p>
+    <p>
+      <a class="download" id="download-linux-appimage" href="https://github.com/wbic16/phext-notepad/releases/latest">Download for Linux (AppImage)</a>
+      <a class="download secondary" id="download-linux-deb" href="https://github.com/wbic16/phext-notepad/releases/latest">Download .deb</a>
+    </p>
+    <p>For the AppImage, mark the file executable and open it. These builds are not signed.</p>
+
     <div class="note">
-      <p>You need an internet connection the first time. setup.exe downloads the app and installs it for you. It does not ask you to install .NET yourself.</p>
-      <p>The next time a new version is published, Phext Notepad asks to update when you open it.</p>
+      <p id="download-note">The macOS, Linux, and native Windows buttons use the latest GitHub Release. They start working after a version is published. Until then they open the releases page.</p>
+      <p>The Windows setup.exe button needs an internet connection the first time. It downloads the app and installs it. It does not ask you to install .NET yourself. The next time a new version is published, that copy asks to update when you open it.</p>
       <p>Source code and issues: <a href="https://github.com/wbic16/phext-notepad">github.com/wbic16/phext-notepad</a>.</p>
     </div>
   </main>
+  <script>
+    (function () {
+      fetch("https://api.github.com/repos/wbic16/phext-notepad/releases/latest", {
+        headers: { Accept: "application/vnd.github+json" }
+      }).then(function (response) {
+        if (!response.ok) throw new Error(String(response.status));
+        return response.json();
+      }).then(function (release) {
+        var assets = release.assets || [];
+        function pick(test) {
+          for (var i = 0; i < assets.length; i++) {
+            if (test(String(assets[i].name || "").toLowerCase())) {
+              return assets[i].browser_download_url;
+            }
+          }
+          return null;
+        }
+        function setLink(id, url) {
+          var link = document.getElementById(id);
+          if (link && url) link.href = url;
+        }
+        setLink("download-mac", pick(function (name) {
+          return name.endsWith(".dmg") || name.endsWith(".app.tar.gz") || name.endsWith(".app.zip");
+        }));
+        setLink("download-linux-appimage", pick(function (name) { return name.endsWith(".appimage"); }));
+        setLink("download-linux-deb", pick(function (name) { return name.endsWith(".deb"); }));
+        setLink("download-windows-native", pick(function (name) { return name.endsWith("-setup.exe"); })
+          || pick(function (name) { return name.endsWith(".msi"); }));
+        var note = document.getElementById("download-note");
+        if (note && release.tag_name) {
+          note.textContent = "Native downloads are from release " + release.tag_name + ". They are not code-signed.";
+        }
+      }).catch(function () {});
+    }());
+  </script>
 </body>
 </html>

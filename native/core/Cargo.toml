@@ -1,0 +1,21 @@
+[package]
+name = "phext-notepad-core"
+version = "0.5.0"
+description = "Phext document model and three-level zoom for Phext Notepad"
+authors = ["Will Bickford <wbic16@gmail.com>"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.90"
+publish = false
+
+[dependencies]
+libphext = "0.3.1"
+# Pinned to exo @ 7c91992. Zoom tiers match phext-edit's z/y/x API.
+# Coordinate moves use phext-lattice's CoordinateNav (forward resets lower dims).
+phext-lattice = { git = "https://github.com/wbic16/phext-lattice", rev = "7c919924e14d0e98002f93dd7c3708ad0c815b0b", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[[bin]]
+name = "dump-fixture"
+path = "src/bin/dump_fixture.rs"
