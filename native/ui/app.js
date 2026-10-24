@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 
 let state = null;
+let preview = null;
 let applying = false;
 let editGen = 0;
 let editQueued = null;
@@ -546,8 +547,6 @@ if (new URLSearchParams(location.search).has("selftest")) {
 
 // Browser preview when the page is opened outside the Tauri shell.
 // The fixture is the baseline phext rendered by the same Rust model.
-let preview = null;
-
 async function previewInvoke(command, args) {
   if (!preview) {
     const response = await fetch("fixture.json");
