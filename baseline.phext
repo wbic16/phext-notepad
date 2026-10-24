@@ -76,8 +76,20 @@ Editor List
 * Flownote: One infinite scroll [C++]
 * Dreamnote: A place for all of your notes [Rust]Release Notes
 -------------
-(c) 2022-2024 Phext, Inc.
+(c) 2022-2026 Phext, Inc.
 MIT License
+
+v0.4.4 (2026-10-23)
+➕ Fixed window resizing issues and tree view bugs
+
+v0.4.3 (2026-02-12)
+➕ OpenClaw and .net10 upgrade
+
+v0.4.2 (2025-07-10)
+➕ Live phext sync with SQ
+
+v0.4.1 (2025-07-02)
+➕ Renamed from Terse to Phext Notepad to support the singularity
 
 v0.3.1 (2024-02-08)
 ➕ Improved Coordinate Editing, Byte Count, and Word Count Tracking

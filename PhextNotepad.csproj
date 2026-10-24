@@ -7,7 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <PlatformTarget>x64</PlatformTarget>
-    <VersionPrefix>0.4.3</VersionPrefix>
+    <VersionPrefix>0.4.4</VersionPrefix>
     <PackageIcon>Phext.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <StartupObject>PhextNotepad.Program</StartupObject>
@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <None Remove="Phext.ico" />
-    <None Remove="Baseline.phext" />
+    <None Remove="baseline.phext" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,7 +27,9 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Phext.ico" />
-    <EmbeddedResource Include="Baseline.phext" />
+    <EmbeddedResource Include="baseline.phext">
+      <LogicalName>PhextNotepad.Baseline.phext</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

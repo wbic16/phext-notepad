@@ -68,22 +68,29 @@
             sqPhext = new TextBox();
             treeView = new TreeView();
             panel1 = new Panel();
+            editorSplit = new SplitContainer();
+            commandBar = new Panel();
             syncButton = new Button();
             menuStrip.SuspendLayout();
             flowLayoutPanel.SuspendLayout();
             panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)editorSplit).BeginInit();
+            editorSplit.Panel1.SuspendLayout();
+            editorSplit.Panel2.SuspendLayout();
+            editorSplit.SuspendLayout();
+            commandBar.SuspendLayout();
             SuspendLayout();
             // 
             // textBox
             // 
             textBox.AcceptsTab = true;
-            textBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             textBox.BackColor = Color.Black;
             textBox.BorderStyle = BorderStyle.FixedSingle;
             textBox.Cursor = Cursors.IBeam;
+            textBox.Dock = DockStyle.Fill;
             textBox.Font = new Font("Cascadia Code", 11F);
             textBox.ForeColor = Color.WhiteSmoke;
-            textBox.Location = new Point(655, 9);
+            textBox.Location = new Point(0, 0);
             textBox.Margin = new Padding(5);
             textBox.MaxLength = 100000000;
             textBox.Name = "textBox";
@@ -101,7 +108,7 @@
             coordinateLabel.CausesValidation = false;
             coordinateLabel.Enabled = false;
             coordinateLabel.Font = new Font("Segoe UI", 14.25F);
-            coordinateLabel.Location = new Point(12, 913);
+            coordinateLabel.Location = new Point(12, 5);
             coordinateLabel.Margin = new Padding(5, 0, 5, 0);
             coordinateLabel.Name = "coordinateLabel";
             coordinateLabel.Size = new Size(167, 49);
@@ -313,7 +320,7 @@
             phextCoordinate.Anchor = AnchorStyles.Bottom;
             phextCoordinate.Enabled = false;
             phextCoordinate.Font = new Font("Segoe UI", 14.25F);
-            phextCoordinate.Location = new Point(188, 917);
+            phextCoordinate.Location = new Point(188, 9);
             phextCoordinate.Margin = new Padding(5);
             phextCoordinate.MaxLength = 64;
             phextCoordinate.Name = "phextCoordinate";
@@ -394,7 +401,7 @@
             jumpButton.Anchor = AnchorStyles.Bottom;
             jumpButton.Font = new Font("Segoe UI", 12F);
             jumpButton.ForeColor = Color.Black;
-            jumpButton.Location = new Point(558, 917);
+            jumpButton.Location = new Point(558, 9);
             jumpButton.Margin = new Padding(5);
             jumpButton.Name = "jumpButton";
             jumpButton.Size = new Size(88, 45);
@@ -409,7 +416,7 @@
             label1.CausesValidation = false;
             label1.Enabled = false;
             label1.Font = new Font("Segoe UI", 14.25F);
-            label1.Location = new Point(655, 912);
+            label1.Location = new Point(655, 4);
             label1.Margin = new Padding(5, 0, 5, 0);
             label1.Name = "label1";
             label1.Size = new Size(139, 49);
@@ -421,7 +428,7 @@
             // 
             sqHost.Anchor = AnchorStyles.Bottom;
             sqHost.Font = new Font("Segoe UI", 14.25F);
-            sqHost.Location = new Point(804, 913);
+            sqHost.Location = new Point(804, 5);
             sqHost.Margin = new Padding(5);
             sqHost.MaxLength = 64;
             sqHost.Name = "sqHost";
@@ -434,7 +441,7 @@
             loadButton.Anchor = AnchorStyles.Bottom;
             loadButton.Font = new Font("Segoe UI", 12F);
             loadButton.ForeColor = Color.Black;
-            loadButton.Location = new Point(1623, 914);
+            loadButton.Location = new Point(1623, 6);
             loadButton.Margin = new Padding(5);
             loadButton.Name = "loadButton";
             loadButton.Size = new Size(107, 45);
@@ -448,7 +455,7 @@
             pushButton.Anchor = AnchorStyles.Bottom;
             pushButton.Font = new Font("Segoe UI", 12F);
             pushButton.ForeColor = Color.Black;
-            pushButton.Location = new Point(1739, 914);
+            pushButton.Location = new Point(1739, 6);
             pushButton.Margin = new Padding(5);
             pushButton.Name = "pushButton";
             pushButton.Size = new Size(107, 45);
@@ -461,7 +468,7 @@
             // 
             sqPhext.Anchor = AnchorStyles.Bottom;
             sqPhext.Font = new Font("Segoe UI", 14.25F);
-            sqPhext.Location = new Point(1432, 914);
+            sqPhext.Location = new Point(1432, 6);
             sqPhext.Margin = new Padding(5);
             sqPhext.MaxLength = 64;
             sqPhext.Name = "sqPhext";
@@ -472,13 +479,13 @@
             // 
             // treeView
             // 
-            treeView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             treeView.BackColor = Color.Black;
             treeView.BorderStyle = BorderStyle.FixedSingle;
+            treeView.Dock = DockStyle.Fill;
             treeView.ForeColor = Color.White;
             treeView.HideSelection = false;
-            treeView.Location = new Point(5, 9);
-            treeView.Margin = new Padding(5);
+            treeView.Location = new Point(0, 0);
+            treeView.Margin = new Padding(0);
             treeView.Name = "treeView";
             treeView.PathSeparator = "/";
             treeView.Size = new Size(642, 898);
@@ -487,19 +494,45 @@
             treeView.DoubleClick += treeView_DoubleClick;
             treeView.KeyUp += treeView_KeyUp;
             // 
+            // editorSplit
+            // 
+            editorSplit.BorderStyle = BorderStyle.None;
+            editorSplit.Dock = DockStyle.Fill;
+            editorSplit.FixedPanel = FixedPanel.Panel1;
+            editorSplit.Location = new Point(0, 0);
+            editorSplit.Margin = new Padding(0);
+            editorSplit.Name = "editorSplit";
+            editorSplit.Orientation = Orientation.Vertical;
+            editorSplit.Size = new Size(1972, 908);
+            editorSplit.SplitterDistance = 642;
+            editorSplit.SplitterWidth = 6;
+            editorSplit.TabIndex = 31;
+            editorSplit.Panel1.Controls.Add(treeView);
+            editorSplit.Panel2.Controls.Add(textBox);
+            editorSplit.SplitterMoved += editorSplit_SplitterMoved;
+            // 
+            // commandBar
+            // 
+            commandBar.Controls.Add(coordinateLabel);
+            commandBar.Controls.Add(phextCoordinate);
+            commandBar.Controls.Add(jumpButton);
+            commandBar.Controls.Add(label1);
+            commandBar.Controls.Add(sqHost);
+            commandBar.Controls.Add(sqPhext);
+            commandBar.Controls.Add(loadButton);
+            commandBar.Controls.Add(pushButton);
+            commandBar.Controls.Add(syncButton);
+            commandBar.Dock = DockStyle.Bottom;
+            commandBar.Location = new Point(0, 908);
+            commandBar.Margin = new Padding(0);
+            commandBar.Name = "commandBar";
+            commandBar.Size = new Size(1972, 64);
+            commandBar.TabIndex = 32;
+            // 
             // panel1
             // 
-            panel1.Controls.Add(jumpButton);
-            panel1.Controls.Add(sqPhext);
-            panel1.Controls.Add(loadButton);
-            panel1.Controls.Add(sqHost);
-            panel1.Controls.Add(label1);
-            panel1.Controls.Add(phextCoordinate);
-            panel1.Controls.Add(coordinateLabel);
-            panel1.Controls.Add(textBox);
-            panel1.Controls.Add(syncButton);
-            panel1.Controls.Add(pushButton);
-            panel1.Controls.Add(treeView);
+            panel1.Controls.Add(editorSplit);
+            panel1.Controls.Add(commandBar);
             panel1.Dock = DockStyle.Fill;
             panel1.Location = new Point(0, 35);
             panel1.Margin = new Padding(5);
@@ -512,7 +545,7 @@
             syncButton.Anchor = AnchorStyles.Bottom;
             syncButton.Font = new Font("Segoe UI", 12F);
             syncButton.ForeColor = Color.Black;
-            syncButton.Location = new Point(1854, 914);
+            syncButton.Location = new Point(1854, 6);
             syncButton.Margin = new Padding(5);
             syncButton.Name = "syncButton";
             syncButton.Size = new Size(107, 45);
@@ -542,6 +575,12 @@
             menuStrip.PerformLayout();
             flowLayoutPanel.ResumeLayout(false);
             flowLayoutPanel.PerformLayout();
+            editorSplit.Panel1.ResumeLayout(false);
+            editorSplit.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)editorSplit).EndInit();
+            editorSplit.ResumeLayout(false);
+            commandBar.ResumeLayout(false);
+            commandBar.PerformLayout();
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ResumeLayout(false);
@@ -572,6 +611,8 @@
         private ToolStripMenuItem defaultPhextToolStripMenuItem;
         private ToolStripMenuItem saveAsToolStripMenuItem;
         private Panel panel1;
+        private SplitContainer editorSplit;
+        private Panel commandBar;
         private ToolStripMenuItem wordWrapToolStripMenuItem;
         private ToolStripMenuItem recentToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator2;
