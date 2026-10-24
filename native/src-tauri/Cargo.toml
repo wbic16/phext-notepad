@@ -17,7 +17,18 @@ tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
 phext-notepad-core = { path = "../core" }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tauri = { version = "2.12.5", features = [] }
-tauri-plugin-dialog = "2"
+# wry is the webview. x11 and dbus are the Linux window and the OS theme.
+# common-controls-v6 is the Windows dialog styling. Compression is off:
+# ui/ is a few static files, so they are embedded as themselves.
+tauri = { version = "2.12.5", default-features = false, features = ["wry", "common-controls-v6", "x11", "dbus"] }
+# Native open/save dialogs. default-features stays off so this does not pull
+# the XDG portal stack. gtk3 is Linux-only inside rfd.
+rfd = { version = "0.16", default-features = false, features = ["common-controls-v6", "gtk3"] }
+
+[features]
+# `cargo build` and `cargo run` embed ui/ and open that. Without this feature
+# Tauri treats the binary as a dev build and loads http://127.0.0.1:1420,
+# which is a blank WebView2 page when no dev server is running.
+# `tauri dev` turns this feature off and serves ui/ itself.
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

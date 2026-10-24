@@ -58,19 +58,61 @@ Windows Authenticode is a later step, not Azure Trusted Signing. The place for i
 
 Linux has no platform signature. A detached GPG signature on the AppImage can be added beside the upload step later.
 
+## Running on Windows
+
+Prerequisites:
+
+- [Rust](https://rustup.rs/) 1.90 or newer (`rustup update stable`)
+- [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/). Windows 11 already has it. On Windows 10, install the Evergreen runtime if the window says the runtime is missing.
+- [Node.js](https://nodejs.org/) current or LTS, only for `npm run tauri`. `cargo build` does not need Node.
+- The Tauri CLI comes from `npm install` in `native/` (`@tauri-apps/cli`). You do not install it globally.
+
+From the repository, in PowerShell:
+
+```powershell
+cd native
+cargo test -p phext-notepad-core
+cargo build -p phext-notepad-native
+.\target\debug\phext-notepad-native.exe
+```
+
+That executable has the window UI inside it. Rebuild after pulling this fix. An older debug exe opens `http://127.0.0.1:1420` and Edge shows "can't reach this page" / `ERR_CONNECTION_REFUSED` because nothing is serving that address.
+
+While editing the UI or the Rust shell:
+
+```powershell
+cd native
+npm install
+npm run tauri dev
+```
+
+`tauri dev` serves `ui/` itself and recompiles when files change. It does not use a separate Python or `sh` server.
+
+A release exe and the NSIS/MSI installers:
+
+```powershell
+cd native
+npm install
+npm run tauri build
+.\target\release\phext-notepad-native.exe
+```
+
+The installers are under `target\release\bundle\`.
+
 ## Build on your own machine
 
-Rust 1.90 or newer, plus the Tauri system libraries for your OS.
+Rust 1.90 or newer, plus the Tauri system libraries for your OS. Windows prerequisites are in the section above.
 
 ```sh
 cd native
-npm install
 cargo test -p phext-notepad-core
+cargo build -p phext-notepad-native
+npm install
 npm run tauri dev
 npm run tauri build -- --bundles deb
 ```
 
-Linux bundle names differ by OS. The release workflow asks each runner only for the bundles that OS can produce.
+`cargo build` is enough to run the app. `npm run tauri dev` is the reload loop. `npm run tauri build` makes the installer. On Linux the bundle flag is `deb` or `appimage`; on Windows the default `tauri build` produces `nsis` and `msi`; on macOS it produces `dmg` and `app`. The release workflow asks each runner only for the bundles that OS can produce.
 
 ## What the native app is
 

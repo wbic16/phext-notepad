@@ -4,10 +4,7 @@
   "version": "0.5.0",
   "identifier": "io.phext.notepad",
   "build": {
-    "frontendDist": "../ui",
-    "devUrl": "http://127.0.0.1:1420",
-    "beforeDevCommand": "sh -c 'if [ -d ui ]; then dir=ui; else dir=../ui; fi; exec python3 -m http.server 1420 --directory \"$dir\" --bind 127.0.0.1'",
-    "beforeBuildCommand": ""
+    "frontendDist": "../ui"
   },
   "app": {
     "withGlobalTauri": true,

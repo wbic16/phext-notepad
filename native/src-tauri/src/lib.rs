@@ -12,7 +12,6 @@ use session::Session;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let session = Session::launch(prefs_file(app.handle()));
             app.manage(Mutex::new(session));

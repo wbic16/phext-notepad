@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use phext_notepad_core::{Document, DocumentView};
+use rfd::FileDialog;
 use tauri::{Manager, State};
-use tauri_plugin_dialog::DialogExt;
 
 use crate::session::Session;
 
@@ -14,10 +14,6 @@ pub type AppState = Mutex<Session>;
 
 fn lock<'a>(state: &'a State<'_, AppState>) -> std::sync::MutexGuard<'a, Session> {
     state.lock().unwrap_or_else(|err| err.into_inner())
-}
-
-fn to_path(file: tauri_plugin_dialog::FilePath) -> Result<PathBuf, String> {
-    file.into_path().map_err(|err| err.to_string())
 }
 
 fn with_phext_extension(path: PathBuf) -> PathBuf {
@@ -30,33 +26,26 @@ fn with_phext_extension(path: PathBuf) -> PathBuf {
     }
 }
 
-fn pick_open(app: &tauri::AppHandle) -> Result<Option<PathBuf>, String> {
-    let picked = app
-        .dialog()
-        .file()
+fn file_dialog(app: &tauri::AppHandle, title: &str) -> FileDialog {
+    let mut dialog = FileDialog::new()
         .add_filter("Phext", &["phext"])
         .add_filter("All files", &["*"])
-        .set_title("Open phext")
-        .blocking_pick_file();
-    match picked {
-        Some(file) => Ok(Some(to_path(file)?)),
-        None => Ok(None),
+        .set_title(title);
+    if let Some(window) = app.get_webview_window("main") {
+        dialog = dialog.set_parent(&window);
     }
+    dialog
 }
 
-fn pick_save(app: &tauri::AppHandle, suggested: &str) -> Result<Option<PathBuf>, String> {
-    let picked = app
-        .dialog()
-        .file()
-        .add_filter("Phext", &["phext"])
-        .add_filter("All files", &["*"])
-        .set_title("Save phext")
+fn pick_open(app: &tauri::AppHandle) -> Option<PathBuf> {
+    file_dialog(app, "Open phext").pick_file()
+}
+
+fn pick_save(app: &tauri::AppHandle, suggested: &str) -> Option<PathBuf> {
+    file_dialog(app, "Save phext")
         .set_file_name(suggested)
-        .blocking_save_file();
-    match picked {
-        Some(file) => Ok(Some(with_phext_extension(to_path(file)?))),
-        None => Ok(None),
-    }
+        .save_file()
+        .map(with_phext_extension)
 }
 
 #[tauri::command]
@@ -168,7 +157,7 @@ pub async fn open_dialog(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
 ) -> Result<DocumentView, String> {
-    let Some(path) = pick_open(&app)? else {
+    let Some(path) = pick_open(&app) else {
         return Ok(lock(&state).view("cancel"));
     };
     let mut session = lock(&state);
@@ -184,7 +173,7 @@ pub async fn save(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<D
         path
     } else {
         let suggested = suggested_name(&lock(&state));
-        let Some(path) = pick_save(&app, &suggested)? else {
+        let Some(path) = pick_save(&app, &suggested) else {
             return Ok(lock(&state).view("cancel"));
         };
         path
@@ -198,7 +187,7 @@ pub async fn save(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<D
 #[tauri::command]
 pub async fn save_as(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<DocumentView, String> {
     let suggested = suggested_name(&lock(&state));
-    let Some(path) = pick_save(&app, &suggested)? else {
+    let Some(path) = pick_save(&app, &suggested) else {
         return Ok(lock(&state).view("cancel"));
     };
     let mut session = lock(&state);

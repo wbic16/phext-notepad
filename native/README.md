@@ -29,15 +29,24 @@ Not carried over from WinForms: SQ sync, vim keys, scroll lock, font settings, a
 
 ## Develop
 
-Rust 1.90 or newer. On Linux, WebKitGTK 4.1 development headers.
+Rust 1.90 or newer. On Linux, WebKitGTK 4.1 development headers. On Windows, the WebView2 runtime (already on Windows 11).
+
+`cargo build` embeds `ui/` into the executable. Run that file directly. A plain debug build used to open `http://127.0.0.1:1420` and show a blank page when nothing was listening there.
 
 ```sh
 cd native
 cargo test -p phext-notepad-core
-npm install
-npm run tauri dev
+cargo build -p phext-notepad-native
 ```
+
+The executable is `target/debug/phext-notepad-native` (`target\debug\phext-notepad-native.exe` on Windows).
+
+`npm run tauri dev` rebuilds while you edit and serves `ui/` with Tauri's own file server. `npm run tauri build` produces the installer and a release executable at `target/release/phext-notepad-native`. Node.js is only required for those two npm commands. Windows setup is in [docs/native-publishing.md](../docs/native-publishing.md#running-on-windows).
 
 `ui/fixture.json` is the baseline rendered by `cargo run -p phext-notepad-core --bin dump-fixture`. Opening `ui/index.html` from a local web server uses that fixture when Tauri is not there, so the layout can be checked in a browser. Open and save dialogs need the native shell.
 
 Release builds are described in [docs/native-publishing.md](../docs/native-publishing.md).
+
+## Dependencies
+
+`ui/` is plain HTML, CSS, and JavaScript. Nothing bundles it. `package-lock.json` lists 12 packages, and every one is `@tauri-apps/cli` or a per-OS build of that CLI. `Cargo.lock` lists the crates the native app compiles. The window is Tauri with its default compression turned off, so those files are stored in the executable as themselves. Open and save call `rfd` directly. libphext and phext-lattice stay. Lattice also depends on its memory-map and rayon crates; this editor does not call them.
