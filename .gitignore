@@ -1,7 +1,7 @@
 .vs/
 *.user
 obj/
-bin/
+/bin/
 *.sln
 artifacts/
 *.pfx
