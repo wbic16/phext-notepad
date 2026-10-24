@@ -10,11 +10,10 @@
 use std::collections::BTreeMap;
 
 use libphext::phext::Coordinate;
-use phext_lattice::coordinate_ext::{CoordinateNav, Dimension};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+use crate::nav::{CoordinateNav, Dimension};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ZoomLevel {
     /// library.shelf.series — phext-lattice tier `z` (11D).
     Outer,
@@ -122,7 +121,7 @@ impl Level {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OutlineNode {
     pub id: String,
     pub kind: String,
@@ -138,13 +137,13 @@ pub struct OutlineNode {
     pub children: Vec<OutlineNode>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Crumb {
     pub level: String,
     pub label: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DimView {
     pub name: String,
     pub label: String,

@@ -5,14 +5,13 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
 use libphext::phext::{default_coordinate, Coordinate, COORDINATE_MAXIMUM, COORDINATE_MINIMUM};
-use serde::{Deserialize, Serialize};
 
 use crate::prefs::Prefs;
 use crate::zoom::{self, Crumb, DimView, OutlineNode, ZoomLevel};
 
 const BASELINE: &str = include_str!("../../../baseline.phext");
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArmView {
     pub level: String,
     pub subspace: String,
@@ -22,7 +21,7 @@ pub struct ArmView {
     pub dimensions: Vec<DimView>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DocumentView {
     pub origin: String,
     pub coordinate: String,

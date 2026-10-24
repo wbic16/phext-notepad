@@ -1,12 +1,13 @@
-# Unsigned Windows, macOS, and Linux builds of the Tauri Phext Notepad.
+# Unsigned Windows, macOS, and Linux binaries of the FLTK Phext Notepad.
 #
-# Tag pushes work as soon as this file is in the tagged commit (merge to exo,
-# then tag). The Actions "Run workflow" button only appears after this file
-# is also on the repository default branch. See docs/native-publishing.md.
+# A version tag builds three archives and attaches them to the GitHub Release.
+# Pull requests and "Run workflow" compile and test the same way, and keep the
+# archives as Actions artifacts. This file has to be in the tagged commit.
+# The Actions button appears once this file is on the repository default branch.
+# See docs/native-publishing.md.
 #
-# Code signing is deferred. The plug-in point is the env block on the
-# tauri-action step. Leave the Apple secrets empty and the build stays
-# unsigned. Do not add Azure Trusted Signing.
+# Code signing is deferred. Sign the finished binary with codesign or signtool
+# in a later step. Do not add Azure Trusted Signing.
 
 name: Publish native builds
 
@@ -24,112 +25,122 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  test:
-    name: Test phext model
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Test document, zoom, and outline
-        working-directory: native
-        run: cargo test -p phext-notepad-core
-
-  publish:
-    name: Build ${{ matrix.platform }}
-    needs: test
-    if: startsWith(github.ref, 'refs/tags/')
+  build:
+    name: ${{ matrix.os }}
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: ubuntu-22.04
-            bundles: deb,appimage
-            rust_targets: ""
-          - platform: macos-latest
-            bundles: dmg,app
-            rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
-            extra_args: --target universal-apple-darwin
-          - platform: windows-latest
-            bundles: nsis,msi
-            rust_targets: ""
-    runs-on: ${{ matrix.platform }}
+        os: [ubuntu-22.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.rust_targets }}
 
-      - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Install FLTK build libraries
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y \
+            build-essential cmake pkg-config \
+            libx11-dev libxext-dev libxft-dev libxinerama-dev \
+            libxcursor-dev libxrender-dev libxfixes-dev \
+            libpango1.0-dev libcairo2-dev libfontconfig1-dev \
+            libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Install CMake
+        shell: bash
+        run: |
+          if ! command -v cmake >/dev/null 2>&1; then
+            if command -v brew >/dev/null 2>&1; then
+              brew install cmake
+            elif command -v choco >/dev/null 2>&1; then
+              choco install cmake -y --no-progress
+            else
+              sudo apt-get update
+              sudo apt-get install -y cmake
+            fi
+          fi
+          cmake --version
 
       - name: Set the app version from the tag
+        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         working-directory: native
-        run: node scripts/set-version.mjs "${GITHUB_REF_NAME#v}"
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          case "$version" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "Tag is not MAJOR.MINOR.PATCH; leaving Cargo.toml versions." && exit 0 ;;
+          esac
+          for file in app/Cargo.toml core/Cargo.toml; do
+            awk -v ver="$version" '
+              BEGIN { done = 0 }
+              !done && /^version = "/ { sub(/"[^"]*"/, "\"" ver "\""); done = 1 }
+              { print }
+            ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+          done
 
-      - name: Install the Tauri CLI
+      - name: Test the phext model
         working-directory: native
-        run: npm ci
+        run: cargo test -p phext-notepad-core
 
-      # Unsigned build. macOS signing and notarization turn on by themselves
-      # when these repository secrets exist (Settings → Secrets → Actions).
-      # Windows Authenticode is not wired; add bundle.windows.signCommand in
-      # native/src-tauri/tauri.conf.json when there is a certificate.
-      # APPLE_CERTIFICATE is the .p12, base64, one line.
-      # APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
-      # APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID.
-      - name: Build and attach release assets
-        uses: tauri-apps/tauri-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Build the release binary
+        working-directory: native
+        run: cargo build --release -p phext-notepad
+
+      - name: Package the binary
+        shell: bash
+        working-directory: native
+        run: |
+          case "${{ runner.os }}" in
+            Linux) os_name=linux ;;
+            macOS) os_name=macos ;;
+            Windows) os_name=windows ;;
+          esac
+          arch=$(uname -m)
+          case "$arch" in
+            arm64|aarch64) arch=aarch64 ;;
+            x86_64|amd64) arch=x86_64 ;;
+          esac
+          bin="phext-notepad"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            bin="phext-notepad.exe"
+          fi
+          name="phext-notepad-${os_name}-${arch}"
+          mkdir -p dist
+          cp "target/release/${bin}" "dist/${bin}"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            archive="${name}.zip"
+            tar -a -cf "dist/${archive}" -C dist "$bin"
+          else
+            archive="${name}.tar.gz"
+            tar -czf "dist/${archive}" -C dist "$bin"
+          fi
+          echo "ARCHIVE_NAME=${archive}" >> "$GITHUB_ENV"
+          echo "ARCHIVE_PATH=native/dist/${archive}" >> "$GITHUB_ENV"
+          ls -lh "target/release/${bin}" "dist/${archive}"
+
+      - name: Upload the archive
+        uses: actions/upload-artifact@v4
         with:
-          projectPath: native
-          tagName: ${{ github.ref_name }}
-          releaseName: Phext Notepad ${{ github.ref_name }}
-          releaseDraft: false
-          prerelease: false
-          retryAttempts: 3
-          uploadUpdaterJson: false
-          uploadWorkflowArtifacts: true
-          args: --bundles ${{ matrix.bundles }} ${{ matrix.extra_args }}
-          releaseBody: |
-            ## Install
+          name: ${{ env.ARCHIVE_NAME }}
+          path: ${{ env.ARCHIVE_PATH }}
 
-            Open this page and choose Windows, macOS, or Linux. You do not need a GitHub account.
-
-            https://wbic16.github.io/phext-notepad/
-
-            The files on this release are unsigned native builds:
-
-            - Windows: the NSIS setup exe and the `.msi`
-            - macOS: a universal `.dmg` (Apple silicon and Intel) and the app
-            - Linux: `.deb` and `.AppImage`
-
-            Windows may say it protected your PC. Choose **More info**, then **Run anyway**. macOS may say the developer cannot be verified. Right-click the app, choose **Open**, then **Open** again.
-
-            Code signing is not part of this release. The publish workflow has a place for an Apple Developer ID certificate; Windows Authenticode is not wired up, and this project does not use Azure signing.
-
-            The Windows ClickOnce installer, when that publish succeeds, is still the **Download for Windows** button on the page above.
+      - name: Attach the archive to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --title "Phext Notepad ${tag}" \
+              --notes "Unsigned native binaries are attached as zip and tar.gz archives. The install page links to them. https://wbic16.github.io/phext-notepad/"
+          fi
+          gh release upload "$tag" "$ARCHIVE_PATH" --clobber

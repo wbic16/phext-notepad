@@ -10,11 +10,12 @@
 //! * inner / x / 4D — chapter.section.scroll, inside the current book
 //!
 //! Those names and the drill direction match `zoom_z` / `zoom_y` / `zoom_x`
-//! in phext-lattice's editor. Dimension steps use phext-lattice's
-//! `CoordinateNav`, so moving library or book resets the dimensions below it
-//! the same way a phext break does.
+//! in phext-lattice's editor. Dimension steps follow that editor's
+//! `CoordinateNav` (see `nav`), so moving library or book resets the
+//! dimensions below it the same way a phext break does.
 
 pub mod document;
+pub mod nav;
 pub mod prefs;
 pub mod zoom;
 

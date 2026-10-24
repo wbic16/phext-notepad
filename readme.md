@@ -17,9 +17,9 @@ The download page starts working after a version is published. Publishing steps 
 
 ## Native builds for Windows, macOS, and Linux
 
-The cross-platform editor is in [`native/`](native/). It keeps the WinForms app in this folder as the Windows ClickOnce build. The native app is Rust and Tauri. Phext bytes go through [libphext-rs](https://github.com/wbic16/libphext-rs). Zoom and dimension steps come from [phext-lattice](https://github.com/wbic16/phext-lattice): outer `library.shelf.series` (11D), middle `collection.volume.book` (7D), and inner `chapter.section.scroll` (4D).
+The cross-platform editor is in [`native/`](native/). It keeps the WinForms app in this folder as the Windows ClickOnce build. The native app is Rust and FLTK, with no web view. Phext bytes go through [libphext-rs](https://github.com/wbic16/libphext-rs). Zoom follows the three coordinate arms: outer `library.shelf.series` (11D), middle `collection.volume.book` (7D), and inner `chapter.section.scroll` (4D). Dimension steps match [phext-lattice](https://github.com/wbic16/phext-lattice) `CoordinateNav`, copied into the native crate so the memory-map and rayon dependencies stay out.
 
-A version tag on `exo` builds unsigned installers for all three systems and attaches them to the GitHub Release. The install page links to those files. Steps are in [docs/native-publishing.md](docs/native-publishing.md).
+A version tag on `exo` builds unsigned binaries for all three systems and attaches zip or tar.gz archives to the GitHub Release. The install page links to those files. Steps are in [docs/native-publishing.md](docs/native-publishing.md).
 
 Historical Note
 ---------------

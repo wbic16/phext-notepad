@@ -4,49 +4,55 @@ Cross-platform Phext Notepad for Windows, macOS, and Linux. The C# WinForms app 
 
 ## Stack
 
-Rust and [Tauri](https://tauri.app/) 2. The window is HTML and CSS. The phext model is a separate crate, `core/`, so it can be tested without a window.
+Rust and [FLTK](https://www.fltk.org/) through [fltk-rs](https://github.com/fltk-rs/fltk-rs). The window, tree, text editor, and open/save dialogs are FLTK widgets. FLTK is compiled into the binary (`fltk-bundled`), so a machine that runs the app does not need FLTK installed. There is no web view and no Node.js.
 
-- [libphext-rs](https://github.com/wbic16/libphext-rs) 0.3.1 opens and saves phext (`explode` / `implode`, coordinate parsing limits, break rules). This is the same crate [phext-lattice](https://github.com/wbic16/phext-lattice) depends on. libphext-py is the Python port of that format; it is not used here because the desktop shells are Rust.
-- phext-lattice, pinned to `exo` commit `7c91992`, supplies `CoordinateNav`. Stepping a dimension forward or back resets the dimensions below it, matching a phext break.
+The phext model is a separate crate, `core/`, so it can be tested without a window.
+
+- [libphext-rs](https://github.com/wbic16/libphext-rs) 0.3.1 opens and saves phext (`explode` / `implode`, coordinate limits, break rules). This is the same crate [phext-lattice](https://github.com/wbic16/phext-lattice) depends on. libphext-py is the Python port of that format. It is not linked here.
+- Dimension steps match phext-lattice `CoordinateNav` at exo commit `7c91992`. Stepping a dimension forward or back resets the dimensions below it, matching a phext break. That code lives in `core/src/nav.rs`. phext-lattice itself is not a dependency: its memmap2, rayon, and tempfile crates are required even when unused, and this editor does not use them.
 - Zoom is the lattice's three tiers, built into the outline rather than layered on afterwards:
   - **Outer / 11D / z** — `library.shelf.series`
   - **Middle / 7D / y** — `collection.volume.book` inside the current outer arm
   - **Inner / 4D / x** — `chapter.section.scroll` inside the current book, which is the scroll you edit
-- Colors follow phext-edit: cyan Z, magenta Y, green X, gold coordinates, on the lattice dark paper. Light mode uses the install-page paper. The default theme follows the operating system.
 
-The lattice memory-map and sentron panel are not in this editor. Notepad holds the scrolls in memory the way the WinForms app does. That mmap index is the path for very large files later.
+The lattice memory-map and sentron panel are not in this editor. Notepad holds the scrolls in memory the way the WinForms app does.
 
 ## What it does
 
 - New, open, and save `.phext` files, plus the embedded baseline
 - Coordinate bar: `library.shelf.series / collection.volume.book / chapter.section.scroll`
 - Outline of the arm you are zoomed to, side by side with the scroll editor
-- Draggable splitter. Hiding the tree gives the editor the whole row. The width and the hidden state are saved.
+- Draggable splitter. Hiding the tree gives the editor the whole row. The width is kept while the tree is hidden, and both are saved.
+- Three zoom levels. The tree and the coordinate bar follow the current level. Double-click a row to zoom in.
 - Dark, light, or follow the system
 - Recent files, word wrap, line and column
 
 Not carried over from WinForms: SQ sync, vim keys, scroll lock, font settings, and the hierarchical checksum panel.
 
+## Crates
+
+Two crates are linked into the app, and each one earns its place:
+
+| Crate | Why it is here |
+| --- | --- |
+| `libphext` | Phext `explode` / `implode` and the coordinate type. Rewriting the format would drift from the other phext tools. |
+| `fltk` | The window, tree, editor, and native file dialogs. The `fltk-bundled` feature compiles FLTK in, so Windows, macOS, and Linux builds do not need a system copy. Image decoders and OpenGL are off. |
+
+`fltk` also brings its own small crates (`fltk-sys`, and a font parser). CMake is a build tool, used while FLTK is compiled, and it is not linked into the exe. Preferences are a hand-written `key=value` file. The outline and the dimension steps are hand-written in `core/`.
+
 ## Develop
 
-Rust 1.90 or newer. On Linux, WebKitGTK 4.1 development headers. On Windows, the WebView2 runtime (already on Windows 11).
-
-`cargo build` embeds `ui/` into the executable. Run that file directly. A plain debug build used to open `http://127.0.0.1:1420` and show a blank page when nothing was listening there.
+Rust 1.90 or newer. A C++ compiler and CMake are needed the first time FLTK is compiled. Linux also needs the X11, Cairo, and Pango development packages listed in [docs/native-publishing.md](../docs/native-publishing.md).
 
 ```sh
 cd native
 cargo test -p phext-notepad-core
-cargo build -p phext-notepad-native
+cargo build --release -p phext-notepad
+./target/release/phext-notepad
 ```
 
-The executable is `target/debug/phext-notepad-native` (`target\debug\phext-notepad-native.exe` on Windows).
+On Windows the executable is `target\release\phext-notepad.exe`. A debug build is `cargo build -p phext-notepad` and `target\debug\phext-notepad.exe`.
 
-`npm run tauri dev` rebuilds while you edit and serves `ui/` with Tauri's own file server. `npm run tauri build` produces the installer and a release executable at `target/release/phext-notepad-native`. Node.js is only required for those two npm commands. Windows setup is in [docs/native-publishing.md](../docs/native-publishing.md#running-on-windows).
-
-`ui/fixture.json` is the baseline rendered by `cargo run -p phext-notepad-core --bin dump-fixture`. Opening `ui/index.html` from a local web server uses that fixture when Tauri is not there, so the layout can be checked in a browser. Open and save dialogs need the native shell.
+`cargo tree --prefix none | sort -u | wc -l` counts the crates in the resolved graph.
 
 Release builds are described in [docs/native-publishing.md](../docs/native-publishing.md).
-
-## Dependencies
-
-`ui/` is plain HTML, CSS, and JavaScript. Nothing bundles it. `package-lock.json` lists 12 packages, and every one is `@tauri-apps/cli` or a per-OS build of that CLI. `Cargo.lock` lists the crates the native app compiles. The window is Tauri with its default compression turned off, so those files are stored in the executable as themselves. Open and save call `rfd` directly. libphext and phext-lattice stay. Lattice also depends on its memory-map and rayon crates; this editor does not call them.

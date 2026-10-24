@@ -87,24 +87,20 @@
       <li>If a window says the publisher is unknown, click <strong>Install</strong>.</li>
       <li>Open Phext Notepad from the Start menu or the desktop shortcut.</li>
     </ol>
-    <p><a class="download secondary" id="download-windows-native" href="https://github.com/wbic16/phext-notepad/releases/latest">Native Windows installer</a></p>
-    <p>The native installer is a separate build. It does not update itself. Use it when you want the same app as the macOS and Linux builds.</p>
+    <p><a class="download secondary" id="download-windows-native" href="https://github.com/wbic16/phext-notepad/releases/latest">Native Windows build</a></p>
+    <p>The native build is a separate zip with <strong>phext-notepad.exe</strong> inside. It does not update itself. Unzip it and run the exe. Use it when you want the same app as the macOS and Linux builds. It does not need WebView2.</p>
 
     <h2>macOS</h2>
-    <p>This is a disk image for Apple silicon and Intel Macs.</p>
+    <p>This is a tar.gz archive for Apple silicon. Unzip it and run <strong>phext-notepad</strong>.</p>
     <p><a class="download" id="download-mac" href="https://github.com/wbic16/phext-notepad/releases/latest">Download for macOS</a></p>
     <ol>
-      <li>Open the <strong>.dmg</strong> file and drag Phext Notepad to Applications.</li>
+      <li>Open the archive and move <strong>phext-notepad</strong> where you want it.</li>
       <li>The app is not signed yet. If macOS says the developer cannot be verified, right-click the app, choose <strong>Open</strong>, then choose <strong>Open</strong> again.</li>
     </ol>
 
     <h2>Linux</h2>
-    <p>Use the AppImage on most desktops, or the <strong>.deb</strong> package on Debian and Ubuntu.</p>
-    <p>
-      <a class="download" id="download-linux-appimage" href="https://github.com/wbic16/phext-notepad/releases/latest">Download for Linux (AppImage)</a>
-      <a class="download secondary" id="download-linux-deb" href="https://github.com/wbic16/phext-notepad/releases/latest">Download .deb</a>
-    </p>
-    <p>For the AppImage, mark the file executable and open it. These builds are not signed.</p>
+    <p>The archive contains one file, <strong>phext-notepad</strong>. Mark it executable and run it. This build is not signed.</p>
+    <p><a class="download" id="download-linux" href="https://github.com/wbic16/phext-notepad/releases/latest">Download for Linux</a></p>
 
     <div class="note">
       <p id="download-note">The macOS, Linux, and native Windows buttons use the latest GitHub Release. They start working after a version is published. Until then they open the releases page.</p>
@@ -134,12 +130,14 @@
           if (link && url) link.href = url;
         }
         setLink("download-mac", pick(function (name) {
-          return name.endsWith(".dmg") || name.endsWith(".app.tar.gz") || name.endsWith(".app.zip");
+          return name.indexOf("macos") !== -1 && (name.endsWith(".tar.gz") || name.endsWith(".zip"));
         }));
-        setLink("download-linux-appimage", pick(function (name) { return name.endsWith(".appimage"); }));
-        setLink("download-linux-deb", pick(function (name) { return name.endsWith(".deb"); }));
-        setLink("download-windows-native", pick(function (name) { return name.endsWith("-setup.exe"); })
-          || pick(function (name) { return name.endsWith(".msi"); }));
+        setLink("download-linux", pick(function (name) {
+          return name.indexOf("linux") !== -1 && (name.endsWith(".tar.gz") || name.endsWith(".zip"));
+        }));
+        setLink("download-windows-native", pick(function (name) {
+          return name.indexOf("windows") !== -1 && (name.endsWith(".zip") || name.endsWith(".exe"));
+        }));
         var note = document.getElementById("download-note");
         if (note && release.tag_name) {
           note.textContent = "Native downloads are from release " + release.tag_name + ". They are not code-signed.";
