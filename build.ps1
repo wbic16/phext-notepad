@@ -35,3 +35,4 @@ git tag $version -f
 git push -f
 git push --tags -f
 Write-Host "Released $version into the wild..."
+Write-Host "ClickOnce: a tag named v$version or $version publishes the Windows installer. See docs/publishing.md."

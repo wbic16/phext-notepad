@@ -2,6 +2,19 @@ Phext Notepad
 -------------
 phext notepad provides a reference implementation of 11 dimensional plain hypertext in C#. You can use this editor to test your tools and verify that your phext encoding is accurate. If you find any bugs in this implementation, please file a bug report!
 
+## Install on Windows
+
+You do not need a GitHub account.
+
+1. Open <https://wbic16.github.io/phext-notepad/>.
+2. Click **Download Phext Notepad**. That saves a file named `setup.exe`.
+3. Open `setup.exe`. If Windows says it protected your PC, click **More info**, then **Run anyway**. If a window says the publisher is unknown, click **Install**.
+4. Open Phext Notepad from the Start menu or the desktop shortcut.
+
+This is for 64-bit Windows 10 or Windows 11. You do not install .NET yourself. The next time a new version is published, the app asks to update when you open it.
+
+The download page starts working after a version is published. Publishing steps are in [docs/publishing.md](docs/publishing.md).
+
 Historical Note
 ---------------
 Phext Notepad was written before libphext-rs or libphext-node. It was the implementation I used to improve my ability to reason about sparse text volumes, prior to the creation of phext-native editors. It bridges the gap between 11D text and plain text. You should think of Phext Notepad as an historic artifact - a reference editor.
