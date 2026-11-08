@@ -1,11 +1,15 @@
 //! An in-memory phext. Scrolls live in a map keyed by [`Coordinate`].
-//! Open and save go through libphext's `explode` / `implode`.
+//! Open and save go through [`crate::parse`]: single-pass equivalents of
+//! libphext's `explode` / `implode` that stay proportional to the occupied
+//! scrolls (libphext 0.3.1's `explode` is quadratic in file size, and its
+//! `implode` forced a full clone of every scroll on each call).
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use libphext::phext::{default_coordinate, Coordinate, COORDINATE_MAXIMUM, COORDINATE_MINIMUM};
 
+use crate::parse;
 use crate::prefs::Prefs;
 use crate::zoom::{self, Crumb, DimView, OutlineNode, ZoomLevel};
 
@@ -59,7 +63,19 @@ pub struct Document {
     dirty: bool,
     virtual_name: Option<String>,
     message: String,
+    /// Length of the serialized phext, maintained arithmetically by
+    /// [`parse::serialized_len`] — never by serializing.
     byte_count: usize,
+    /// Sum of the word counts of every scroll, maintained incrementally
+    /// so `view()` does not rescan the whole document.
+    total_words: usize,
+    /// Bumped on every scroll mutation. Together with the zoom and the
+    /// coordinate it keys the outline cache: the outline is a pure
+    /// function of (scrolls, zoom, coordinate), and rebuilding it walks
+    /// every occupied scroll, so repeated views at the same position
+    /// reuse the last build instead.
+    revision: u64,
+    outline_cache: std::cell::RefCell<Option<(u64, ZoomLevel, Coordinate, Vec<OutlineNode>)>>,
 }
 
 impl Document {
@@ -80,19 +96,18 @@ impl Document {
             virtual_name: None,
             message: String::new(),
             byte_count: 0,
+            total_words: 0,
+            revision: 0,
+            outline_cache: std::cell::RefCell::new(None),
         }
     }
 
     pub fn from_phext(text: &str, path: Option<PathBuf>) -> Self {
         let text = text.strip_prefix('\u{feff}').unwrap_or(text);
-        let exploded = libphext::phext::explode(text);
-        let mut scrolls = BTreeMap::new();
-        for (coord, scroll) in exploded {
-            if !scroll.is_empty() {
-                scrolls.insert(coord, scroll);
-            }
-        }
-        let mut doc = Self {
+        let scrolls = parse::explode(text);
+        let total_words = scrolls.values().map(|text| word_count(text)).sum();
+        let byte_count = parse::serialized_len(&scrolls);
+        Self {
             scrolls,
             coordinate: default_coordinate(),
             zoom: ZoomLevel::Inner,
@@ -100,10 +115,11 @@ impl Document {
             dirty: false,
             virtual_name: None,
             message: String::new(),
-            byte_count: 0,
-        };
-        doc.byte_count = doc.serialize().len();
-        doc
+            byte_count,
+            total_words,
+            revision: 0,
+            outline_cache: std::cell::RefCell::new(None),
+        }
     }
 
     pub fn load_path(&mut self, path: &Path) -> Result<(), String> {
@@ -135,12 +151,7 @@ impl Document {
     }
 
     pub fn serialize(&self) -> String {
-        let map: HashMap<Coordinate, String> = self
-            .scrolls
-            .iter()
-            .map(|(coord, text)| (*coord, text.clone()))
-            .collect();
-        libphext::phext::implode(map)
+        parse::serialize(&self.scrolls)
     }
 
     pub fn set_scroll(&mut self, text: &str) {
@@ -148,6 +159,11 @@ impl Document {
         if current == text {
             return;
         }
+        // Keep the running totals exact without rescanning the document:
+        // words adjust by the edited scroll's delta, and the byte count
+        // is an arithmetic walk over the map (no string is built).
+        self.total_words -= word_count(current);
+        self.total_words += word_count(text);
         if text.is_empty() {
             self.scrolls.remove(&self.coordinate);
         } else {
@@ -155,7 +171,27 @@ impl Document {
         }
         self.dirty = true;
         self.message.clear();
-        self.byte_count = self.serialize().len();
+        self.byte_count = parse::serialized_len(&self.scrolls);
+        self.revision += 1;
+    }
+
+    /// The outline for the current zoom and coordinate, rebuilt only
+    /// when the scrolls, zoom, or coordinate changed since the last one.
+    fn outline(&self) -> Vec<OutlineNode> {
+        if let Some((revision, zoom, coordinate, outline)) = &*self.outline_cache.borrow() {
+            if *revision == self.revision && *zoom == self.zoom && *coordinate == self.coordinate
+            {
+                return outline.clone();
+            }
+        }
+        let outline = zoom::outline(&self.scrolls, self.zoom, self.coordinate);
+        *self.outline_cache.borrow_mut() = Some((
+            self.revision,
+            self.zoom,
+            self.coordinate,
+            outline.clone(),
+        ));
+        outline
     }
 
     pub fn scroll_text(&self) -> &str {
@@ -253,7 +289,7 @@ impl Document {
     pub fn view(&self, origin: &str, prefs: &Prefs) -> DocumentView {
         let coordinate = format!("{}", self.coordinate);
         let scroll = self.scroll_text().to_string();
-        let words: usize = self.scrolls.values().map(|text| word_count(text)).sum();
+        let words = self.total_words;
         let summary = format!(
             "LB: {}  SF: {}  SR: {}  /  CN: {}  VM: {}  BK: {}  /  CH: {}  SN: {}  SC: {}    Bytes: {}, Words (Total): {}, Words (Page): {}",
             self.coordinate.z.library,
@@ -298,7 +334,7 @@ impl Document {
             arms,
             crumbs: zoom::crumbs(self.zoom, self.coordinate),
             outline_title: format!("{} · {}", self.zoom.subspace(), self.zoom.arm_title()),
-            outline: zoom::outline(&self.scrolls, self.zoom, self.coordinate),
+            outline: self.outline(),
             scroll,
             path: self.path.as_ref().map(|path| path.display().to_string()),
             filename: self.filename(),
@@ -521,6 +557,67 @@ mod tests {
         doc.jump("1.2.3/4.5.6/7.8.9").unwrap();
         doc.nudge("book", 1).unwrap();
         assert_eq!(format!("{}", doc.coordinate()), "1.2.3/4.5.7/1.1.1");
+    }
+
+    #[test]
+    fn totals_track_edits_without_a_rescan() {
+        let mut doc = sample();
+        let view = doc.view("open", &Prefs::default());
+        assert_eq!(view.bytes, doc.serialize().len());
+        assert_eq!(
+            view.words,
+            doc.scrolls.values().map(|text| word_count(text)).sum::<usize>()
+        );
+        doc.jump("1.1.1/1.1.1/1.1.2").unwrap();
+        doc.set_scroll("one two three four");
+        let view = doc.view("edit", &Prefs::default());
+        assert_eq!(view.bytes, doc.serialize().len());
+        assert_eq!(
+            view.words,
+            doc.scrolls.values().map(|text| word_count(text)).sum::<usize>()
+        );
+        doc.set_scroll("");
+        let view = doc.view("edit", &Prefs::default());
+        assert_eq!(view.bytes, doc.serialize().len());
+        assert_eq!(
+            view.words,
+            doc.scrolls.values().map(|text| word_count(text)).sum::<usize>()
+        );
+        // A scroll created far from every other scroll: the byte count
+        // must pick up the full break run to reach it.
+        doc.jump("50.60.70/80.90.100/110.120.130").unwrap();
+        doc.set_scroll("far away");
+        let view = doc.view("edit", &Prefs::default());
+        assert_eq!(view.bytes, doc.serialize().len());
+    }
+
+    #[test]
+    fn cached_outline_matches_a_fresh_build() {
+        let mut doc = sample();
+        doc.set_zoom(ZoomLevel::Outer);
+        let first = doc.view("open", &Prefs::default());
+        // Second view at the same position takes the cache path.
+        let second = doc.view("again", &Prefs::default());
+        assert_eq!(first.outline, second.outline);
+        assert_eq!(
+            second.outline,
+            zoom::outline(doc.scrolls(), ZoomLevel::Outer, doc.coordinate())
+        );
+        // An edit invalidates the cache.
+        doc.set_scroll("changed alpha line");
+        let third = doc.view("edit", &Prefs::default());
+        assert_eq!(
+            third.outline,
+            zoom::outline(doc.scrolls(), ZoomLevel::Outer, doc.coordinate())
+        );
+        assert_ne!(third.outline, first.outline);
+        // So does a jump.
+        doc.jump("1.1.2/1.1.1/1.1.1").unwrap();
+        let fourth = doc.view("navigate", &Prefs::default());
+        assert_eq!(
+            fourth.outline,
+            zoom::outline(doc.scrolls(), ZoomLevel::Outer, doc.coordinate())
+        );
     }
 
     #[test]

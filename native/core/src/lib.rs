@@ -1,7 +1,10 @@
 //! Document model for the cross-platform Phext Notepad.
 //!
-//! Phext bytes go through [`libphext`] (the same crate phext-lattice uses):
-//! `explode` on open, `implode` on save. Zoom is not a view trick on top of a
+//! Phext bytes are parsed and serialized by [`parse`], a single-pass
+//! sparse implementation that is byte-compatible with [`libphext`] (the
+//! crate phext-lattice uses) — libphext 0.3.1's `explode` is quadratic in
+//! file size, which made multi-megabyte phexts take seconds to open.
+//! Zoom is not a view trick on top of a
 //! flat tree. A coordinate is three arms, and the outline is always built for
 //! the arm the user is in:
 //!
@@ -16,6 +19,7 @@
 
 pub mod document;
 pub mod nav;
+pub mod parse;
 pub mod prefs;
 pub mod zoom;
 
