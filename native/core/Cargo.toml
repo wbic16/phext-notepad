@@ -9,4 +9,10 @@ rust-version = "1.90"
 publish = false
 
 [dependencies]
-libphext = "0.3.1"
+# libphext 0.5.0 is the parity target (unbounded coordinates, binary
+# scrolls, xz seal), but crates.io tops out at 0.4.0 — 0.5.0 exists only
+# in-tree on libphext-rs exo. Pin the git source to the exact exo commit
+# that carries 0.5.0 so a fresh clone reproduces this build bit-for-bit
+# (Cargo.lock records the same rev). The binary and xz features gate the
+# base64 and xz2 dependencies, mirroring upstream's own feature layout.
+libphext = { git = "https://github.com/wbic16/libphext-rs", rev = "e85d8b5676c6461e6bad6a89fe7a3d2eb06f552d", features = ["binary", "xz"] }

@@ -1,13 +1,19 @@
 //! An in-memory phext. Scrolls live in a map keyed by [`Coordinate`].
 //! Open and save go through [`crate::parse`]: single-pass equivalents of
 //! libphext's `explode` / `implode` that stay proportional to the occupied
-//! scrolls (libphext 0.3.1's `explode` is quadratic in file size, and its
+//! scrolls (libphext 0.3.1's `explode` was quadratic in file size, and its
 //! `implode` forced a full clone of every scroll on each call).
+//!
+//! Coordinates follow libphext 0.5.0 semantics: components are unbounded
+//! (the 0.3.1 `COORDINATE_MAXIMUM` of 1000, which silently collapsed
+//! large files, is gone). Byte-level scroll access, ingestion of foreign
+//! byte streams, and the xz seal live here and in [`crate::binary`] /
+//! [`crate::seal`].
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use libphext::phext::{default_coordinate, Coordinate, COORDINATE_MAXIMUM, COORDINATE_MINIMUM};
+use libphext::phext::{default_coordinate, Coordinate, COORDINATE_MINIMUM};
 
 use crate::parse;
 use crate::prefs::Prefs;
@@ -175,6 +181,66 @@ impl Document {
         self.revision += 1;
     }
 
+    /// The bytes held at the current coordinate, with libphext 0.5.0
+    /// `fetch_binary` semantics: a well-formed binary scroll decodes to
+    /// its payload; any other scroll (plain text, a malformed binary
+    /// scroll) yields its own UTF-8 bytes; an unoccupied coordinate
+    /// yields no bytes.
+    pub fn scroll_bytes(&self) -> Vec<u8> {
+        let scroll = self.scroll_text();
+        match crate::binary::decode_scroll(scroll) {
+            Some(bytes) => bytes,
+            None => scroll.as_bytes().to_vec(),
+        }
+    }
+
+    /// Store `payload` at the current coordinate under the 0.5.0
+    /// ingestion rule: valid UTF-8 stays ordinary text; anything else is
+    /// stored as a binary scroll holding the base64 of the exact bytes,
+    /// verbatim, so [`Document::scroll_bytes`] returns them exactly.
+    pub fn set_scroll_bytes(&mut self, payload: &[u8]) {
+        match std::str::from_utf8(payload) {
+            Ok(text) => self.set_scroll(text),
+            Err(_) => {
+                let stored = crate::binary::encode_scroll(payload);
+                self.set_scroll(&stored);
+            }
+        }
+    }
+
+    /// Store `payload` at the current coordinate as a binary scroll,
+    /// unconditionally — the caller has declared this scroll binary,
+    /// even if the bytes happen to be valid UTF-8.
+    pub fn set_binary_scroll(&mut self, payload: &[u8]) {
+        let stored = crate::binary::encode_scroll(payload);
+        self.set_scroll(&stored);
+    }
+
+    /// Build a document from a raw phext byte stream (the 0.5.0 `ingest`
+    /// path): valid UTF-8 opens as ordinary text; a stream carrying
+    /// non-UTF-8 scrolls has those scrolls stored as binary scrolls
+    /// holding the exact observed bytes. Never rejects.
+    pub fn from_bytes(bytes: &[u8], path: Option<PathBuf>) -> Self {
+        match std::str::from_utf8(bytes) {
+            Ok(text) => Self::from_phext(text, path),
+            Err(_) => Self::from_phext(&crate::binary::ingest(bytes), path),
+        }
+    }
+
+    /// Build a document from xz-sealed phext bytes (see [`crate::seal`]).
+    /// The unsealed bytes go through the same ingestion rule as
+    /// [`Document::from_bytes`], so a sealed foreign stream opens too.
+    pub fn from_sealed(bytes: &[u8], path: Option<PathBuf>) -> Result<Self, String> {
+        let raw = crate::seal::unseal(bytes).map_err(|err| err.to_string())?;
+        Ok(Self::from_bytes(&raw, path))
+    }
+
+    /// Seal the document's serialized bytes (xz, preset 6). The seal is
+    /// a transport/storage form only; the working document stays text.
+    pub fn seal(&self) -> std::io::Result<Vec<u8>> {
+        crate::seal::seal(&self.serialize())
+    }
+
     /// The outline for the current zoom and coordinate, rebuilt only
     /// when the scrolls, zoom, or coordinate changed since the last one.
     fn outline(&self) -> Vec<OutlineNode> {
@@ -203,7 +269,7 @@ impl Document {
 
     pub fn jump(&mut self, text: &str) -> Result<(), String> {
         let coord = parse_coordinate(text).ok_or_else(|| {
-            "Use a coordinate like 1.1.1/1.1.1/1.1.1. Each number is from 1 to 1000.".to_string()
+            "Use a coordinate like 1.1.1/1.1.1/1.1.1. Each number must be 1 or larger.".to_string()
         })?;
         self.coordinate = coord;
         self.message.clear();
@@ -381,7 +447,7 @@ pub fn parse_coordinate(address: &str) -> Option<Coordinate> {
                 return None;
             }
             let value: usize = part.parse().ok()?;
-            if !(COORDINATE_MINIMUM..=COORDINATE_MAXIMUM).contains(&value) {
+            if value < COORDINATE_MINIMUM {
                 return None;
             }
             numbers[arm_index * 3 + part_index] = value;
@@ -444,7 +510,12 @@ mod tests {
         assert_eq!(format!("{url}"), "1.1.1/1.1.1/1.1.2");
         assert!(parse_coordinate("1.1.1/1.1.1").is_none());
         assert!(parse_coordinate("0.1.1/1.1.1/1.1.1").is_none());
-        assert!(parse_coordinate("1.1.1/1.1.1/1.1.1001").is_none());
+        // 0.5.0 parity: components are unbounded — past the old 1000 cap
+        // and past the WinForms app's old 32,767 wrap alike.
+        let past_cap = parse_coordinate("1.1.1/1.1.1/1.1.1001").unwrap();
+        assert_eq!(format!("{past_cap}"), "1.1.1/1.1.1/1.1.1001");
+        let ultra_max = parse_coordinate("9.9.9/9.9.9/9.9.223854").unwrap();
+        assert_eq!(format!("{ultra_max}"), "9.9.9/9.9.9/9.9.223854");
         assert!(parse_coordinate("1.1.1/1.1.1/1.1.a").is_none());
     }
 
@@ -618,6 +689,77 @@ mod tests {
             fourth.outline,
             zoom::outline(doc.scrolls(), ZoomLevel::Outer, doc.coordinate())
         );
+    }
+
+    #[test]
+    fn coordinates_past_the_old_caps_navigate_and_round_trip() {
+        let mut doc = Document::empty();
+        // Jump to ultra.phext's maximum scroll coordinate.
+        doc.jump("9.9.9/9.9.9/9.9.223854").unwrap();
+        doc.set_scroll("floatable was here");
+        // Nudge across the old 1000 cap in a fresh document.
+        let mut near = Document::empty();
+        near.jump("1.1.1/1.1.1/1.1.999").unwrap();
+        near.nudge("scroll", 2).unwrap();
+        assert_eq!(format!("{}", near.coordinate()), "1.1.1/1.1.1/1.1.1001");
+        // The far scroll survives a serialize/reload round trip at its
+        // true coordinate, as the document's second scroll.
+        let again = Document::from_phext(&doc.serialize(), None);
+        assert_eq!(again.scrolls().len(), 1);
+        let mut again = again;
+        again.jump("9.9.9/9.9.9/9.9.223854").unwrap();
+        assert_eq!(again.scroll_text(), "floatable was here");
+    }
+
+    #[test]
+    fn binary_scrolls_round_trip_through_the_document() {
+        let mut doc = Document::empty();
+        // Non-UTF-8 payload, including dimension-break bytes: armoured
+        // as base64, it returns verbatim.
+        let payload: Vec<u8> = vec![0xFF, 0x17, 0x1C, 0x80, 0x00, 0x61];
+        doc.set_scroll_bytes(&payload);
+        assert!(crate::binary::is_binary_scroll(doc.scroll_text()));
+        assert_eq!(doc.scroll_bytes(), payload);
+        // UTF-8 bytes stay ordinary text.
+        doc.jump("1.1.1/1.1.1/1.1.2").unwrap();
+        doc.set_scroll_bytes("ordinary text ✓".as_bytes());
+        assert_eq!(doc.scroll_text(), "ordinary text ✓");
+        assert_eq!(doc.scroll_bytes(), "ordinary text ✓".as_bytes());
+        // Unconditional binary storage, even for valid UTF-8 bytes.
+        doc.jump("1.1.1/1.1.1/1.1.3").unwrap();
+        doc.set_binary_scroll(b"declared binary");
+        assert!(crate::binary::is_binary_scroll(doc.scroll_text()));
+        assert_eq!(doc.scroll_bytes(), b"declared binary");
+        // A malformed binary scroll fetches its own bytes verbatim.
+        doc.jump("1.1.1/1.1.1/1.1.4").unwrap();
+        doc.set_scroll("phext-binary:1:base64\n!!!");
+        assert_eq!(doc.scroll_bytes(), b"phext-binary:1:base64\n!!!");
+        // And everything survives serialization.
+        let again = Document::from_phext(&doc.serialize(), None);
+        assert_eq!(again.scrolls(), doc.scrolls());
+    }
+
+    #[test]
+    fn from_bytes_ingests_a_foreign_stream() {
+        let mut stream: Vec<u8> = Vec::new();
+        stream.extend_from_slice(b"hello");
+        stream.push(0x17); // SCROLL_BREAK
+        stream.extend_from_slice(&[0xFF, 0xFE, 0x41, 0x80]);
+        let mut doc = Document::from_bytes(&stream, None);
+        assert_eq!(doc.scroll_text(), "hello");
+        doc.jump("1.1.1/1.1.1/1.1.2").unwrap();
+        assert!(crate::binary::is_binary_scroll(doc.scroll_text()));
+        assert_eq!(doc.scroll_bytes(), vec![0xFF, 0xFE, 0x41, 0x80]);
+    }
+
+    #[test]
+    fn seal_round_trips_the_document() {
+        let doc = sample();
+        let sealed = doc.seal().unwrap();
+        let opened = Document::from_sealed(&sealed, None).unwrap();
+        assert_eq!(opened.scrolls(), doc.scrolls());
+        // Garbage is an error, not a panic or an empty document.
+        assert!(Document::from_sealed(b"not xz at all", None).is_err());
     }
 
     #[test]

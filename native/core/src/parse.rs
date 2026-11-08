@@ -1,12 +1,17 @@
 //! Single-pass phext parsing and serialization over the sparse scroll map.
 //!
 //! These replace `libphext::phext::explode` / `implode` on the hot path.
-//! libphext 0.3.1's `explode` is built on `phokenize`, which re-copies the
-//! entire remaining buffer for every scroll it finds — quadratic in the
-//! file size (a 1.47 MB file with ~7.3k scrolls cost ~2.9 s to open).
+//! libphext 0.3.1's `explode` was built on a `phokenize` that re-copied
+//! the entire remaining buffer for every scroll it found — quadratic in
+//! the file size (a 1.47 MB file with ~7.3k scrolls cost ~2.9 s to open).
 //! `implode` is linear, but `Document::serialize` had to clone every scroll
 //! string into a fresh `HashMap` to call it, and the document paid that
 //! full serialization again on every edit just to refresh a byte count.
+//!
+//! Coordinate semantics are the reference crate's: since libphext 0.4.0
+//! the break methods increment without saturating, so this walk places
+//! scrolls at their true coordinates however large the components grow
+//! (ultra.phext's scroll component reaches 223,854).
 //!
 //! The functions here walk the bytes once, keep scrolls in the document's
 //! `BTreeMap`, and never materialize anything proportional to the address

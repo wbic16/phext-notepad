@@ -8,7 +8,7 @@ Rust and [FLTK](https://www.fltk.org/) through [fltk-rs](https://github.com/fltk
 
 The phext model is a separate crate, `core/`, so it can be tested without a window.
 
-- [libphext-rs](https://github.com/wbic16/libphext-rs) 0.3.1 opens and saves phext (`explode` / `implode`, coordinate limits, break rules). This is the same crate [phext-lattice](https://github.com/wbic16/phext-lattice) depends on. libphext-py is the Python port of that format. It is not linked here.
+- [libphext-rs](https://github.com/wbic16/libphext-rs) 0.5.0 supplies the coordinate type, break rules, binary scrolls, and the xz seal. It is pinned by git rev in `core/Cargo.toml` (crates.io tops out at 0.4.0; 0.5.0 is in-tree on libphext-rs exo). Coordinates are unbounded — the 0.3.1 build this app started on capped components at 1000 and silently collapsed large files. Opening and saving run through `core/src/parse.rs`, a single-pass sparse implementation byte-compatible with libphext's `explode` / `implode`. This is the same crate [phext-lattice](https://github.com/wbic16/phext-lattice) depends on. libphext-py is the Python port of that format. It is not linked here.
 - Dimension steps match phext-lattice `CoordinateNav` at exo commit `7c91992`. Stepping a dimension forward or back resets the dimensions below it, matching a phext break. That code lives in `core/src/nav.rs`. phext-lattice itself is not a dependency: its memmap2, rayon, and tempfile crates are required even when unused, and this editor does not use them.
 - Zoom is the lattice's three tiers, built into the outline rather than layered on afterwards:
   - **Outer / 11D / z** — `library.shelf.series`
