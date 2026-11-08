@@ -93,7 +93,8 @@ checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
 [[package]]
 name = "libphext"
 version = "0.5.0"
-source = "git+https://github.com/wbic16/libphext-rs?rev=e85d8b5676c6461e6bad6a89fe7a3d2eb06f552d#e85d8b5676c6461e6bad6a89fe7a3d2eb06f552d"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8f8df75a786bc56bc7261e068e26cfa089341a26feb7d0c2a299ef2a6b4da8c"
 dependencies = [
  "base64",
  "xxhash-rust",
