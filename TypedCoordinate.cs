@@ -2,9 +2,9 @@
 {
     public class TypedCoordinate : IComparable
     {
-        private short _value;
+        private int _value;
 
-        public TypedCoordinate(short value)
+        public TypedCoordinate(int value)
         {
             _value = value;
         }
@@ -22,7 +22,7 @@
             return _value.ToString();
         }
 
-        public static implicit operator short(TypedCoordinate value)
+        public static implicit operator int(TypedCoordinate value)
         {
             return value._value;
         }

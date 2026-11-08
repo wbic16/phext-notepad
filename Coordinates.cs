@@ -110,97 +110,97 @@
         public bool Intermediate { get; set; } = false;
         public class ScrollIndex : TypedCoordinate
         {
-            public ScrollIndex(short value) : base(value)
+            public ScrollIndex(int value) : base(value)
             {
             }
-            public static implicit operator ScrollIndex(short value)
+            public static implicit operator ScrollIndex(int value)
             {
                 return new ScrollIndex(value);
             }
         }
         public class SectionIndex : TypedCoordinate
         {
-            public SectionIndex(short value) : base(value)
+            public SectionIndex(int value) : base(value)
             {
             }
-            public static implicit operator SectionIndex(short value)
+            public static implicit operator SectionIndex(int value)
             {
                 return new SectionIndex(value);
             }
         }
         public class ChapterIndex : TypedCoordinate
         {
-            public ChapterIndex(short value) : base(value)
+            public ChapterIndex(int value) : base(value)
             {
             }
 
-            public static implicit operator ChapterIndex(short value)
+            public static implicit operator ChapterIndex(int value)
             {
                 return new ChapterIndex(value);
             }
         }
         public class BookIndex : TypedCoordinate
         {
-            public BookIndex(short value) : base(value)
+            public BookIndex(int value) : base(value)
             {
             }
-            public static implicit operator BookIndex(short value)
+            public static implicit operator BookIndex(int value)
             {
                 return new BookIndex(value);
             }
         }
         public class VolumeIndex : TypedCoordinate
         {
-            public VolumeIndex(short value) : base(value)
+            public VolumeIndex(int value) : base(value)
             {
             }
-            public static implicit operator VolumeIndex(short value)
+            public static implicit operator VolumeIndex(int value)
             {
                 return new VolumeIndex(value);
             }
         }
         public class CollectionIndex : TypedCoordinate
         {
-            public CollectionIndex(short value) : base(value)
+            public CollectionIndex(int value) : base(value)
             {
             }
-            public static implicit operator CollectionIndex(short value)
+            public static implicit operator CollectionIndex(int value)
             {
                 return new CollectionIndex(value);
             }
         }
         public class SeriesIndex : TypedCoordinate
         {
-            public SeriesIndex(short value) : base(value)
+            public SeriesIndex(int value) : base(value)
             {
             }
-            public static implicit operator SeriesIndex(short value)
+            public static implicit operator SeriesIndex(int value)
             {
                 return new SeriesIndex(value);
             }
         }
         public class ShelfIndex : TypedCoordinate
         {
-            public ShelfIndex(short value) : base(value)
+            public ShelfIndex(int value) : base(value)
             {
             }
-            public static implicit operator ShelfIndex(short value)
+            public static implicit operator ShelfIndex(int value)
             {
                 return new ShelfIndex(value);
             }
         }
         public class LibraryIndex : TypedCoordinate
         {
-            public LibraryIndex(short value) : base(value)
+            public LibraryIndex(int value) : base(value)
             {
             }
-            public static implicit operator LibraryIndex(short value)
+            public static implicit operator LibraryIndex(int value)
             {
                 return new LibraryIndex(value);
             }
         }
 
-        public static readonly short SZERO = 0;
+        public static readonly int SZERO = 0;
 
         public int Column { get; set; } = 1;
         public int Line { get; set; } = 1;
@@ -219,9 +219,9 @@
             return ToString(this);
         }
 
-        public static short CoordinateClamp(short value)
+        public static int CoordinateClamp(int value)
         {
-            return (value < 1) ? (short)1 : value;
+            return (value < 1) ? 1 : value;
         }
         public static string ToString(Coordinates c)
         {
@@ -350,13 +350,13 @@
             Library = 1;
         }
 
-        private short[] ParseCoordinateString(string coordinates)
+        private int[] ParseCoordinateString(string coordinates)
         {
             var strings = coordinates.Replace('.','/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-            var result = new List<short>();
+            var result = new List<int>();
             foreach (var s in strings)
             {
-                if (short.TryParse(s, out short parsed))
+                if (int.TryParse(s, out int parsed))
                 {
                     result.Add(parsed);
                 }

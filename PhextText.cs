@@ -7,19 +7,16 @@ namespace PhextNotepad
 {
     public class ScrollNode
     {
-        public TreeNode Node { get; set; } = new();
         public string Text { get; set; } = string.Empty;
     };
     public interface IPhextNode<T, S>
         where T : notnull
     {
-        public TreeNode Node { get; set; }
         public SortedDictionary<T, S> Children { get; set; }
         public char Delimiter { get; }
     };
     public class SectionNode : IPhextNode<ScrollIndex, ScrollNode>
     {
-        public TreeNode Node { get; set; } = new();
         public SortedDictionary<ScrollIndex, ScrollNode> Scroll { get; set; } = new();
         public SortedDictionary<ScrollIndex, ScrollNode> Children
         {
@@ -30,7 +27,6 @@ namespace PhextNotepad
     };
     public class ChapterNode : IPhextNode<SectionIndex, SectionNode>
     {
-        public TreeNode Node { get; set; } = new();
         public SortedDictionary<SectionIndex, SectionNode> Section { get; set; } = new();
         public SortedDictionary<SectionIndex, SectionNode> Children
         {
@@ -41,7 +37,6 @@ namespace PhextNotepad
     };
     public class BookNode : IPhextNode<ChapterIndex, ChapterNode>
     {
-        public TreeNode Node { get; set; } = new();
         public SortedDictionary<ChapterIndex, ChapterNode> Chapter { get; set; } = new();
         public SortedDictionary<ChapterIndex, ChapterNode> Children
         {
@@ -53,7 +48,6 @@ namespace PhextNotepad
 
     public class VolumeNode : IPhextNode<BookIndex, BookNode>
     {
-        public TreeNode Node { get; set; } = new();
         public SortedDictionary<BookIndex, BookNode> Book { get; set; } = new();
         public SortedDictionary<BookIndex, BookNode> Children
         {
@@ -65,7 +59,6 @@ namespace PhextNotepad
 
     public class CollectionNode : IPhextNode<VolumeIndex, VolumeNode>
     {
-        public TreeNode Node { get; set; } = new();
         public SortedDictionary<VolumeIndex, VolumeNode> Volume { get; set; } = new();
         public SortedDictionary<VolumeIndex, VolumeNode> Children
         {
@@ -77,7 +70,6 @@ namespace PhextNotepad
 
     public class SeriesNode : IPhextNode<CollectionIndex, CollectionNode>
     {
-        public TreeNode Node { get; set; } = new();
         public SortedDictionary<CollectionIndex, CollectionNode> Collection { get; set; } = new();
         public SortedDictionary<CollectionIndex, CollectionNode> Children
         {
@@ -89,7 +81,6 @@ namespace PhextNotepad
 
     public class ShelfNode : IPhextNode<SeriesIndex, SeriesNode>
     {
-        public TreeNode Node { get; set; } = new();
         public SortedDictionary<SeriesIndex, SeriesNode> Series { get; set; } = new();
         public SortedDictionary<SeriesIndex, SeriesNode> Children
         {
@@ -101,7 +92,6 @@ namespace PhextNotepad
 
     public class LibraryNode : IPhextNode<ShelfIndex, ShelfNode>
     {
-        public TreeNode Node { get; set; } = new();
         public SortedDictionary<ShelfIndex, ShelfNode> Shelf { get; set; } = new();
         public SortedDictionary<ShelfIndex, ShelfNode> Children
         {
@@ -120,7 +110,6 @@ namespace PhextNotepad
     {
         public Coordinates Coords = new();
         public RootNode Root = new();
-        public Dictionary<string, TreeNode> Cache = new();
         public int LeafCount { get; private set; } = 0;
         public int WordCount { get; private set; } = 0;
         private XxHash128 _hasher = new XxHash128();
@@ -193,7 +182,7 @@ namespace PhextNotepad
                                                     {
                                                         walker.ScrollBreak();
                                                     }
-                                                    var scroll = section.Scroll[scroll_key];                                                    
+                                                    var scroll = section.Scroll[scroll_key];
                                                     if (scroll.Text.Length == 0)
                                                     {
                                                         continue;
@@ -238,15 +227,108 @@ namespace PhextNotepad
                 return GetWordCount(getScroll());
             }
         }
+        // The accessors below resolve the node chain for the current
+        // Coords, creating any missing level (the behavior they have
+        // always had). Each accessor used to call the one above it, so
+        // resolving Scroll re-walked every dictionary above it — 36
+        // dictionary walks per access, and setScroll accesses Scroll
+        // twice per call. On a several-hundred-thousand-scroll
+        // document that access pattern, not the parse, was the load
+        // time (~28 us per setScroll, most of it re-walking). The
+        // resolvers walk the chain iteratively: one dictionary walk
+        // per level.
+        private LibraryNode ResolveLibrary()
+        {
+            if (!Root.Library.TryGetValue(Coords.Library, out var library))
+            {
+                library = new();
+                Root.Library[Coords.Library] = library;
+            }
+            return library;
+        }
+
+        private ShelfNode ResolveShelf()
+        {
+            var library = ResolveLibrary();
+            if (!library.Shelf.TryGetValue(Coords.Shelf, out var shelf))
+            {
+                shelf = new();
+                library.Shelf[Coords.Shelf] = shelf;
+            }
+            return shelf;
+        }
+
+        private SeriesNode ResolveSeries()
+        {
+            var shelf = ResolveShelf();
+            if (!shelf.Series.TryGetValue(Coords.Series, out var series))
+            {
+                series = new();
+                shelf.Series[Coords.Series] = series;
+            }
+            return series;
+        }
+
+        private CollectionNode ResolveCollection()
+        {
+            var series = ResolveSeries();
+            if (!series.Collection.TryGetValue(Coords.Collection, out var collection))
+            {
+                collection = new();
+                series.Collection[Coords.Collection] = collection;
+            }
+            return collection;
+        }
+
+        private VolumeNode ResolveVolume()
+        {
+            var collection = ResolveCollection();
+            if (!collection.Volume.TryGetValue(Coords.Volume, out var volume))
+            {
+                volume = new();
+                collection.Volume[Coords.Volume] = volume;
+            }
+            return volume;
+        }
+
+        private BookNode ResolveBook()
+        {
+            var volume = ResolveVolume();
+            if (!volume.Book.TryGetValue(Coords.Book, out var book))
+            {
+                book = new();
+                volume.Book[Coords.Book] = book;
+            }
+            return book;
+        }
+
+        private ChapterNode ResolveChapter()
+        {
+            var book = ResolveBook();
+            if (!book.Chapter.TryGetValue(Coords.Chapter, out var chapter))
+            {
+                chapter = new();
+                book.Chapter[Coords.Chapter] = chapter;
+            }
+            return chapter;
+        }
+
+        private SectionNode ResolveSection()
+        {
+            var chapter = ResolveChapter();
+            if (!chapter.Section.TryGetValue(Coords.Section, out var section))
+            {
+                section = new();
+                chapter.Section[Coords.Section] = section;
+            }
+            return section;
+        }
+
         public LibraryNode Library
         {
             get
             {
-                if (!Root.Library.ContainsKey(Coords.Library))
-                {
-                    Root.Library[Coords.Library] = new();
-                }
-                return Root.Library[Coords.Library];
+                return ResolveLibrary();
             }
             set
             {
@@ -258,11 +340,7 @@ namespace PhextNotepad
         {
             get
             {
-                if (!Library.Shelf.ContainsKey(Coords.Shelf))
-                {
-                    Library.Shelf[Coords.Shelf] = new();
-                }
-                return Library.Shelf[Coords.Shelf];
+                return ResolveShelf();
             }
             set
             {
@@ -274,11 +352,7 @@ namespace PhextNotepad
         {
             get
             {
-                if (!Shelf.Series.ContainsKey(Coords.Series))
-                {
-                    Shelf.Series[Coords.Series] = new();
-                }
-                return Shelf.Series[Coords.Series];
+                return ResolveSeries();
             }
             set
             {
@@ -290,11 +364,7 @@ namespace PhextNotepad
         {
             get
             {
-                if (!Series.Collection.ContainsKey(Coords.Collection))
-                {
-                    Series.Collection[Coords.Collection] = new();
-                }
-                return Series.Collection[Coords.Collection];
+                return ResolveCollection();
             }
             set
             {
@@ -306,11 +376,7 @@ namespace PhextNotepad
         {
             get
             {
-                if (!Collection.Volume.ContainsKey(Coords.Volume))
-                {
-                    Collection.Volume[Coords.Volume] = new();
-                }
-                return Collection.Volume[Coords.Volume];
+                return ResolveVolume();
             }
             set
             {
@@ -322,11 +388,7 @@ namespace PhextNotepad
         {
             get
             {
-                if (!Volume.Book.ContainsKey(Coords.Book))
-                {
-                    Volume.Book[Coords.Book] = new();
-                }
-                return Volume.Book[Coords.Book];
+                return ResolveBook();
             }
             set
             {
@@ -338,11 +400,7 @@ namespace PhextNotepad
         {
             get
             {
-                if (!Book.Chapter.ContainsKey(Coords.Chapter))
-                {
-                    Book.Chapter[Coords.Chapter] = new();
-                }
-                return Book.Chapter[Coords.Chapter];
+                return ResolveChapter();
             }
             set
             {
@@ -354,11 +412,7 @@ namespace PhextNotepad
         {
             get
             {
-                if (!Chapter.Section.ContainsKey(Coords.Section))
-                {
-                    Chapter.Section[Coords.Section] = new();
-                }
-                return Chapter.Section[Coords.Section];
+                return ResolveSection();
             }
             set
             {
@@ -369,11 +423,13 @@ namespace PhextNotepad
         {
             get
             {
-                if (!Section.Scroll.ContainsKey(Coords.Scroll))
+                var section = ResolveSection();
+                if (!section.Scroll.TryGetValue(Coords.Scroll, out var scroll))
                 {
-                    Section.Scroll[Coords.Scroll] = new();
+                    scroll = new();
+                    section.Scroll[Coords.Scroll] = scroll;
                 }
-                return Section.Scroll[Coords.Scroll];
+                return scroll;
             }
             set
             {
@@ -402,7 +458,7 @@ namespace PhextNotepad
             return words;
         }
 
-        public void setScroll(string text, TreeNode? node = null)
+        public void setScroll(string text)
         {
             if (text.Length > 0)
             {
@@ -413,11 +469,6 @@ namespace PhextNotepad
                 ++LeafCount;
                 var count = GetWordCount(text);
                 WordCount += (count - priorCount);
-                if (node != null)
-                {
-                    Scroll.Node = node;
-                    Cache[node.Name] = node;
-                }
             }
             // note: the key checks here optimize performance on sparse files
             if (text.Length == 0 &&
@@ -568,168 +619,6 @@ namespace PhextNotepad
         public string EditorSummary(string action = "")
         {
             return Coords.EditorSummary(action);
-        }
-
-        public void SetLibraryNode(TreeNode libraryNode, Coordinates local)
-        {
-            if (!Root.Library.ContainsKey(local.Library))
-            {
-                Root.Library[local.Library] = new()
-                {
-                    Node = libraryNode
-                };
-            }
-            Cache[libraryNode.Name] = libraryNode;
-        }
-
-        public void SetShelfNode(TreeNode shelfNode, Coordinates local)
-        {
-            if (!Library.Shelf.ContainsKey(local.Shelf))
-            {
-                Library.Shelf[local.Shelf] = new()
-                {
-                    Node = shelfNode
-                };
-            }
-            Cache[shelfNode.Name] = shelfNode;
-        }
-
-        public void SetSeriesNode(TreeNode seriesNode, Coordinates local)
-        {
-            if (!Shelf.Series.ContainsKey(local.Series))
-            {
-                Shelf.Series[local.Series] = new()
-                {
-                    Node = seriesNode
-                };
-            }
-            Cache[seriesNode.Name] = seriesNode;
-        }
-
-        public void SetCollectionNode(TreeNode collectionNode, Coordinates local)
-        {
-            if (!Series.Collection.ContainsKey(local.Collection))
-            {
-                Series.Collection[local.Collection] = new()
-                {
-                    Node = collectionNode
-                };
-            }
-            Cache[collectionNode.Name] = collectionNode;
-        }
-
-        public void SetVolumeNode(TreeNode volumeNode, Coordinates local)
-        {
-            if (!Collection.Volume.ContainsKey(local.Volume))
-            {
-                Collection.Volume[local.Volume] = new()
-                {
-                    Node = volumeNode
-                };
-            }
-            Cache[volumeNode.Name] = volumeNode;
-        }
-
-        public void SetBookNode(TreeNode bookNode, Coordinates local)
-        {
-            if (!Volume.Book.ContainsKey(local.Book))
-            {
-                Volume.Book[local.Book] = new()
-                {
-                    Node = bookNode
-                };
-            }
-            Cache[bookNode.Name] = bookNode;
-        }
-
-        public void SetChapterNode(TreeNode chapterNode, Coordinates local)
-        {
-            if (!Book.Chapter.ContainsKey(local.Chapter))
-            {
-                Book.Chapter[local.Chapter] = new()
-                {
-                    Node = chapterNode
-                };
-            }
-            Cache[chapterNode.Name] = chapterNode;
-        }
-
-        public void SetSectionNode(TreeNode sectionNode, Coordinates local)
-        {
-            if (!Book.Chapter.ContainsKey(local.Chapter))
-            {
-                Book.Chapter[local.Chapter] = new();
-            }
-            if (!Book.Chapter[local.Chapter].Section.ContainsKey(local.Section))
-            {
-                Book.Chapter[local.Chapter].Section[local.Section] = new()
-                {
-                    Node = sectionNode
-                };
-            }
-            Cache[sectionNode.Name] = sectionNode;
-        }
-
-        private TreeNode CreateNamedRootNode(string text, Coordinates local)
-        {
-            var name = local.ToString();
-            var node = new TreeNode(text)
-            {
-                Name = name
-            };
-            Cache[name] = node;
-            return node;
-        }
-
-        public TreeNode GetSectionTreeRoot(Coordinates local)
-        {
-            return CreateNamedRootNode($"Section {local.Section}", local.GetSectionRoot());
-        }
-
-        public TreeNode GetChapterTreeRoot(Coordinates local)
-        {
-            return CreateNamedRootNode($"Chapter {local.Chapter}", local.GetChapterRoot());
-        }
-
-        public TreeNode GetBookTreeRoot(Coordinates local)
-        {
-            return CreateNamedRootNode($"Book {local.Book}", local.GetBookRoot());
-        }
-
-        public TreeNode GetVolumeTreeRoot(Coordinates local)
-        {
-            return CreateNamedRootNode($"Volume {local.Volume}", local.GetVolumeRoot());
-        }
-
-        public TreeNode GetCollectionTreeRoot(Coordinates local)
-        {
-            return CreateNamedRootNode($"Collection {local.Collection}", local.GetCollectionRoot());
-        }
-
-        public TreeNode GetSeriesTreeRoot(Coordinates local)
-        {
-            return CreateNamedRootNode($"Series {local.Series}", local.GetSeriesRoot());
-        }
-
-        public TreeNode GetShelfTreeRoot(Coordinates local)
-        {
-            return CreateNamedRootNode($"Shelf {local.Shelf}", local.GetShelfRoot());
-        }
-
-        public TreeNode GetLibraryTreeRoot(Coordinates local)
-        {
-            return CreateNamedRootNode($"Library {local.Library}", local.GetLibraryRoot());
-        }
-
-        public TreeNode? Find(Coordinates coordinates)
-        {
-            string test = coordinates.ToString();
-            if (Cache.ContainsKey(test))
-            {
-                return Cache[test];
-            }
-
-            return null;
         }
     }
 }
