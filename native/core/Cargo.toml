@@ -10,3 +10,8 @@ publish = false
 
 [dependencies]
 libphext = "0.3.1"
+# Sync talks to phext-edit over HTTPS and JSON — the same client
+# stack phext-lattice itself uses (ureq + rustls, serde_json).
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ureq = { version = "2", features = ["json"] }

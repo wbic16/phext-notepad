@@ -155,22 +155,42 @@ impl Document {
     }
 
     pub fn set_scroll(&mut self, text: &str) {
-        let current = self.scroll_text();
-        if current == text {
+        if self.scroll_text() == text {
             return;
         }
+        let coordinate = self.coordinate;
+        self.apply_scroll(coordinate, text);
+        self.message.clear();
+    }
+
+    /// The text at an arbitrary coordinate, if a scroll lives there.
+    pub fn scroll_at(&self, coordinate: Coordinate) -> Option<&str> {
+        self.scrolls.get(&coordinate).map(String::as_str)
+    }
+
+    /// Write a scroll at an arbitrary coordinate (empty text removes
+    /// it). The sync layer uses this to land pulled scrolls without
+    /// moving the user's cursor; editing uses [`Document::set_scroll`].
+    pub fn set_scroll_at(&mut self, coordinate: Coordinate, text: &str) {
+        if self.scroll_at(coordinate).unwrap_or("") == text {
+            return;
+        }
+        self.apply_scroll(coordinate, text);
+    }
+
+    fn apply_scroll(&mut self, coordinate: Coordinate, text: &str) {
         // Keep the running totals exact without rescanning the document:
         // words adjust by the edited scroll's delta, and the byte count
         // is an arithmetic walk over the map (no string is built).
-        self.total_words -= word_count(current);
+        let current = self.scroll_at(coordinate).unwrap_or("").to_string();
+        self.total_words -= word_count(&current);
         self.total_words += word_count(text);
         if text.is_empty() {
-            self.scrolls.remove(&self.coordinate);
+            self.scrolls.remove(&coordinate);
         } else {
-            self.scrolls.insert(self.coordinate, text.to_string());
+            self.scrolls.insert(coordinate, text.to_string());
         }
         self.dirty = true;
-        self.message.clear();
         self.byte_count = parse::serialized_len(&self.scrolls);
         self.revision += 1;
     }
