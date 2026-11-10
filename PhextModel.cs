@@ -1,4 +1,4 @@
-﻿using System.Text;
+using Phext;
 
 namespace PhextNotepad
 {
@@ -8,14 +8,23 @@ namespace PhextNotepad
         public Coordinates Coord { get; set; } = new();
         public string Scroll { get; set; } = string.Empty;
     }
+
+    // The editor's facade over PhextDocument. Parsing and
+    // serialization are libphext-cs's work now (PhextEngine.Phokenize
+    // / Dephokenize); this class keeps the surface the form and the
+    // tree have always used — Load with its SQ missing-scroll patch,
+    // Serialize, the counters, and the break constants (aliases of
+    // the library's, identical values).
     public class PhextModel
     {
         public PhextModel()
         {
             Coords.Reset();
         }
-        public PhextText Phext = new();
+
+        public PhextDocument Phext = new();
         public Dictionary<Coordinates, string> PendingScrolls = new();
+
         public Coordinates Coords
         {
             get
@@ -61,34 +70,34 @@ namespace PhextNotepad
         }
 
         public const char WORD_BREAK = '\x20';
-        public const char LINE_BREAK = '\n';
-        public const char SCROLL_BREAK = '\x17';
-        public const char SECTION_BREAK = '\x18';
-        public const char CHAPTER_BREAK = '\x19';
-        public const char BOOK_BREAK = '\x1A';
-        public const char VOLUME_BREAK = '\x1C';
-        public const char COLLECTION_BREAK = '\x1D';
-        public const char SERIES_BREAK = '\x1E';
-        public const char SHELF_BREAK = '\x1F';
-        public const char LIBRARY_BREAK = '\x01';
+        public const char LINE_BREAK = PhextConstants.LINE_BREAK;
+        public const char SCROLL_BREAK = PhextConstants.SCROLL_BREAK;
+        public const char SECTION_BREAK = PhextConstants.SECTION_BREAK;
+        public const char CHAPTER_BREAK = PhextConstants.CHAPTER_BREAK;
+        public const char BOOK_BREAK = PhextConstants.BOOK_BREAK;
+        public const char VOLUME_BREAK = PhextConstants.VOLUME_BREAK;
+        public const char COLLECTION_BREAK = PhextConstants.COLLECTION_BREAK;
+        public const char SERIES_BREAK = PhextConstants.SERIES_BREAK;
+        public const char SHELF_BREAK = PhextConstants.SHELF_BREAK;
+        public const char LIBRARY_BREAK = PhextConstants.LIBRARY_BREAK;
 
         public string getHierarchicalChecksum()
         {
             return Phext.HierarchicalChecksum;
         }
 
-        // Parses `data` into the sparse model only. This used to also
-        // build the entire WinForms tree (one TreeNode per scroll and
-        // group, plus several discarded TreeNodes per break while it
-        // tracked the "current" group nodes) and register every node in
-        // a coordinate-string cache. On ultra.phext that was 4.47M
-        // TreeNode allocations and a 1.65M-entry cache for a 379K-node
-        // tree. The tree is now a view: PhextTree describes it from
-        // this model on demand, and the form materializes TreeNodes
-        // lazily as the user expands. The parse itself is unchanged —
-        // same break walk, same insert points, same SQ-missing-scroll
-        // patch — so the resulting model is identical (verified by
-        // byte-identical Serialize()/checksum/enumeration dumps).
+        // Parses `data` into the document only; the tree stays a
+        // lazy view (PhextTree) over the result. The parse is the
+        // library's tokenizer: Phokenize walks the same breaks the
+        // vendored loader walked, applies the same break semantics
+        // (each break advances its own dimension and resets the lower
+        // ones), and reports each run of text at the coordinate the
+        // walker occupied when the run began — the vendored loader's
+        // insert points exactly. Empty runs store nothing, as before,
+        // and the SQ missing-scroll patch is preserved verbatim: a
+        // scroll whose whole text is the marker is not stored; its
+        // coordinate and the text already held there are queued in
+        // PendingScrolls for the form to push back to SQ.
         public void Load(string data, bool resetPhext = true)
         {
             if (resetPhext)
@@ -96,135 +105,22 @@ namespace PhextNotepad
                 Phext = new();
             }
             PendingScrolls.Clear();
-            Coordinates local = new(true);
-            var stage = new StringBuilder();
-            for (int i = 0; i < data.Length; ++i)
+            foreach (var token in PhextEngine.Phokenize(data))
             {
-                var next = data[i];
-                int dimensions_broken = 0;
-                switch (next)
-                {
-                    case LIBRARY_BREAK:
-                        dimensions_broken = 9;
-                        break;
-                    case SHELF_BREAK:
-                        dimensions_broken = 8;
-                        break;
-                    case SERIES_BREAK:
-                        dimensions_broken = 7;
-                        break;
-                    case COLLECTION_BREAK:
-                        dimensions_broken = 6;
-                        break;
-                    case VOLUME_BREAK:
-                        dimensions_broken = 5;
-                        break;
-                    case BOOK_BREAK:
-                        dimensions_broken = 4;
-                        break;
-                    case CHAPTER_BREAK:
-                        dimensions_broken = 3;
-                        break;
-                    case SECTION_BREAK:
-                        dimensions_broken = 2;
-                        break;
-                    case SCROLL_BREAK:
-                        dimensions_broken = 1;
-                        break;
-                    default:
-                        stage.Append(next);
-                        break;
-                }
-
-                if (dimensions_broken == 0)
+                if (token.Scroll.Length == 0)
                 {
                     continue;
                 }
-
-                if (stage.Length > 0)
+                if (token.Scroll == "---sq:Scroll-Missing---")
                 {
-                    var result = insertScroll(stage, local);
-                    if (result != null && result.PushToSQ)
-                    {
-                        PendingScrolls[result.Coord] = result.Scroll;
-                    }
-                    stage.Clear();
+                    // hack to patch missing scrolls back to SQ
+                    var coord = new Coordinates(token.Coord);
+                    PendingScrolls[coord] = Phext.GetAt(token.Coord);
+                    continue;
                 }
-
-                // Each break advances exactly its own dimension (the
-                // break methods reset all lower dimensions to 1). The
-                // old loader reached the same end state through nested
-                // per-dimension blocks whose other work was building
-                // the eager tree.
-                switch (next)
-                {
-                    case SCROLL_BREAK:
-                        local.ScrollBreak();
-                        break;
-                    case SECTION_BREAK:
-                        local.SectionBreak();
-                        break;
-                    case CHAPTER_BREAK:
-                        local.ChapterBreak();
-                        break;
-                    case BOOK_BREAK:
-                        local.BookBreak();
-                        break;
-                    case VOLUME_BREAK:
-                        local.VolumeBreak();
-                        break;
-                    case COLLECTION_BREAK:
-                        local.CollectionBreak();
-                        break;
-                    case SERIES_BREAK:
-                        local.SeriesBreak();
-                        break;
-                    case SHELF_BREAK:
-                        local.ShelfBreak();
-                        break;
-                    case LIBRARY_BREAK:
-                        local.LibraryBreak();
-                        break;
-                }
-            }
-
-            if (stage.Length > 0)
-            {
-                var result = insertScroll(stage, local);
-                if (result != null && result.PushToSQ)
-                {
-                    PendingScrolls[result.Coord] = result.Scroll;
-                }
-                stage.Clear();
+                Phext.SetAt(token.Coord, token.Scroll);
             }
             Coords.Reset();
-        }
-
-
-        private InsertResult? insertScroll(StringBuilder stage, Coordinates local)
-        {
-            var scroll = stage.ToString();
-            if (scroll == "---sq:Scroll-Missing---")
-            {
-                // hack to patch missing scrolls back to SQ
-                Phext.Coords = local;
-                var prior = Phext.getScroll();
-                InsertResult result = new()
-                {
-                    PushToSQ = true,
-                    Coord = new(local),
-                    Scroll = prior
-                };
-                return result;
-            }
-
-            if (scroll.Length > 0)
-            {
-                Phext.Coords = local;
-                Phext.setScroll(scroll);
-            }
-
-            return null;
         }
 
         public static string GetScrollSummary(Coordinates coords, string scroll)
@@ -238,163 +134,19 @@ namespace PhextNotepad
             return coords.GetNodeSummary();
         }
 
+        // The library's serializer over the document's scrolls in
+        // coordinate order: Dephokenize emits the same minimal break
+        // runs the vendored nested walk emitted (advance the highest
+        // dimension that is behind, one break at a time), so the
+        // output is byte-identical for the same stored scrolls.
         public string Serialize()
         {
-            StringBuilder collector = new();
-            Coordinates local = new(true);
-            foreach (var library_index in Phext.Root.Library.Keys)
+            var tokens = new List<PositionedScroll>(Phext.Scrolls.Count);
+            foreach (var (coord, text) in Phext.Scrolls)
             {
-                while (local.Library < library_index)
-                {
-                    collector.Append(LIBRARY_BREAK);
-                    ++local.Library;
-                    local.Shelf = 1;
-                    local.Series = 1;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Library(collector, Phext.Root.Library[library_index], local);
+                tokens.Add(new PositionedScroll(coord, text));
             }
-            return collector.ToString();
-        }
-        private void Serialize_Library(StringBuilder collector, LibraryNode library, Coordinates local)
-        {
-            foreach (var shelf_index in library.Shelf.Keys)
-            {
-                while (local.Shelf < shelf_index)
-                {
-                    collector.Append(SHELF_BREAK);
-                    ++local.Shelf;
-                    local.Series = 1;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Shelf(collector, library.Shelf[shelf_index], local);
-            }
-        }
-
-        private void Serialize_Shelf(StringBuilder collector, ShelfNode shelf, Coordinates local)
-        {
-            foreach (var series_index in shelf.Series.Keys)
-            {
-                while (local.Series < series_index)
-                {
-                    collector.Append(SERIES_BREAK);
-                    ++local.Series;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Series(collector, shelf.Series[series_index], local);
-            }
-        }
-        private void Serialize_Series(StringBuilder collector, SeriesNode series, Coordinates local)
-        {
-            foreach (var collection_index in series.Collection.Keys)
-            {
-                while (local.Collection < collection_index)
-                {
-                    collector.Append(COLLECTION_BREAK);
-                    ++local.Collection;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Collection(collector, series.Collection[collection_index], local);
-            }
-        }
-
-        private void Serialize_Collection(StringBuilder collector, CollectionNode collection, Coordinates local)
-        {
-            foreach (var volume_index in collection.Volume.Keys)
-            {
-                while (local.Volume < volume_index)
-                {
-                    collector.Append(VOLUME_BREAK);
-                    ++local.Volume;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Volume(collector, collection.Volume[volume_index], local);
-            }
-        }
-
-        private void Serialize_Volume(StringBuilder collector, VolumeNode volume, Coordinates local)
-        {
-            foreach (var book_index in volume.Book.Keys)
-            {
-                while (local.Book < book_index)
-                {
-                    collector.Append(BOOK_BREAK);
-                    ++local.Book;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Book(collector, volume.Book[book_index], local);
-            }
-        }
-
-        private void Serialize_Book(StringBuilder collector, BookNode book, Coordinates local)
-        {
-            foreach (var chapter_index in book.Chapter.Keys)
-            {
-                while (local.Chapter < chapter_index)
-                {
-                    collector.Append(CHAPTER_BREAK);
-                    ++local.Chapter;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Chapter(collector, book.Chapter[chapter_index], local);
-            }
-        }
-
-        private void Serialize_Chapter(StringBuilder collector, ChapterNode chapter, Coordinates local)
-        {
-            foreach (var section_index in chapter.Section.Keys)
-            {
-                while (local.Section < section_index)
-                {
-                    collector.Append(SECTION_BREAK);
-                    ++local.Section;
-                    local.Scroll = 1;
-                }
-                Serialize_Section(collector, chapter.Section[section_index], local);
-            }
-        }
-
-        private void Serialize_Section(StringBuilder collector, SectionNode section, Coordinates local)
-        {
-            foreach (var scroll_index in section.Scroll.Keys)
-            {
-                while (local.Scroll < scroll_index)
-                {
-                    collector.Append(SCROLL_BREAK);
-                    ++local.Scroll;
-                }
-                Serialize_Scroll(collector, section.Scroll[scroll_index]);
-            }
-        }
-
-        private void Serialize_Scroll(StringBuilder collector, ScrollNode scroll)
-        {
-            collector.Append(scroll.Text);
+            return PhextEngine.Dephokenize(tokens);
         }
 
         public static bool IsBreakCharacter(char ch)
