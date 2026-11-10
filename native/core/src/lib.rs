@@ -1,9 +1,13 @@
 //! Document model for the cross-platform Phext Notepad.
 //!
 //! Phext bytes are parsed and serialized by [`parse`], a single-pass
-//! sparse implementation that is byte-compatible with [`libphext`] (the
-//! crate phext-lattice uses) — libphext 0.3.1's `explode` is quadratic in
+//! sparse implementation that is byte-compatible with [`libphext`]
+//! pinned at 0.5.0 (see `core/Cargo.toml` for the git pin — crates.io
+//! tops out at 0.4.0) — libphext 0.3.1's `explode` was quadratic in
 //! file size, which made multi-megabyte phexts take seconds to open.
+//! Parity with 0.5.0 means: unbounded coordinates (no 1000 cap),
+//! canonical binary scrolls ([`binary`]), byte-level ingestion, and
+//! the xz seal ([`seal`]).
 //! Zoom is not a view trick on top of a
 //! flat tree. A coordinate is three arms, and the outline is always built for
 //! the arm the user is in:
@@ -17,10 +21,12 @@
 //! `CoordinateNav` (see `nav`), so moving library or book resets the
 //! dimensions below it the same way a phext break does.
 
+pub mod binary;
 pub mod document;
 pub mod nav;
 pub mod parse;
 pub mod prefs;
+pub mod seal;
 pub mod zoom;
 
 pub use document::{parse_coordinate, Document, DocumentView};

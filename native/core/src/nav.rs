@@ -6,7 +6,7 @@
 //! stepping a dimension resets every dimension below it. `peek` and the
 //! delimiter helpers from the same file are not used here.
 
-use libphext::phext::{Coordinate, COORDINATE_MAXIMUM, COORDINATE_MINIMUM};
+use libphext::phext::{Coordinate, COORDINATE_MINIMUM};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Dimension {
@@ -30,9 +30,8 @@ pub(crate) trait CoordinateNav {
 
 impl CoordinateNav for Coordinate {
     fn navigate_forward(&mut self, dim: Dimension) -> bool {
-        if self.dimension_value(dim) >= COORDINATE_MAXIMUM {
-            return false;
-        }
+        // libphext 0.4+ coordinates are unbounded: a forward step always
+        // succeeds (the break increments without saturating).
         match dim {
             Dimension::Scroll => self.scroll_break(),
             Dimension::Section => self.section_break(),
@@ -126,7 +125,8 @@ impl CoordinateNav for Coordinate {
     }
 
     fn set_dimension(&mut self, dim: Dimension, value: usize) {
-        let clamped = value.clamp(COORDINATE_MINIMUM, COORDINATE_MAXIMUM);
+        // Only the floor remains: components are unbounded above.
+        let clamped = value.max(COORDINATE_MINIMUM);
         match dim {
             Dimension::Scroll => self.x.scroll = clamped,
             Dimension::Section => self.x.section = clamped,

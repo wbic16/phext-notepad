@@ -1,4 +1,4 @@
-﻿using System.Text;
+using Phext;
 
 namespace PhextNotepad
 {
@@ -8,14 +8,23 @@ namespace PhextNotepad
         public Coordinates Coord { get; set; } = new();
         public string Scroll { get; set; } = string.Empty;
     }
+
+    // The editor's facade over PhextDocument. Parsing and
+    // serialization are libphext-cs's work now (PhextEngine.Phokenize
+    // / Dephokenize); this class keeps the surface the form and the
+    // tree have always used — Load with its SQ missing-scroll patch,
+    // Serialize, the counters, and the break constants (aliases of
+    // the library's, identical values).
     public class PhextModel
     {
         public PhextModel()
         {
             Coords.Reset();
         }
-        public PhextText Phext = new();
+
+        public PhextDocument Phext = new();
         public Dictionary<Coordinates, string> PendingScrolls = new();
+
         public Coordinates Coords
         {
             get
@@ -61,323 +70,57 @@ namespace PhextNotepad
         }
 
         public const char WORD_BREAK = '\x20';
-        public const char LINE_BREAK = '\n';
-        public const char SCROLL_BREAK = '\x17';
-        public const char SECTION_BREAK = '\x18';
-        public const char CHAPTER_BREAK = '\x19';
-        public const char BOOK_BREAK = '\x1A';
-        public const char VOLUME_BREAK = '\x1C';
-        public const char COLLECTION_BREAK = '\x1D';
-        public const char SERIES_BREAK = '\x1E';
-        public const char SHELF_BREAK = '\x1F';
-        public const char LIBRARY_BREAK = '\x01';
+        public const char LINE_BREAK = PhextConstants.LINE_BREAK;
+        public const char SCROLL_BREAK = PhextConstants.SCROLL_BREAK;
+        public const char SECTION_BREAK = PhextConstants.SECTION_BREAK;
+        public const char CHAPTER_BREAK = PhextConstants.CHAPTER_BREAK;
+        public const char BOOK_BREAK = PhextConstants.BOOK_BREAK;
+        public const char VOLUME_BREAK = PhextConstants.VOLUME_BREAK;
+        public const char COLLECTION_BREAK = PhextConstants.COLLECTION_BREAK;
+        public const char SERIES_BREAK = PhextConstants.SERIES_BREAK;
+        public const char SHELF_BREAK = PhextConstants.SHELF_BREAK;
+        public const char LIBRARY_BREAK = PhextConstants.LIBRARY_BREAK;
 
         public string getHierarchicalChecksum()
         {
             return Phext.HierarchicalChecksum;
         }
 
-        public void Load(string data, bool showCoordinates, TreeView? treeView = null, bool resetPhext = true)
+        // Parses `data` into the document only; the tree stays a
+        // lazy view (PhextTree) over the result. The parse is the
+        // library's tokenizer: Phokenize walks the same breaks the
+        // vendored loader walked, applies the same break semantics
+        // (each break advances its own dimension and resets the lower
+        // ones), and reports each run of text at the coordinate the
+        // walker occupied when the run began — the vendored loader's
+        // insert points exactly. Empty runs store nothing, as before,
+        // and the SQ missing-scroll patch is preserved verbatim: a
+        // scroll whose whole text is the marker is not stored; its
+        // coordinate and the text already held there are queued in
+        // PendingScrolls for the form to push back to SQ.
+        public void Load(string data, bool resetPhext = true)
         {
-            // Index the string directly: ToCharArray() copied the whole
-            // document (2 bytes per char) for no benefit.
-            var charStream = data;
             if (resetPhext)
             {
                 Phext = new();
             }
             PendingScrolls.Clear();
-            Coordinates local = new(true);
-            var stage = new StringBuilder();
-            var sectionNode = Phext.GetSectionTreeRoot(local);
-            var chapterNode = Phext.GetChapterTreeRoot(local);
-            var bookNode = Phext.GetBookTreeRoot(local);
-            var volumeNode = Phext.GetVolumeTreeRoot(local);
-            var collectionNode = Phext.GetCollectionTreeRoot(local);
-            var seriesNode = Phext.GetSeriesTreeRoot(local);
-            var shelfNode = Phext.GetShelfTreeRoot(local);
-            var libraryNode = Phext.GetLibraryTreeRoot(local);
-            for (int i = 0; i < charStream.Length; ++i)
+            foreach (var token in PhextEngine.Phokenize(data))
             {
-                var next = charStream[i];
-                int dimensions_broken = 0;
-                switch (next)
-                {
-                    case LIBRARY_BREAK:
-                        dimensions_broken = 9;
-                        break;
-                    case SHELF_BREAK:
-                        dimensions_broken = 8;
-                        break;
-                    case SERIES_BREAK:
-                        dimensions_broken = 7;
-                        break;
-                    case COLLECTION_BREAK:
-                        dimensions_broken = 6;
-                        break;
-                    case VOLUME_BREAK:
-                        dimensions_broken = 5;
-                        break;
-                    case BOOK_BREAK:
-                        dimensions_broken = 4;
-                        break;
-                    case CHAPTER_BREAK:
-                        dimensions_broken = 3;
-                        break;
-                    case SECTION_BREAK:
-                        dimensions_broken = 2;
-                        break;
-                    case SCROLL_BREAK:
-                        dimensions_broken = 1;
-                        break;
-                    default:
-                        stage.Append(next);
-                        break;
-                }
-
-                if (dimensions_broken == 0)
+                if (token.Scroll.Length == 0)
                 {
                     continue;
                 }
-
-                if (dimensions_broken >= 1)
+                if (token.Scroll == "---sq:Scroll-Missing---")
                 {
-                    if (stage.Length > 0)
-                    {
-                        var result = insertScroll(stage, local, sectionNode, showCoordinates);
-                        if (result != null && result.PushToSQ)
-                        {
-                            PendingScrolls[result.Coord] = result.Scroll;
-                        }
-                        stage.Clear();
-                    }
-                    if (next == SCROLL_BREAK)
-                    {
-                        local.ScrollBreak();
-                    }
+                    // hack to patch missing scrolls back to SQ
+                    var coord = new Coordinates(token.Coord);
+                    PendingScrolls[coord] = Phext.GetAt(token.Coord);
+                    continue;
                 }
-
-                if (dimensions_broken >= 2)
-                {
-                    if (sectionNode.Nodes.Count > 0)
-                    {
-                        chapterNode.Nodes.Add(sectionNode);
-                        Phext.SetSectionNode(sectionNode, local.GetSectionRoot());
-                    }
-                    if (next == SECTION_BREAK)
-                    {
-                        local.SectionBreak();
-                    }
-                    sectionNode = Phext.GetSectionTreeRoot(local);
-                }
-
-                if (dimensions_broken >= 3)
-                {
-                    if (chapterNode.Nodes.Count > 0)
-                    {
-                        bookNode.Nodes.Add(chapterNode);
-                        Phext.SetChapterNode(chapterNode, local.GetChapterRoot());
-                    }
-                    if (next == CHAPTER_BREAK)
-                    {
-                        local.ChapterBreak();
-                    }
-                    sectionNode = Phext.GetSectionTreeRoot(local);
-                    chapterNode = Phext.GetChapterTreeRoot(local);
-                }
-
-                if (dimensions_broken >= 4)
-                {
-                    if (bookNode.Nodes.Count > 0)
-                    {
-                        volumeNode.Nodes.Add(bookNode);
-                        Phext.SetBookNode(bookNode, local.GetBookRoot());
-                    }
-                    if (next == BOOK_BREAK)
-                    {
-                        local.BookBreak();
-                    }
-                    sectionNode = Phext.GetSectionTreeRoot(local);
-                    chapterNode = Phext.GetChapterTreeRoot(local);
-                    bookNode = Phext.GetBookTreeRoot(local);
-                }
-
-                if (dimensions_broken >= 5)
-                {
-                    if (volumeNode.Nodes.Count > 0)
-                    {
-                        collectionNode.Nodes.Add(volumeNode);
-                        Phext.SetVolumeNode(volumeNode, local.GetVolumeRoot());
-                    }
-                    if (next == VOLUME_BREAK)
-                    {
-                        local.VolumeBreak();
-                    }
-                    sectionNode = Phext.GetSectionTreeRoot(local);
-                    chapterNode = Phext.GetChapterTreeRoot(local);
-                    bookNode = Phext.GetBookTreeRoot(local);
-                    volumeNode = Phext.GetVolumeTreeRoot(local);
-                }
-
-                if (dimensions_broken >= 6)
-                {
-                    if (collectionNode.Nodes.Count > 0)
-                    {
-                        seriesNode.Nodes.Add(collectionNode);
-                        Phext.SetCollectionNode(collectionNode, local.GetCollectionRoot());
-                    }
-                    if (next == COLLECTION_BREAK)
-                    {
-                        local.CollectionBreak();
-                    }
-                    sectionNode = Phext.GetSectionTreeRoot(local);
-                    chapterNode = Phext.GetChapterTreeRoot(local);
-                    bookNode = Phext.GetBookTreeRoot(local);
-                    volumeNode = Phext.GetVolumeTreeRoot(local);
-                    collectionNode = Phext.GetCollectionTreeRoot(local);
-                }
-
-                if (dimensions_broken >= 7)
-                {
-                    if (seriesNode.Nodes.Count > 0)
-                    {
-                        shelfNode.Nodes.Add(seriesNode);
-                        Phext.SetSeriesNode(seriesNode, local.GetSeriesRoot());
-                    }
-                    if (next == SERIES_BREAK)
-                    {
-                        local.SeriesBreak();
-                    }
-                    sectionNode = Phext.GetSectionTreeRoot(local);
-                    chapterNode = Phext.GetChapterTreeRoot(local);
-                    bookNode = Phext.GetBookTreeRoot(local);
-                    volumeNode = Phext.GetVolumeTreeRoot(local);
-                    collectionNode = Phext.GetCollectionTreeRoot(local);
-                    seriesNode = Phext.GetSeriesTreeRoot(local);
-                }
-
-                if (dimensions_broken >= 8)
-                {
-                    if (shelfNode.Nodes.Count > 0)
-                    {
-                        libraryNode.Nodes.Add(shelfNode);
-                        Phext.SetShelfNode(shelfNode, local.GetShelfRoot());
-                    }
-                    if (next == SHELF_BREAK)
-                    {
-                        local.ShelfBreak();
-                    }
-                    sectionNode = Phext.GetSectionTreeRoot(local);
-                    chapterNode = Phext.GetChapterTreeRoot(local);
-                    bookNode = Phext.GetBookTreeRoot(local);
-                    volumeNode = Phext.GetVolumeTreeRoot(local);
-                    collectionNode = Phext.GetCollectionTreeRoot(local);
-                    seriesNode = Phext.GetSeriesTreeRoot(local);
-                    shelfNode = Phext.GetShelfTreeRoot(local);
-                }
-
-                if (dimensions_broken >= 9)
-                {
-                    if (libraryNode.Nodes.Count > 0)
-                    {
-                        treeView?.Nodes.Add(libraryNode);
-                        Phext.SetLibraryNode(libraryNode, local.GetLibraryRoot());
-                    }
-                    if (next == LIBRARY_BREAK)
-                    {
-                        local.LibraryBreak();
-                    }
-                    sectionNode = Phext.GetSectionTreeRoot(local);
-                    chapterNode = Phext.GetChapterTreeRoot(local);
-                    bookNode = Phext.GetBookTreeRoot(local);
-                    volumeNode = Phext.GetVolumeTreeRoot(local);
-                    collectionNode = Phext.GetCollectionTreeRoot(local);
-                    seriesNode = Phext.GetSeriesTreeRoot(local);
-                    shelfNode = Phext.GetShelfTreeRoot(local);
-                    libraryNode = Phext.GetLibraryTreeRoot(local);
-                }
-            }
-
-            if (stage.Length > 0)
-            {
-                var result = insertScroll(stage, local, sectionNode, showCoordinates);
-                if (result != null && result.PushToSQ)
-                {
-                    PendingScrolls[result.Coord] = result.Scroll;
-                }
-                stage.Clear();
-            }
-            if (sectionNode.Nodes.Count > 0)
-            {
-                chapterNode.Nodes.Add(sectionNode);
-                Phext.SetSectionNode(sectionNode, local);
-            }
-            if (chapterNode.Nodes.Count > 0)
-            {
-                bookNode.Nodes.Add(chapterNode);
-                Phext.SetChapterNode(chapterNode, local);
-            }
-            if (bookNode.Nodes.Count > 0)
-            {
-                volumeNode.Nodes.Add(bookNode);
-                Phext.SetBookNode(bookNode, local);
-            }
-            if (volumeNode.Nodes.Count > 0)
-            {
-                collectionNode.Nodes.Add(volumeNode);
-                Phext.SetVolumeNode(volumeNode, local);
-            }
-            if (collectionNode.Nodes.Count > 0)
-            {
-                seriesNode.Nodes.Add(collectionNode);
-                Phext.SetCollectionNode(collectionNode, local);
-            }
-            if (seriesNode.Nodes.Count > 0)
-            {
-                shelfNode.Nodes.Add(seriesNode);
-                Phext.SetSeriesNode(seriesNode, local);
-            }
-            if (shelfNode.Nodes.Count > 0)
-            {
-                libraryNode.Nodes.Add(shelfNode);
-                Phext.SetShelfNode(shelfNode, local);
-            }
-            if (libraryNode.Nodes.Count > 0)
-            {
-                treeView?.Nodes.Add(libraryNode);
-                Phext.SetLibraryNode(libraryNode, local);
+                Phext.SetAt(token.Coord, token.Scroll);
             }
             Coords.Reset();
-        }
-
-
-        private InsertResult? insertScroll(StringBuilder stage, Coordinates local, TreeNode? node, bool showCoordinates)
-        {
-            var scroll = stage.ToString();
-            if (scroll == "---sq:Scroll-Missing---")
-            {
-                // hack to patch missing scrolls back to SQ
-                Phext.Coords = local;
-                var prior = Phext.getScroll();
-                InsertResult result = new()
-                {
-                    PushToSQ = true,
-                    Coord = new(local),
-                    Scroll = prior
-                };
-                return result;
-            }
-
-            if (scroll.Length > 0)
-            {
-                var key = local.ToString();
-                var line = GetScrollSummary(local, scroll);
-                var scrollNode = node?.Nodes.Add(key, (showCoordinates ? $"{key}! {line}" : line));
-                Phext.Coords = local;
-                Phext.setScroll(scroll, scrollNode);
-            }
-
-            return null;
         }
 
         public static string GetScrollSummary(Coordinates coords, string scroll)
@@ -391,163 +134,19 @@ namespace PhextNotepad
             return coords.GetNodeSummary();
         }
 
+        // The library's serializer over the document's scrolls in
+        // coordinate order: Dephokenize emits the same minimal break
+        // runs the vendored nested walk emitted (advance the highest
+        // dimension that is behind, one break at a time), so the
+        // output is byte-identical for the same stored scrolls.
         public string Serialize()
         {
-            StringBuilder collector = new();
-            Coordinates local = new(true);
-            foreach (var library_index in Phext.Root.Library.Keys)
+            var tokens = new List<PositionedScroll>(Phext.Scrolls.Count);
+            foreach (var (coord, text) in Phext.Scrolls)
             {
-                while (local.Library < library_index)
-                {
-                    collector.Append(LIBRARY_BREAK);
-                    ++local.Library;
-                    local.Shelf = 1;
-                    local.Series = 1;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Library(collector, Phext.Root.Library[library_index], local);
+                tokens.Add(new PositionedScroll(coord, text));
             }
-            return collector.ToString();
-        }
-        private void Serialize_Library(StringBuilder collector, LibraryNode library, Coordinates local)
-        {
-            foreach (var shelf_index in library.Shelf.Keys)
-            {
-                while (local.Shelf < shelf_index)
-                {
-                    collector.Append(SHELF_BREAK);
-                    ++local.Shelf;
-                    local.Series = 1;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Shelf(collector, library.Shelf[shelf_index], local);
-            }
-        }
-
-        private void Serialize_Shelf(StringBuilder collector, ShelfNode shelf, Coordinates local)
-        {
-            foreach (var series_index in shelf.Series.Keys)
-            {
-                while (local.Series < series_index)
-                {
-                    collector.Append(SERIES_BREAK);
-                    ++local.Series;
-                    local.Collection = 1;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Series(collector, shelf.Series[series_index], local);
-            }
-        }
-        private void Serialize_Series(StringBuilder collector, SeriesNode series, Coordinates local)
-        {
-            foreach (var collection_index in series.Collection.Keys)
-            {
-                while (local.Collection < collection_index)
-                {
-                    collector.Append(COLLECTION_BREAK);
-                    ++local.Collection;
-                    local.Volume = 1;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Collection(collector, series.Collection[collection_index], local);
-            }
-        }
-
-        private void Serialize_Collection(StringBuilder collector, CollectionNode collection, Coordinates local)
-        {
-            foreach (var volume_index in collection.Volume.Keys)
-            {
-                while (local.Volume < volume_index)
-                {
-                    collector.Append(VOLUME_BREAK);
-                    ++local.Volume;
-                    local.Book = 1;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Volume(collector, collection.Volume[volume_index], local);
-            }
-        }
-
-        private void Serialize_Volume(StringBuilder collector, VolumeNode volume, Coordinates local)
-        {
-            foreach (var book_index in volume.Book.Keys)
-            {
-                while (local.Book < book_index)
-                {
-                    collector.Append(BOOK_BREAK);
-                    ++local.Book;
-                    local.Chapter = 1;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Book(collector, volume.Book[book_index], local);
-            }
-        }
-
-        private void Serialize_Book(StringBuilder collector, BookNode book, Coordinates local)
-        {
-            foreach (var chapter_index in book.Chapter.Keys)
-            {
-                while (local.Chapter < chapter_index)
-                {
-                    collector.Append(CHAPTER_BREAK);
-                    ++local.Chapter;
-                    local.Section = 1;
-                    local.Scroll = 1;
-                }
-                Serialize_Chapter(collector, book.Chapter[chapter_index], local);
-            }
-        }
-
-        private void Serialize_Chapter(StringBuilder collector, ChapterNode chapter, Coordinates local)
-        {
-            foreach (var section_index in chapter.Section.Keys)
-            {
-                while (local.Section < section_index)
-                {
-                    collector.Append(SECTION_BREAK);
-                    ++local.Section;
-                    local.Scroll = 1;
-                }
-                Serialize_Section(collector, chapter.Section[section_index], local);
-            }
-        }
-
-        private void Serialize_Section(StringBuilder collector, SectionNode section, Coordinates local)
-        {
-            foreach (var scroll_index in section.Scroll.Keys)
-            {
-                while (local.Scroll < scroll_index)
-                {
-                    collector.Append(SCROLL_BREAK);
-                    ++local.Scroll;
-                }
-                Serialize_Scroll(collector, section.Scroll[scroll_index]);
-            }
-        }
-
-        private void Serialize_Scroll(StringBuilder collector, ScrollNode scroll)
-        {
-            collector.Append(scroll.Text);
+            return PhextEngine.Dephokenize(tokens);
         }
 
         public static bool IsBreakCharacter(char ch)
@@ -561,20 +160,6 @@ namespace PhextNotepad
         public static bool IsTextCharacter(char ch)
         {
             return ch >= WORD_BREAK;
-        }
-
-        public TreeNode? Find(Coordinates coordinates)
-        {
-            return Phext.Find(coordinates);
-        }
-
-        public TreeNode CreateNode(TreeNode sectionNode, string line, bool showKey)
-        {
-            var key = Coords.ToString();
-            var scrollNode = sectionNode.Nodes.Add(key, (showKey ? $"{key}: {line}" : line));
-            Phext.Section.Node = scrollNode;
-            Phext.Cache[scrollNode.Name] = scrollNode;
-            return scrollNode;
         }
     }
 }

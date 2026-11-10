@@ -9,4 +9,10 @@ rust-version = "1.90"
 publish = false
 
 [dependencies]
-libphext = "0.3.1"
+# libphext 0.5.0 is the parity target (unbounded coordinates, binary
+# scrolls, xz seal). It was developed in-tree on libphext-rs exo and
+# pinned here by git rev until Will published it to crates.io on
+# 2026-11-08; the dependency now resolves from the registry and
+# Cargo.lock records its checksum. The binary and xz features gate the
+# base64 and xz2 dependencies, mirroring upstream's own feature layout.
+libphext = { version = "0.5.0", features = ["binary", "xz"] }

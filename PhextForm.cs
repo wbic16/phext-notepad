@@ -29,6 +29,7 @@ namespace PhextNotepad
         public PhextForm(string[] args)
         {
             InitializeComponent();
+            treeView.BeforeExpand += treeView_BeforeExpand;
 
             try
             {
@@ -104,7 +105,7 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
 
         private void collectScroll()
         {
-            if (_checkout == null || _checkout.ToString() != _model.Coords.ToString())
+            if (_loading || _checkout == null || _checkout.ToString() != _model.Coords.ToString())
             {
                 return;
             }
@@ -116,7 +117,7 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             }
             treeView.BeginUpdate();
             treeView.SuspendLayout();
-            var node = getTreeNode(_model.Phext.Coords);
+            var node = FindMaterializedNode(_model.Phext.Coords.ToString());
             if (node != null)
             {
                 if (textBox.Lines != null && textBox.Lines.Length >= 1)
@@ -127,30 +128,34 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             }
             else
             {
-                var parent = getParentTreeNode(_model.Phext.Coords);
-                if (parent != null)
+                // The scroll's node is not in the tree yet (a new
+                // scroll, or a section never expanded). setScroll
+                // above has already created the scroll in the model,
+                // so materializing its path brings the node in with
+                // its siblings; if it is still missing afterwards,
+                // add it directly under its section.
+                MaterializeNodePath(_model.Phext.Coords, out bool found);
+                node = found ? FindMaterializedNode(_model.Phext.Coords.ToString()) : null;
+                if (node == null)
                 {
-                    TreeNode sectionNode;
-                    if (parent.Text.StartsWith("Chapter"))
+                    var section = FindMaterializedNode(_model.Phext.Coords.GetSectionRoot().ToString());
+                    if (section != null)
                     {
-                        var sectionName = _model.Phext.Coords.GetSectionRoot().ToString();
-                        sectionNode = parent.Nodes.Add(sectionName, $"Section {_model.Phext.Coords.Section}");
-                        _model.Phext.Cache[sectionName] = sectionNode;
+                        var line = PhextModel.GetScrollSummary(_model.Phext.Coords, textBox.Text);
+                        var key = _model.Phext.Coords.ToString();
+                        node = section.Nodes.Add(key, _settings.ShowCoordinates ? $"{key}: {line}" : line);
+                        node.Tag = PhextTree.ScrollEntry(_model.Phext, _model.Phext.Coords, _settings.ShowCoordinates);
                     }
-                    else
-                    {
-                        sectionNode = parent;
-                    }
-
-                    var line = PhextModel.GetScrollSummary(_model.Phext.Coords, textBox.Text);
-                    var scrollNode = _model.CreateNode(sectionNode, line, _settings.ShowCoordinates);
-                    scrollNode.NodeFont = SCROLL_NODE_FONT;
-                    treeView.SelectedNode = scrollNode;
+                }
+                if (node != null)
+                {
+                    node.NodeFont = SCROLL_NODE_FONT;
+                    treeView.SelectedNode = node;
                     textBox.SelectionStart = textBox.Text.Length;
-                    // Only a structural change needs the tree re-expanded;
-                    // this used to run on every keystroke, walking every
-                    // node in the tree each time.
-                    treeView.ExpandAll();
+                    // Only the new node needs to become visible; this
+                    // used to ExpandAll(), walking every node in the
+                    // tree on the keystroke that created a scroll.
+                    node.EnsureVisible();
                 }
             }
 
@@ -177,12 +182,7 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             if (treeView.Visible)
             {
                 treeView.Enabled = true;
-                var id = $"{_model.Coords}";
-                var node = treeView.Nodes.Find(id, true);
-                if (node != null && node.Length >= 1)
-                {
-                    treeView.SelectedNode = node[0];
-                }
+                SelectNodeInTree(_model.Coords);
             }
 
             textBox.ResumeLayout();
@@ -305,28 +305,45 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             return num.ToString("#,0");
         }
 
+        private bool _loading = false;
+
         private async void LoadData(string data, bool resetView, bool resetPhext = true)
         {
-            treeView.SuspendLayout();
-            treeView.BeginUpdate();
-            if (resetPhext)
+            if (_loading)
             {
-                treeView.Nodes.Clear();
+                return;
             }
-            _model.Load(data, _settings.ShowCoordinates, treeView, resetPhext);
-            if (_model.PendingScrolls.Count() > 0 && _syncing)
+            _loading = true;
+            try
             {
-                var list = _model.PendingScrolls.ToList();
-                foreach (var (key, value) in list)
+                if (resetPhext)
                 {
-                    string syncKey = new(key.ToString());
-                    string syncValue = new(value);
-                    await pushScroll(syncKey, syncValue);
+                    treeView.Nodes.Clear();
                 }
+                status.Text = $"Loading {_settings.Filename}...";
+                // The parse + model build runs off the UI thread: on
+                // a large phext this used to block the window for the
+                // entire load (Task Manager: Not Responding). Only the
+                // model is touched on that thread; the tree is
+                // populated back here, roots only — the rest of the
+                // tree materializes as the user expands it.
+                await Task.Run(() => _model.Load(data, resetPhext));
+                if (_model.PendingScrolls.Count() > 0 && _syncing)
+                {
+                    var list = _model.PendingScrolls.ToList();
+                    foreach (var (key, value) in list)
+                    {
+                        string syncKey = new(key.ToString());
+                        string syncValue = new(value);
+                        await pushScroll(syncKey, syncValue);
+                    }
+                }
+                PopulateTreeRoots();
             }
-            treeView.ExpandAll();
-            treeView.EndUpdate();
-            treeView.ResumeLayout();
+            finally
+            {
+                _loading = false;
+            }
             if (resetView)
             {
                 jumpToOrigin();
@@ -334,6 +351,147 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             else
             {
                 coordinateJump(_settings.Coords, false);
+            }
+        }
+
+        private TreeNode MakeTreeNode(PhextTreeEntry entry)
+        {
+            var node = new TreeNode(entry.Text)
+            {
+                Name = entry.Name,
+                Tag = entry
+            };
+            if (entry.HasChildren)
+            {
+                // Placeholder child: keeps the [+] affordance without
+                // paying for the real children until first expansion.
+                node.Nodes.Add(new TreeNode(""));
+            }
+            return node;
+        }
+
+        // Replaces a node's placeholder with its real children,
+        // described from the model as it stands right now. Nodes whose
+        // children are already materialized (or that have none) are
+        // left alone.
+        private void PopulateTreeNode(TreeNode node)
+        {
+            if (node.Tag is not PhextTreeEntry entry || entry.IsScroll)
+            {
+                return;
+            }
+            if (node.Nodes.Count != 1 || node.Nodes[0].Tag != null)
+            {
+                return;
+            }
+            node.Nodes.Clear();
+            foreach (var child in PhextTree.Children(_model.Phext, entry.Coord, entry.Level, _settings.ShowCoordinates))
+            {
+                node.Nodes.Add(MakeTreeNode(child));
+            }
+        }
+
+        private void treeView_BeforeExpand(object sender, TreeViewCancelEventArgs e)
+        {
+            if (e.Node != null)
+            {
+                PopulateTreeNode(e.Node);
+            }
+        }
+
+        private void PopulateTreeRoots()
+        {
+            treeView.BeginUpdate();
+            treeView.Nodes.Clear();
+            foreach (var entry in PhextTree.Roots(_model.Phext, _settings.ShowCoordinates))
+            {
+                treeView.Nodes.Add(MakeTreeNode(entry));
+            }
+            treeView.EndUpdate();
+        }
+
+        private TreeNode? FindMaterializedNode(string name)
+        {
+            foreach (TreeNode root in treeView.Nodes)
+            {
+                var found = FindMaterializedNode(root, name);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            return null;
+        }
+
+        private TreeNode? FindMaterializedNode(TreeNode node, string name)
+        {
+            if (node.Name == name)
+            {
+                return node;
+            }
+            foreach (TreeNode child in node.Nodes)
+            {
+                if (child.Tag == null)
+                {
+                    continue;
+                }
+                var found = FindMaterializedNode(child, name);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            return null;
+        }
+
+        // Materializes the TreeNodes along the path to `target`,
+        // expanding each ancestor. Returns the deepest node reached;
+        // `targetFound` is true only when the target itself exists in
+        // the model (for a scroll target: the scroll is present), which
+        // is what distinguishes "select it" from the old full-tree
+        // Find coming up empty.
+        private TreeNode? MaterializeNodePath(Coordinates target, out bool targetFound)
+        {
+            targetFound = false;
+            var path = PhextTree.PathTo(_model.Phext, target, _settings.ShowCoordinates);
+            TreeNodeCollection level = treeView.Nodes;
+            TreeNode? current = null;
+            foreach (var entry in path)
+            {
+                TreeNode? next = null;
+                foreach (TreeNode candidate in level)
+                {
+                    if (candidate.Name == entry.Name)
+                    {
+                        next = candidate;
+                        break;
+                    }
+                }
+                if (next == null)
+                {
+                    break;
+                }
+                current = next;
+                if (entry.IsScroll)
+                {
+                    targetFound = true;
+                }
+                else
+                {
+                    PopulateTreeNode(current);
+                    current.Expand();
+                    level = current.Nodes;
+                }
+            }
+            return current;
+        }
+
+        private void SelectNodeInTree(Coordinates target)
+        {
+            var node = MaterializeNodePath(target, out bool found);
+            if (node != null && found)
+            {
+                treeView.SelectedNode = node;
             }
         }
 
@@ -698,27 +856,6 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             }
         }
 
-        private TreeNode? getTreeNode(Coordinates coordinates)
-        {
-            return _model.Find(coordinates);
-        }
-
-        private TreeNode? getParentTreeNode(Coordinates coords)
-        {
-            if (coords.Chapter == 0 || coords.Section == 0)
-            {
-                return null;
-            }
-
-            var section = _model.Find(coords.GetSectionRoot());
-            if (section != null)
-            {
-                return section;
-            }
-
-            return _model.Find(coords.GetChapterRoot());
-        }
-
         // pre: the UI always shows the selected node...
         private void deleteNode(string coordinates, bool requestConfirmation = true)
         {
@@ -734,11 +871,14 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             _checkout = test;
             _model.Phext.Coords = test;
             UpdateUI("Delete");
-            var node = getTreeNode(_model.Phext.Coords);
-            if (node == null) { return; }
+            var level = PhextTree.LevelOf(test);
+            if (level < 0)
+            {
+                return;
+            }
             if (requestConfirmation)
             {
-                var count = 1 + node.GetNodeCount(true);
+                var count = PhextTree.CountSubtree(_model.Phext, test, level);
                 if (count > 1)
                 {
                     var confirm = MessageBox.Show($"Are you sure you want to delete {count} nodes?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
@@ -752,16 +892,23 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             textBox.Text = "";
             collectScroll();
 
-            var deleteList = new List<string>();
-            foreach (TreeNode child in node.Nodes)
+            // Clear every scroll in the subtree from the model
+            // (setScroll("") removes it, pruning ancestors that become
+            // empty). The old implementation recursed over the eager
+            // tree's materialized children; the model walk reaches the
+            // same scrolls whether or not they were ever expanded.
+            foreach (var scrollCoord in PhextTree.SubtreeScrolls(_model.Phext, test, level))
             {
-                deleteList.Add(child.Name);
+                if (scrollCoord.ToString() == test.ToString())
+                {
+                    continue;
+                }
+                _model.Phext.Coords = scrollCoord;
+                _model.Phext.setScroll("");
             }
-            foreach (var childCoordinates in deleteList)
-            {
-                deleteNode(childCoordinates, false);
-            }
-            node.Remove();
+            _model.Phext.Coords = test;
+            _checkout = test;
+            FindMaterializedNode(coordinates)?.Remove();
         }
 
         private void coordinateJump(string coordinates, bool storeFirst)

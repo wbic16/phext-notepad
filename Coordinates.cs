@@ -1,6 +1,28 @@
-﻿namespace PhextNotepad
+using Phext;
+
+namespace PhextNotepad
 {
-    public class Coordinates
+    // The editor's coordinate. The coordinate itself — the nine
+    // components, the break arithmetic, ordering, equality, and the
+    // canonical text form — is libphext-cs's Phext.Coordinate, consumed
+    // from the NuGet package. What remains in this class is only what
+    // the library does not carry because it belongs to this editor:
+    //
+    // - the text caret (Line/Column) and the coordinate box's
+    //   Intermediate flag;
+    // - group-root coordinates with zeroed lower dimensions, which the
+    //   tree uses as node names. The library's ToString declines to
+    //   format a coordinate with a component below 1 (it returns ""),
+    //   so the override below formats every component unconditionally,
+    //   exactly as the vendored implementation did. For any coordinate
+    //   the library would format, the output is identical.
+    // - IsValid with the editor's semantics: a group root (zeroed
+    //   lower dimensions) is a valid navigation target, so components
+    //   may be 0. The library's IsValid requires every component >= 1.
+    // - the lenient Load the coordinate box has always used (extract
+    //   the integers, require exactly nine), the status-line summaries,
+    //   and Clamp.
+    public class Coordinates : Coordinate
     {
         public Coordinates(bool reset = false)
         {
@@ -11,226 +33,45 @@
         {
             Load(coordinates);
         }
-        public Coordinates(Coordinates other)
+
+        public Coordinates(Coordinate other) : base(other)
+        {
+        }
+
+        public Coordinates(Coordinates other) : base(other)
         {
             Column = other.Column;
             Line = other.Line;
-            Scroll = other.Scroll;
-            Section = other.Section;
-            Chapter = other.Chapter;
-            Book = other.Book;
-            Volume = other.Volume;
-            Collection = other.Collection;
-            Series = other.Series;
-            Shelf = other.Shelf;
-            Library = other.Library;
             Intermediate = other.Intermediate;
         }
 
-        public void LibraryBreak()
-        {
-            Library++;
-            Shelf = 1;
-            Series = 1;
-            Collection = 1;
-            Volume = 1;
-            Book = 1;
-            Chapter = 1;
-            Section = 1;
-            Scroll = 1;
-        }
-
-        public void ShelfBreak()
-        {
-            Shelf++;
-            Series = 1;
-            Collection = 1;
-            Volume = 1;
-            Book = 1;
-            Chapter = 1;
-            Section = 1;
-            Scroll = 1;
-        }
-
-        public void SeriesBreak()
-        {
-            Series++;
-            Collection = 1;
-            Volume = 1;
-            Book = 1;
-            Chapter = 1;
-            Section = 1;
-            Scroll = 1;
-        }
-
-        public void CollectionBreak()
-        {
-            Collection++;
-            Volume = 1;
-            Book = 1;
-            Chapter = 1;
-            Section = 1;
-            Scroll = 1;
-        }
-
-        public void VolumeBreak()
-        {
-            Volume++;
-            Book = 1;
-            Chapter = 1;
-            Section = 1;
-            Scroll = 1;
-        }
-
-        public void BookBreak()
-        {
-            Book++;
-            Chapter = 1;
-            Section = 1;
-            Scroll = 1;
-        }
-
-        public void ChapterBreak()
-        {
-            Chapter++;
-            Section = 1;
-            Scroll = 1;
-        }
-
-        public void SectionBreak()
-        {
-            Section++;
-            Scroll = 1;
-        }
-
-        public void ScrollBreak()
-        {
-            Scroll++;
-        }
         public bool Intermediate { get; set; } = false;
-        public class ScrollIndex : TypedCoordinate
-        {
-            public ScrollIndex(short value) : base(value)
-            {
-            }
-            public static implicit operator ScrollIndex(short value)
-            {
-                return new ScrollIndex(value);
-            }
-        }
-        public class SectionIndex : TypedCoordinate
-        {
-            public SectionIndex(short value) : base(value)
-            {
-            }
-            public static implicit operator SectionIndex(short value)
-            {
-                return new SectionIndex(value);
-            }
-        }
-        public class ChapterIndex : TypedCoordinate
-        {
-            public ChapterIndex(short value) : base(value)
-            {
-            }
 
-            public static implicit operator ChapterIndex(short value)
-            {
-                return new ChapterIndex(value);
-            }
-        }
-        public class BookIndex : TypedCoordinate
-        {
-            public BookIndex(short value) : base(value)
-            {
-            }
-            public static implicit operator BookIndex(short value)
-            {
-                return new BookIndex(value);
-            }
-        }
-        public class VolumeIndex : TypedCoordinate
-        {
-            public VolumeIndex(short value) : base(value)
-            {
-            }
-            public static implicit operator VolumeIndex(short value)
-            {
-                return new VolumeIndex(value);
-            }
-        }
-        public class CollectionIndex : TypedCoordinate
-        {
-            public CollectionIndex(short value) : base(value)
-            {
-            }
-            public static implicit operator CollectionIndex(short value)
-            {
-                return new CollectionIndex(value);
-            }
-        }
-        public class SeriesIndex : TypedCoordinate
-        {
-            public SeriesIndex(short value) : base(value)
-            {
-            }
-            public static implicit operator SeriesIndex(short value)
-            {
-                return new SeriesIndex(value);
-            }
-        }
-        public class ShelfIndex : TypedCoordinate
-        {
-            public ShelfIndex(short value) : base(value)
-            {
-            }
-            public static implicit operator ShelfIndex(short value)
-            {
-                return new ShelfIndex(value);
-            }
-        }
-        public class LibraryIndex : TypedCoordinate
-        {
-            public LibraryIndex(short value) : base(value)
-            {
-            }
-            public static implicit operator LibraryIndex(short value)
-            {
-                return new LibraryIndex(value);
-            }
-        }
-
-        public static readonly short SZERO = 0;
+        public static readonly int SZERO = 0;
 
         public int Column { get; set; } = 1;
         public int Line { get; set; } = 1;
-        public ScrollIndex Scroll { get; set; } = 1;
-        public SectionIndex Section { get; set; } = 1;
-        public ChapterIndex Chapter { get; set; } = 1;
-        public BookIndex Book { get; set; } = 1;
-        public VolumeIndex Volume { get; set; } = 1;
-        public CollectionIndex Collection { get; set; } = 1;
-        public SeriesIndex Series { get; set; } = 1;
-        public ShelfIndex Shelf { get; set; } = 1;
-        public LibraryIndex Library { get; set; } = 1;
 
         public override string ToString()
         {
             return ToString(this);
         }
 
-        public static short CoordinateClamp(short value)
+        public static int CoordinateClamp(int value)
         {
-            return (value < 1) ? (short)1 : value;
+            return (value < 1) ? 1 : value;
         }
+
         public static string ToString(Coordinates c)
         {
             return $"{c.Library}.{c.Shelf}.{c.Series}/{c.Collection}.{c.Volume}.{c.Book}/{c.Chapter}.{c.Section}.{c.Scroll}";
         }
+
         public Coordinates GetRoot()
         {
             return new Coordinates();
         }
+
         public Coordinates GetLibraryRoot()
         {
             return new Coordinates(this)
@@ -245,6 +86,7 @@
                 Shelf = 0
             };
         }
+
         public Coordinates GetShelfRoot()
         {
             return new Coordinates(this)
@@ -258,6 +100,7 @@
                 Series = 0
             };
         }
+
         public Coordinates GetSeriesRoot()
         {
             return new Coordinates(this)
@@ -270,6 +113,7 @@
                 Collection = 0
             };
         }
+
         public Coordinates GetCollectionRoot()
         {
             return new Coordinates(this)
@@ -281,6 +125,7 @@
                 Volume = 0
             };
         }
+
         public Coordinates GetVolumeRoot()
         {
             return new Coordinates(this)
@@ -291,6 +136,7 @@
                 Book = 0
             };
         }
+
         public Coordinates GetBookRoot()
         {
             return new Coordinates(this)
@@ -300,6 +146,7 @@
                 Chapter = 0
             };
         }
+
         public Coordinates GetChapterRoot()
         {
             return new Coordinates(this)
@@ -308,6 +155,7 @@
                 Section = 0
             };
         }
+
         public Coordinates GetSectionRoot()
         {
             return new Coordinates(this)
@@ -315,6 +163,7 @@
                 Scroll = 0
             };
         }
+
         public Coordinates GetScrollRoot()
         {
             return new Coordinates(this);
@@ -350,13 +199,13 @@
             Library = 1;
         }
 
-        private short[] ParseCoordinateString(string coordinates)
+        private int[] ParseCoordinateString(string coordinates)
         {
-            var strings = coordinates.Replace('.','/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-            var result = new List<short>();
+            var strings = coordinates.Replace('.', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var result = new List<int>();
             foreach (var s in strings)
             {
-                if (short.TryParse(s, out short parsed))
+                if (int.TryParse(s, out int parsed))
                 {
                     result.Add(parsed);
                 }
@@ -384,7 +233,7 @@
             Intermediate = false;
         }
 
-        public bool IsValid()
+        public new bool IsValid()
         {
             return Chapter >= 0 && Section >= 0 && Scroll >= 0 &&
                    Book >= 0 && Volume >= 0 && Collection >= 0 &&
