@@ -15,7 +15,8 @@ use fltk::enums::{Align, Color, Event, Font, FrameType, Key, Shortcut};
 use fltk::prelude::*;
 use fltk::{app, button, dialog, frame, input, menu, text, tree, window};
 use phext_notepad_core::sync::{
-    pull_all, pull_scroll, push_all, EditClient, SessionInfo, StoredSession, SyncBook, SyncReport,
+    pull_all, pull_scroll, push_all, DesktopSso, EditClient, LoopbackCatch, SessionInfo,
+    StoredSession, SyncBook, SyncReport,
 };
 use phext_notepad_core::zoom::OutlineNode;
 use phext_notepad_core::{parse_coordinate, Document, Prefs, Theme, ZoomLevel};
@@ -1131,15 +1132,18 @@ impl Notepad {
     /// providers when it is locked, pick a library phext, and pull
     /// it into a fresh document.
     ///
-    /// Sign-in runs in the system browser: phext-edit clamps the
-    /// post-sign-in redirect to its own site (`safe_next` in its
-    /// oauth.rs), so no loopback return exists for the app to catch,
-    /// and the session cookie is HttpOnly in the browser's jar. The
-    /// user therefore hands the app the `phext_session` value once;
-    /// the app verifies it against `/api/session`, keeps it in the
-    /// owner-only session file, and reuses it until it expires
-    /// (14 days) — the OAuth flow itself is entirely the server's
-    /// GitHub/Google sign-in.
+    /// Sign-in runs in the system browser. When the server has the
+    /// desktop SSO audience armed, it is the automated loopback flow
+    /// ([`Self::desktop_sign_in`]): the browser is redirected back to
+    /// the app's own listener with a sealed assertion, and the app
+    /// trades it at the server's exchange endpoint for the session —
+    /// no paste, and no secret ever ships in the app (the server
+    /// verifies its own assertion). Servers that answer the desktop
+    /// endpoint 404 (unarmed, or older than the flow) fall back to
+    /// the paste ([`Self::paste_sign_in`]): the user hands the app
+    /// the `phext_session` value once per 14 days. Either way the
+    /// session is verified against `/api/session`, kept in the
+    /// owner-only session file, and reused until it expires.
     fn sync_connect(&mut self) {
         if !self.confirm_discard() {
             return;
@@ -1184,49 +1188,20 @@ impl Notepad {
                     // An open or --local server: nothing to sign into.
                     probe
                 } else {
-                    let providers: Vec<&str> = ["github", "google", "x"]
-                        .into_iter()
-                        .filter(|p| probe.providers.iter().any(|have| have == p))
-                        .collect();
-                    let Some(&provider) = providers.first() else {
-                        dialog::alert_default(
-                            "This server requires sign-in but offers no providers.",
-                        );
-                        return;
-                    };
-                    let provider = if providers.len() > 1 {
-                        let names: Vec<String> =
-                            providers.iter().map(|p| provider_label(p)).collect();
-                        match dialog::choice2_default(
-                            "Sign in with:",
-                            &names[0],
-                            names.get(1).map(String::as_str).unwrap_or(""),
-                            names.get(2).map(String::as_str).unwrap_or("Cancel"),
-                        ) {
-                            Some(index) if (index as usize) < providers.len() => {
-                                providers[index as usize]
+                    match client.desktop_sso_probe() {
+                        Ok(DesktopSso::Armed) => match self.desktop_sign_in(&mut client) {
+                            Ok(info) => info,
+                            Err(message) => {
+                                dialog::alert_default(&message);
+                                return;
                             }
-                            _ => return,
+                        },
+                        Ok(DesktopSso::Unavailable) => {
+                            match self.paste_sign_in(&mut client, &probe) {
+                                Some(info) => info,
+                                None => return,
+                            }
                         }
-                    } else {
-                        provider
-                    };
-                    if !open_url(&client.auth_start_url(provider)) {
-                        dialog::alert_default("Could not open a browser for sign-in.");
-                        return;
-                    }
-                    let Some(cookie) = dialog::password_default(
-                        "Sign in in your browser, then paste the phext_session cookie value\n(from the browser's developer tools: Application/Storage → Cookies → edit site):",
-                        "",
-                    ) else {
-                        return;
-                    };
-                    if cookie.trim().is_empty() {
-                        return;
-                    }
-                    client.set_cookie(cookie);
-                    match client.session() {
-                        Ok(info) => info,
                         Err(err) => {
                             dialog::alert_default(&err.0);
                             return;
@@ -1326,6 +1301,94 @@ impl Notepad {
                 self.refresh();
             }
             Err(err) => dialog::alert_default(&err.0),
+        }
+    }
+
+    /// The desktop SSO sign-in: open a loopback catch, send the
+    /// browser to the server's desktop endpoint, wait for the
+    /// assertion to land (pumping the UI so the window stays alive
+    /// while the user signs in), and trade it at the exchange
+    /// endpoint. On success the client holds the exchanged session
+    /// and the server's view of it is returned. A failure is a
+    /// message for the user — there is deliberately no silent slide
+    /// into the paste here; the paste is only for servers where the
+    /// desktop endpoint does not exist (the probe's 404).
+    fn desktop_sign_in(&self, client: &mut EditClient) -> Result<SessionInfo, String> {
+        let catch = LoopbackCatch::start().map_err(|e| e.0)?;
+        let state = catch.state().to_string();
+        let url = client.desktop_sso_url(catch.return_url(), catch.state());
+        if !open_url(&url) {
+            return Err("Could not open a browser for sign-in.".to_string());
+        }
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = tx.send(catch.wait(std::time::Duration::from_secs(300)));
+        });
+        let assertion = loop {
+            match rx.try_recv() {
+                Ok(result) => break result.map_err(|e| e.0)?,
+                Err(std::sync::mpsc::TryRecvError::Empty) => {
+                    let _ = app::wait_for(0.05);
+                }
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    return Err("The sign-in listener stopped unexpectedly.".to_string());
+                }
+            }
+        };
+        client.desktop_exchange(&assertion, &state).map_err(|e| e.0)?;
+        client.session().map_err(|e| e.0)
+    }
+
+    /// The paste sign-in, kept as the fallback for servers without
+    /// the desktop SSO audience: phext-edit clamps the post-sign-in
+    /// redirect to its own site (`safe_next` in its oauth.rs), so no
+    /// loopback return exists there for the app to catch, and the
+    /// session cookie is HttpOnly in the browser's jar. The user
+    /// therefore hands the app the `phext_session` value once; the
+    /// app verifies it against `/api/session` before keeping it.
+    /// `None` means the attempt was abandoned (already reported, or
+    /// the dialog was dismissed).
+    fn paste_sign_in(&self, client: &mut EditClient, probe: &SessionInfo) -> Option<SessionInfo> {
+        let providers: Vec<&str> = ["github", "google", "x"]
+            .into_iter()
+            .filter(|p| probe.providers.iter().any(|have| have == p))
+            .collect();
+        let Some(&provider) = providers.first() else {
+            dialog::alert_default("This server requires sign-in but offers no providers.");
+            return None;
+        };
+        let provider = if providers.len() > 1 {
+            let names: Vec<String> = providers.iter().map(|p| provider_label(p)).collect();
+            match dialog::choice2_default(
+                "Sign in with:",
+                &names[0],
+                names.get(1).map(String::as_str).unwrap_or(""),
+                names.get(2).map(String::as_str).unwrap_or("Cancel"),
+            ) {
+                Some(index) if (index as usize) < providers.len() => providers[index as usize],
+                _ => return None,
+            }
+        } else {
+            provider
+        };
+        if !open_url(&client.auth_start_url(provider)) {
+            dialog::alert_default("Could not open a browser for sign-in.");
+            return None;
+        }
+        let cookie = dialog::password_default(
+            "Sign in in your browser, then paste the phext_session cookie value\n(from the browser's developer tools: Application/Storage → Cookies → edit site):",
+            "",
+        )?;
+        if cookie.trim().is_empty() {
+            return None;
+        }
+        client.set_cookie(cookie);
+        match client.session() {
+            Ok(info) => Some(info),
+            Err(err) => {
+                dialog::alert_default(&err.0);
+                None
+            }
         }
     }
 

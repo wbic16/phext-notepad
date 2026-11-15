@@ -27,10 +27,27 @@
 //! cookie (HMAC-sealed by the server, 14-day life) plus the session's
 //! CSRF token in `x-csrf-token` on POSTs, exactly as the web editor
 //! presents them. See [`StoredSession`] for how the cookie is kept.
+//!
+//! Sign-in prefers the server's desktop SSO flow when it is armed
+//! (`PHEXT_SSO_DESKTOP=1` there): the app opens a loopback listener
+//! ([`LoopbackCatch`]), sends the browser to
+//! `GET /api/auth/sso/desktop` with that listener as the return, and
+//! POSTs the assertion it catches to
+//! `POST /api/auth/desktop/exchange`. The server verifies the
+//! assertion itself — a shipped app cannot hold the SSO secret, so
+//! the secret never leaves the server — burns its single-use id, and
+//! answers with a freshly sealed session value, which the app then
+//! stores and presents exactly like a cookie the user pasted. When
+//! the desktop endpoint answers 404 (unarmed, or a server older than
+//! the flow) the app falls back to that paste; see
+//! [`EditClient::desktop_sso_probe`].
 
 use std::collections::{BTreeMap, HashSet};
+use std::io::{Read, Write};
+use std::net::TcpListener;
 use std::path::Path;
-use std::time::Duration;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use libphext::phext::Coordinate;
 use serde_json::{json, Value};
@@ -187,6 +204,72 @@ impl EditClient {
     /// runs the provider sign-in and lands back on the server.
     pub fn auth_start_url(&self, provider: &str) -> String {
         format!("{}/api/auth/{}", self.base, provider)
+    }
+
+    /// The desktop SSO start URL for one sign-in attempt: visiting
+    /// it in a browser runs the sign-in there and redirects to the
+    /// attempt's loopback `return_url` carrying the assertion and
+    /// the attempt's `state`.
+    pub fn desktop_sso_url(&self, return_url: &str, state: &str) -> String {
+        format!(
+            "{}/api/auth/sso/desktop?return={}&state={}",
+            self.base,
+            form_encode(return_url),
+            form_encode(state)
+        )
+    }
+
+    /// Ask whether this server has the desktop SSO audience armed.
+    /// The probe is a plain GET of the mint URL with a throwaway
+    /// loopback return: an armed server answers 302 (toward sign-in,
+    /// or toward the return when a session is presented), an unarmed
+    /// or older server answers 404 — the distinction the app's
+    /// paste fallback hangs on.
+    pub fn desktop_sso_probe(&self) -> Result<DesktopSso> {
+        let url = self.desktop_sso_url("http://127.0.0.1:8912/", "probe-state-0123456789abcdef");
+        let status = match self.agent.get(&url).call() {
+            Ok(resp) => resp.status(),
+            Err(ureq::Error::Status(status, _)) => status,
+            Err(err) => return Err(self.wrap_error(err)),
+        };
+        match status {
+            302 => Ok(DesktopSso::Armed),
+            404 => Ok(DesktopSso::Unavailable),
+            other => Err(SyncError(format!(
+                "{} answered HTTP {other} on the desktop sign-in probe",
+                self.base
+            ))),
+        }
+    }
+
+    /// Trade a desktop SSO assertion for the session it grants:
+    /// POSTs the assertion and the attempt's state to the exchange
+    /// endpoint, and on success this client holds the returned
+    /// session cookie and CSRF token, exactly as if the user had
+    /// pasted the cookie. Refusals surface in the server's own words
+    /// (a 401 for a bad, spent, or foreign assertion; the editor-list
+    /// refusal for a signed-in non-editor).
+    pub fn desktop_exchange(&mut self, assertion: &str, state: &str) -> Result<()> {
+        let resp = self
+            .agent
+            .post(&format!("{}/api/auth/desktop/exchange", self.base))
+            .set("x-phext-assertion", assertion)
+            .set("x-phext-state", state)
+            .call()
+            .map_err(|e| self.wrap_error(e))?;
+        let value = resp
+            .into_json::<Value>()
+            .map_err(|e| SyncError(format!("bad reply from {}: {e}", self.base)))?;
+        check_ok(&value)?;
+        let session = value
+            .get("session")
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty())
+            .ok_or_else(|| SyncError("the exchange returned no session".to_string()))?;
+        let csrf = value.get("csrf").and_then(Value::as_str).unwrap_or("");
+        self.set_cookie(session);
+        self.set_csrf(csrf);
+        Ok(())
     }
 
     /// Present a `phext_session` cookie value (the full sealed value,
@@ -411,6 +494,218 @@ impl EditClient {
 
 /// `POST` replies carry `{ok, message}`; a false `ok` is a failure
 /// even at HTTP 200 (the server's `ApiOk` convention).
+/// Whether a server's desktop SSO audience answered the probe.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DesktopSso {
+    /// The mint endpoint answered 302: the flow is armed.
+    Armed,
+    /// The mint endpoint answered 404: unarmed there, or a server
+    /// older than the flow. The paste sign-in is the fallback.
+    Unavailable,
+}
+
+/// Percent-encode for a query value: unreserved characters pass
+/// through, everything else becomes `%XX`.
+fn form_encode(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for byte in text.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(byte as char)
+            }
+            _ => out.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    out
+}
+
+/// Percent-decode a query value (`+` reads as a space, per form
+/// encoding; neither the assertion alphabet nor the state alphabet
+/// contains either character, so nothing real is altered).
+fn percent_decode(text: &str) -> String {
+    let bytes = text.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'%' if i + 2 < bytes.len() => {
+                let hex = std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or("");
+                match u8::from_str_radix(hex, 16) {
+                    Ok(byte) => {
+                        out.push(byte);
+                        i += 3;
+                    }
+                    Err(_) => {
+                        out.push(bytes[i]);
+                        i += 1;
+                    }
+                }
+            }
+            b'+' => {
+                out.push(b' ');
+                i += 1;
+            }
+            byte => {
+                out.push(byte);
+                i += 1;
+            }
+        }
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+static NONCE_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+/// A fresh per-attempt state nonce for the desktop flow: 32 hex
+/// characters of the crate's SHA-256 over the process id, the
+/// wall clock, and a process-wide counter. The nonce's job is
+/// binding — the app accepts only the landing that carries its own
+/// attempt's state, and the server demands the same state back at
+/// the exchange — and its unguessability rests on the hash, not on
+/// the inputs being secret. (The assertion itself is additionally
+/// single-use, server-burned, and worthless to anyone but an editor
+/// account; the state is the attempt binding, not the credential.)
+pub fn new_state_nonce() -> String {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let tick = NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let seed = format!("phext-notepad-desktop-sso:{}:{nanos}:{tick}", std::process::id());
+    sha256_hex(seed.as_bytes())[..32].to_string()
+}
+
+/// One desktop sign-in attempt's loopback catch: a listener on an
+/// ephemeral loopback port, waiting for the browser the server
+/// redirects back with the attempt's assertion.
+///
+/// The listener binds the numeric loopback only and serves nothing
+/// but this one landing; unrelated requests (a favicon fetch, a
+/// stray local process probing the port) are answered and the wait
+/// continues until the assertion lands or the deadline passes.
+pub struct LoopbackCatch {
+    listener: TcpListener,
+    return_url: String,
+    state: String,
+}
+
+impl LoopbackCatch {
+    /// Bind the listener and mint the attempt's state. Open the
+    /// browser at the client's `desktop_sso_url` for this catch's
+    /// return and state, then call [`LoopbackCatch::wait`].
+    pub fn start() -> Result<Self> {
+        let listener = TcpListener::bind(("127.0.0.1", 0))
+            .map_err(|e| SyncError(format!("cannot open the sign-in listener: {e}")))?;
+        let port = listener
+            .local_addr()
+            .map_err(|e| SyncError(format!("cannot open the sign-in listener: {e}")))?
+            .port();
+        Ok(Self {
+            listener,
+            return_url: format!("http://127.0.0.1:{port}/"),
+            state: new_state_nonce(),
+        })
+    }
+
+    /// The return URL the server redirects the browser to.
+    pub fn return_url(&self) -> &str {
+        &self.return_url
+    }
+
+    /// The attempt's state nonce; the landing must carry it back.
+    pub fn state(&self) -> &str {
+        &self.state
+    }
+
+    /// Block until the assertion lands (answering the browser with
+    /// a small "you can close this tab" page) or the timeout passes.
+    /// The landing's state must equal this attempt's — a redirect
+    /// minted for a different attempt is refused and named as such —
+    /// and the verified assertion is returned for the exchange.
+    pub fn wait(self, timeout: Duration) -> Result<String> {
+        self.listener
+            .set_nonblocking(true)
+            .map_err(|e| SyncError(format!("sign-in listener failed: {e}")))?;
+        let deadline = Instant::now() + timeout;
+        loop {
+            match self.listener.accept() {
+                Ok((stream, _)) => {
+                    if let Some(assertion) = self.serve(stream)? {
+                        return Ok(assertion);
+                    }
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                    if Instant::now() >= deadline {
+                        return Err(SyncError(
+                            "sign-in timed out — the browser never came back".to_string(),
+                        ));
+                    }
+                    std::thread::sleep(Duration::from_millis(25));
+                }
+                Err(e) => return Err(SyncError(format!("sign-in listener failed: {e}"))),
+            }
+        }
+    }
+
+    /// Serve one connection. `Ok(Some)` when it carried this
+    /// attempt's assertion, `Ok(None)` for anything else the wait
+    /// should outlive.
+    fn serve(&self, mut stream: std::net::TcpStream) -> Result<Option<String>> {
+        let _ = stream.set_nonblocking(false);
+        let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
+        let mut head = Vec::with_capacity(2048);
+        let mut byte = [0u8; 1];
+        while !head.ends_with(b"\r\n\r\n") && head.len() < 16384 {
+            match stream.read(&mut byte) {
+                Ok(0) => break,
+                Ok(_) => head.push(byte[0]),
+                Err(_) => break,
+            }
+        }
+        let head = String::from_utf8_lossy(&head);
+        let target = head
+            .lines()
+            .next()
+            .and_then(|line| line.split_whitespace().nth(1))
+            .unwrap_or("")
+            .to_string();
+        let query = target.split_once('?').map(|(_, q)| q).unwrap_or("");
+        let param = |key: &str| -> Option<String> {
+            query.split('&').find_map(|pair| {
+                let (name, value) = pair.split_once('=')?;
+                (name == key).then(|| percent_decode(value))
+            })
+        };
+        let Some(assertion) = param("assertion").filter(|a| !a.is_empty()) else {
+            // Not the landing (a favicon, a probe): answer and wait on.
+            let _ = stream.write_all(
+                b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            );
+            return Ok(None);
+        };
+        if param("state").as_deref() != Some(self.state.as_str()) {
+            let _ = stream.write_all(
+                b"HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\nThis sign-in belongs to a different attempt.",
+            );
+            return Err(SyncError(
+                "the browser returned a sign-in for a different attempt — try Connect again"
+                    .to_string(),
+            ));
+        }
+        let page = "<!doctype html><title>Phext Notepad</title>\
+                    <p>Signed in. You can close this tab and return to Phext Notepad.</p>";
+        let _ = stream.write_all(
+            format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                page.len(),
+                page
+            )
+            .as_bytes(),
+        );
+        Ok(Some(assertion))
+    }
+}
+
 fn check_ok(value: &Value) -> Result<()> {
     if value.get("ok").and_then(Value::as_bool) == Some(false) {
         let message = value
@@ -840,5 +1135,76 @@ mod tests {
             assert_eq!(mode & 0o777, 0o600);
         }
         let _ = std::fs::remove_file(&session_path);
+    }
+
+    #[test]
+    fn desktop_sso_url_encodes_return_and_state() {
+        let client = EditClient::new("http://127.0.0.1:8791/");
+        assert_eq!(
+            client.desktop_sso_url("http://127.0.0.1:8912/", "abc-def_123"),
+            "http://127.0.0.1:8791/api/auth/sso/desktop?return=http%3A%2F%2F127.0.0.1%3A8912%2F&state=abc-def_123"
+        );
+    }
+
+    #[test]
+    fn state_nonces_are_shaped_and_distinct() {
+        let a = new_state_nonce();
+        let b = new_state_nonce();
+        assert_eq!(a.len(), 32);
+        assert!(a.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_ne!(a, b);
+    }
+
+    /// Fire one raw HTTP request at a catch, as the redirected
+    /// browser would, and read its answer's status line.
+    fn knock(return_url: &str, target: &str) -> String {
+        use std::io::Read as _;
+        let address = return_url
+            .strip_prefix("http://")
+            .and_then(|rest| rest.split('/').next())
+            .unwrap()
+            .to_string();
+        let mut stream = std::net::TcpStream::connect(address).unwrap();
+        stream
+            .write_all(format!("GET {target} HTTP/1.1\r\nHost: x\r\n\r\n").as_bytes())
+            .unwrap();
+        let mut answer = String::new();
+        let _ = stream.read_to_string(&mut answer);
+        answer
+    }
+
+    #[test]
+    fn loopback_catch_takes_only_its_own_attempts_landing() {
+        let catch = LoopbackCatch::start().unwrap();
+        let return_url = catch.return_url().to_string();
+        let state = catch.state().to_string();
+        assert!(return_url.starts_with("http://127.0.0.1:"));
+
+        // Unrelated knocks (a favicon fetch) do not end the wait.
+        let waiting = std::thread::spawn(move || catch.wait(Duration::from_secs(10)));
+        std::thread::sleep(Duration::from_millis(50));
+        let favicon = knock(&return_url, "/favicon.ico");
+        assert!(favicon.starts_with("HTTP/1.1 404"), "{favicon}");
+        let landing = knock(
+            &return_url,
+            &format!("/?assertion=sealed.value-here_123&state={state}"),
+        );
+        assert!(landing.starts_with("HTTP/1.1 200"), "{landing}");
+        assert_eq!(waiting.join().unwrap().unwrap(), "sealed.value-here_123");
+    }
+
+    #[test]
+    fn loopback_catch_refuses_a_foreign_attempts_landing() {
+        let catch = LoopbackCatch::start().unwrap();
+        let return_url = catch.return_url().to_string();
+        let waiting = std::thread::spawn(move || catch.wait(Duration::from_secs(10)));
+        std::thread::sleep(Duration::from_millis(50));
+        let landing = knock(
+            &return_url,
+            "/?assertion=sealed.value-here_123&state=someone-elses-attempt-state",
+        );
+        assert!(landing.starts_with("HTTP/1.1 400"), "{landing}");
+        let err = waiting.join().unwrap().unwrap_err();
+        assert!(err.0.contains("different attempt"), "{}", err.0);
     }
 }
