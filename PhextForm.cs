@@ -147,10 +147,13 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
                     scrollNode.NodeFont = SCROLL_NODE_FONT;
                     treeView.SelectedNode = scrollNode;
                     textBox.SelectionStart = textBox.Text.Length;
+                    // Only a structural change needs the tree re-expanded;
+                    // this used to run on every keystroke, walking every
+                    // node in the tree each time.
+                    treeView.ExpandAll();
                 }
             }
 
-            treeView.ExpandAll();
             treeView.ResumeLayout();
             treeView.EndUpdate();
         }

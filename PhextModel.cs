@@ -79,7 +79,9 @@ namespace PhextNotepad
 
         public void Load(string data, bool showCoordinates, TreeView? treeView = null, bool resetPhext = true)
         {
-            var charStream = data.ToCharArray();
+            // Index the string directly: ToCharArray() copied the whole
+            // document (2 bytes per char) for no benefit.
+            var charStream = data;
             if (resetPhext)
             {
                 Phext = new();

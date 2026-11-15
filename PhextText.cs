@@ -217,48 +217,17 @@ namespace PhextNotepad
                 return result;
             }
         }
+        // Maintained incrementally in setScroll (the only place a scroll's
+        // text ever changes), the same way WordCount is. This getter used
+        // to walk all nine levels of the tree summing every scroll on
+        // every access — and UpdateUI reads it on every cursor move and
+        // navigation, so working in a large phext paid a full-document
+        // traversal per keystroke-adjacent event.
+        private int _byteCount = 0;
         public int ByteCount {
             get
             {
-                int total = 0;
-                foreach (var lib_key in Root.Library.Keys)
-                {
-                    var library = Root.Library[lib_key];
-                    foreach (var shelf_key in library.Shelf.Keys)
-                    {
-                        var shelf = library.Shelf[shelf_key];
-                        foreach (var series_key in shelf.Series.Keys)
-                        {
-                            var series = shelf.Series[series_key];
-                            foreach (var collection_key in series.Collection.Keys)
-                            {
-                                var collection = series.Collection[collection_key];
-                                foreach (var volume_key in collection.Volume.Keys)
-                                {
-                                    var volume = collection.Volume[volume_key];
-                                    foreach (var book_key in volume.Book.Keys)
-                                    {
-                                        var book = volume.Book[book_key];
-                                        foreach (var chapter_key in book.Chapter.Keys)
-                                        {
-                                            var chapter = book.Chapter[chapter_key];
-                                            foreach (var section_key in chapter.Section.Keys)
-                                            {
-                                                var section = chapter.Section[section_key];
-                                                foreach (var scroll_key in section.Scroll.Keys)
-                                                {
-                                                    var scroll = section.Scroll[scroll_key];
-                                                    total += scroll.Text.Length;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                return total;
+                return _byteCount;
             }
         }
 
@@ -440,6 +409,7 @@ namespace PhextNotepad
                 var priorText = Scroll.Text;
                 var priorCount = GetWordCount(priorText);
                 Scroll.Text = text;
+                _byteCount += text.Length - priorText.Length;
                 ++LeafCount;
                 var count = GetWordCount(text);
                 WordCount += (count - priorCount);
@@ -461,6 +431,7 @@ namespace PhextNotepad
                 Chapter.Section.ContainsKey(Coords.Section) &&
                 Section.Scroll.ContainsKey(Coords.Scroll))
             {
+                _byteCount -= Section.Scroll[Coords.Scroll].Text.Length;
                 Section.Scroll.Remove(Coords.Scroll);
                 if (Section.Scroll.Count == 0)
                 {
