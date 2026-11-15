@@ -21,6 +21,8 @@ pub mod document;
 pub mod nav;
 pub mod parse;
 pub mod prefs;
+mod sha256;
+pub mod sync;
 pub mod zoom;
 
 pub use document::{parse_coordinate, Document, DocumentView};

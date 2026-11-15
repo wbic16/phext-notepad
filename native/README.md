@@ -26,6 +26,7 @@ The lattice memory-map and sentron panel are not in this editor. Notepad holds t
 - Three zoom levels. The tree and the coordinate bar follow the current level. Double-click a row to zoom in.
 - Dark, light, or follow the system
 - Recent files, word wrap, line and column
+- Sync with a phext-edit server (edit.phext.io) from the Sync menu: sign in through the server's GitHub/Google OAuth, pick a library phext, pull and push at scroll granularity. Each scroll's base is hashed at sync time; a scroll changed on both sides is reported as a conflict and never overwritten silently. Editing stays fully local — sync only happens when you ask for it.
 
 Not carried over from WinForms: SQ sync, vim keys, scroll lock, font settings, and the hierarchical checksum panel.
 
@@ -37,6 +38,7 @@ Two crates are linked into the app, and each one earns its place:
 | --- | --- |
 | `libphext` | Phext `explode` / `implode` and the coordinate type. Rewriting the format would drift from the other phext tools. |
 | `fltk` | The window, tree, editor, and native file dialogs. The `fltk-bundled` feature compiles FLTK in, so Windows, macOS, and Linux builds do not need a system copy. Image decoders and OpenGL are off. |
+| `ureq` + `serde_json` | The sync client's HTTPS and JSON — the same stack phext-lattice uses. Only the core crate depends on them; the window does not. |
 
 `fltk` also brings its own small crates (`fltk-sys`, and a font parser). CMake is a build tool, used while FLTK is compiled, and it is not linked into the exe. Preferences are a hand-written `key=value` file. The outline and the dimension steps are hand-written in `core/`.
 

@@ -14,6 +14,9 @@ use std::sync::Arc;
 use fltk::enums::{Align, Color, Event, Font, FrameType, Key, Shortcut};
 use fltk::prelude::*;
 use fltk::{app, button, dialog, frame, input, menu, text, tree, window};
+use phext_notepad_core::sync::{
+    pull_all, pull_scroll, push_all, EditClient, SessionInfo, StoredSession, SyncBook, SyncReport,
+};
 use phext_notepad_core::zoom::OutlineNode;
 use phext_notepad_core::{parse_coordinate, Document, Prefs, Theme, ZoomLevel};
 
@@ -42,6 +45,11 @@ enum Ui {
     ZoomOut,
     Theme(Theme),
     About,
+    SyncConnect,
+    SyncPull,
+    SyncPullScroll,
+    SyncPush,
+    SyncDisconnect,
     TreePick { clicks: i32 },
     Buffer,
     CoordCommit,
@@ -202,6 +210,16 @@ fn suggested_name(doc: &Document) -> String {
     "notes.phext".to_string()
 }
 
+/// A live sync link to one phext on one phext-edit server. The book
+/// is the base-hash ledger for that phext; it is persisted next to
+/// the settings file after every sync operation.
+struct SyncLink {
+    client: EditClient,
+    remote_name: String,
+    book: SyncBook,
+    book_path: PathBuf,
+}
+
 struct Notepad {
     app: app::App,
     wind: window::Window,
@@ -224,6 +242,7 @@ struct Notepad {
     buffer: text::TextBuffer,
     status: frame::Frame,
     doc: Document,
+    sync: Option<SyncLink>,
     prefs: Prefs,
     prefs_path: PathBuf,
     tree_coords: HashMap<String, String>,
@@ -451,6 +470,7 @@ impl Notepad {
             buffer,
             status,
             doc,
+            sync: None,
             prefs,
             prefs_path,
             tree_coords: HashMap::new(),
@@ -880,6 +900,9 @@ impl Notepad {
     }
 
     fn open_path(&mut self, path: &Path) {
+        // A local file replaces the synced document; the link would
+        // otherwise push this file's scrolls at the remote phext.
+        self.sync = None;
         match self.doc.load_path(path) {
             Ok(()) => {
                 self.prefs.remember(path);
@@ -924,6 +947,7 @@ impl Notepad {
                 if !self.confirm_discard() {
                     return;
                 }
+                self.sync = None;
                 let zoom = self.doc.zoom();
                 self.doc = Document::empty();
                 self.doc.set_zoom(zoom);
@@ -942,6 +966,7 @@ impl Notepad {
                 if !self.confirm_discard() {
                     return;
                 }
+                self.sync = None;
                 let zoom = self.doc.zoom();
                 self.doc = Document::baseline();
                 self.doc.set_zoom(zoom);
@@ -1006,6 +1031,20 @@ impl Notepad {
                     env!("CARGO_PKG_VERSION")
                 ));
             }
+            Ui::SyncConnect => self.sync_connect(),
+            Ui::SyncPull => self.sync_pull(false),
+            Ui::SyncPullScroll => self.sync_pull(true),
+            Ui::SyncPush => self.sync_push(),
+            Ui::SyncDisconnect => {
+                if let Some(link) = self.sync.take() {
+                    self.doc.set_message(format!(
+                        "Disconnected from {} on {} (sign-in kept for next time)",
+                        link.remote_name,
+                        link.client.base()
+                    ));
+                }
+                self.refresh();
+            }
             Ui::CoordCommit => self.commit_coordinate(),
             Ui::Nudge(index, delta) => {
                 let name = self
@@ -1069,6 +1108,319 @@ impl Notepad {
             }
         }
     }
+
+    fn session_file(&self) -> PathBuf {
+        self.prefs_path.with_file_name("edit-session.txt")
+    }
+
+    fn book_file(&self, remote_name: &str) -> PathBuf {
+        let safe: String = remote_name
+            .chars()
+            .map(|ch| {
+                if ch.is_ascii_alphanumeric() || ch == '.' || ch == '-' {
+                    ch
+                } else {
+                    '-'
+                }
+            })
+            .collect();
+        self.prefs_path.with_file_name(format!("sync-book-{safe}.txt"))
+    }
+
+    /// Connect to a phext-edit server, sign in through its OAuth
+    /// providers when it is locked, pick a library phext, and pull
+    /// it into a fresh document.
+    ///
+    /// Sign-in runs in the system browser: phext-edit clamps the
+    /// post-sign-in redirect to its own site (`safe_next` in its
+    /// oauth.rs), so no loopback return exists for the app to catch,
+    /// and the session cookie is HttpOnly in the browser's jar. The
+    /// user therefore hands the app the `phext_session` value once;
+    /// the app verifies it against `/api/session`, keeps it in the
+    /// owner-only session file, and reuses it until it expires
+    /// (14 days) — the OAuth flow itself is entirely the server's
+    /// GitHub/Google sign-in.
+    fn sync_connect(&mut self) {
+        if !self.confirm_discard() {
+            return;
+        }
+        let session_file = self.session_file();
+        let stored = StoredSession::load(&session_file);
+        let default_url = stored
+            .as_ref()
+            .map(|s| s.base_url.clone())
+            .unwrap_or_else(|| "https://edit.phext.io".to_string());
+        let Some(url) = dialog::input_default("phext-edit server:", &default_url) else {
+            return;
+        };
+        let mut client = EditClient::new(&url);
+
+        // Reuse the stored session for this server while it lasts.
+        let mut info: Option<SessionInfo> = None;
+        if let Some(stored) = &stored {
+            if stored.base_url == client.base() && !stored.cookie.is_empty() {
+                client.set_cookie(stored.cookie.clone());
+                client.set_csrf(stored.csrf.clone());
+                match client.session() {
+                    Ok(found) if found.signed_in => info = Some(found),
+                    _ => {
+                        client.set_cookie("");
+                        client.set_csrf("");
+                    }
+                }
+            }
+        }
+        let info = match info {
+            Some(info) => info,
+            None => {
+                let probe = match client.session() {
+                    Ok(info) => info,
+                    Err(err) => {
+                        dialog::alert_default(&err.0);
+                        return;
+                    }
+                };
+                if !probe.locked {
+                    // An open or --local server: nothing to sign into.
+                    probe
+                } else {
+                    let providers: Vec<&str> = ["github", "google", "x"]
+                        .into_iter()
+                        .filter(|p| probe.providers.iter().any(|have| have == p))
+                        .collect();
+                    let Some(&provider) = providers.first() else {
+                        dialog::alert_default(
+                            "This server requires sign-in but offers no providers.",
+                        );
+                        return;
+                    };
+                    let provider = if providers.len() > 1 {
+                        let names: Vec<String> =
+                            providers.iter().map(|p| provider_label(p)).collect();
+                        match dialog::choice2_default(
+                            "Sign in with:",
+                            &names[0],
+                            names.get(1).map(String::as_str).unwrap_or(""),
+                            names.get(2).map(String::as_str).unwrap_or("Cancel"),
+                        ) {
+                            Some(index) if (index as usize) < providers.len() => {
+                                providers[index as usize]
+                            }
+                            _ => return,
+                        }
+                    } else {
+                        provider
+                    };
+                    if !open_url(&client.auth_start_url(provider)) {
+                        dialog::alert_default("Could not open a browser for sign-in.");
+                        return;
+                    }
+                    let Some(cookie) = dialog::password_default(
+                        "Sign in in your browser, then paste the phext_session cookie value\n(from the browser's developer tools: Application/Storage → Cookies → edit site):",
+                        "",
+                    ) else {
+                        return;
+                    };
+                    if cookie.trim().is_empty() {
+                        return;
+                    }
+                    client.set_cookie(cookie);
+                    match client.session() {
+                        Ok(info) => info,
+                        Err(err) => {
+                            dialog::alert_default(&err.0);
+                            return;
+                        }
+                    }
+                }
+            }
+        };
+        if info.locked && !info.signed_in {
+            dialog::alert_default("Sign-in did not complete — the server reports no session.");
+            return;
+        }
+        if info.signed_in && info.locked && !info.editor {
+            // The server's own refusal, in its words (oauth.rs admit).
+            dialog::alert_default(&format!(
+                "Signed in as {}, but: This account is not on the editor list.",
+                info.who
+            ));
+            return;
+        }
+        if info.signed_in {
+            client.set_csrf(info.csrf.clone());
+            if let Some(cookie) = client.cookie_value() {
+                let _ = StoredSession {
+                    base_url: client.base().to_string(),
+                    cookie,
+                    csrf: info.csrf.clone(),
+                    who: info.who.clone(),
+                }
+                .store(&session_file);
+            }
+        }
+
+        let files = match client.list_phexts() {
+            Ok(files) => files,
+            Err(err) => {
+                dialog::alert_default(&err.0);
+                return;
+            }
+        };
+        if files.is_empty() {
+            dialog::alert_default("The server's library is empty.");
+            return;
+        }
+        let listing = files
+            .iter()
+            .enumerate()
+            .map(|(i, f)| format!("{}) {} ({} bytes)", i + 1, f.name, f.bytes))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let Some(choice) = dialog::input_default(
+            &format!("Open which phext?\n{listing}\nEnter a number or name:"),
+            "1",
+        ) else {
+            return;
+        };
+        let chosen = choice.trim();
+        let file = files
+            .iter()
+            .find(|f| f.name == chosen)
+            .or_else(|| {
+                chosen
+                    .parse::<usize>()
+                    .ok()
+                    .and_then(|n| files.get(n.wrapping_sub(1)))
+            });
+        let Some(file) = file else {
+            dialog::alert_default("No phext by that number or name.");
+            return;
+        };
+
+        let book_path = self.book_file(&file.name);
+        let mut book = match SyncBook::load(&book_path) {
+            Some(book) if book.server == client.base() && book.remote_path == file.path => book,
+            _ => SyncBook::new(client.base(), &file.path),
+        };
+        let zoom = self.doc.zoom();
+        let mut doc = Document::empty();
+        doc.set_zoom(zoom);
+        match pull_all(&client, &mut doc, &mut book) {
+            Ok(report) => {
+                let _ = book.store(&book_path);
+                doc.set_message(format!(
+                    "Synced with {} on {} — {}",
+                    file.name,
+                    client.base(),
+                    report.summary()
+                ));
+                self.doc = doc;
+                self.sync = Some(SyncLink {
+                    client,
+                    remote_name: file.name.clone(),
+                    book,
+                    book_path,
+                });
+                self.show_conflicts(&report);
+                self.refresh();
+            }
+            Err(err) => dialog::alert_default(&err.0),
+        }
+    }
+
+    fn sync_pull(&mut self, current_only: bool) {
+        self.commit_buffer();
+        let Some(link) = self.sync.as_mut() else {
+            self.doc.set_message("Not connected — Sync ▸ Connect first");
+            self.refresh();
+            return;
+        };
+        let coordinate = format!("{}", self.doc.coordinate());
+        let result = if current_only {
+            pull_scroll(&link.client, &mut self.doc, &mut link.book, &coordinate)
+        } else {
+            pull_all(&link.client, &mut self.doc, &mut link.book)
+        };
+        match result {
+            Ok(report) => {
+                let _ = link.book.store(&link.book_path);
+                let name = link.remote_name.clone();
+                self.doc.set_message(format!(
+                    "Pulled from {name} — {}",
+                    report.summary()
+                ));
+                self.show_conflicts(&report);
+            }
+            Err(err) => dialog::alert_default(&err.0),
+        }
+        self.refresh();
+    }
+
+    fn sync_push(&mut self) {
+        self.commit_buffer();
+        let Some(link) = self.sync.as_mut() else {
+            self.doc.set_message("Not connected — Sync ▸ Connect first");
+            self.refresh();
+            return;
+        };
+        match push_all(&link.client, &mut self.doc, &mut link.book) {
+            Ok(report) => {
+                let _ = link.book.store(&link.book_path);
+                let name = link.remote_name.clone();
+                self.doc.set_message(format!(
+                    "Pushed to {name} — {}",
+                    report.summary()
+                ));
+                self.show_conflicts(&report);
+            }
+            Err(err) => dialog::alert_default(&err.0),
+        }
+        self.refresh();
+    }
+
+    /// Conflicts are never resolved silently: the local text stays
+    /// in the document, and the user sees what the server holds.
+    fn show_conflicts(&self, report: &SyncReport) {
+        if report.conflicts.is_empty() {
+            return;
+        }
+        let mut text = format!(
+            "{} scroll(s) changed on both sides. Your text was kept; nothing was overwritten.\n",
+            report.conflicts.len()
+        );
+        for conflict in &report.conflicts {
+            text.push_str(&format!(
+                "\n{}\n  server: {}\n  yours:  {}",
+                conflict.coordinate,
+                leaf_preview(&conflict.remote),
+                leaf_preview(&conflict.local),
+            ));
+        }
+        dialog::message_default(&text);
+    }
+}
+
+fn provider_label(provider: &str) -> String {
+    match provider {
+        "github" => "GitHub".to_string(),
+        "google" => "Google".to_string(),
+        "x" => "X".to_string(),
+        other => other.to_string(),
+    }
+}
+
+/// Open a URL in the system browser.
+fn open_url(url: &str) -> bool {
+    #[cfg(target_os = "windows")]
+    let attempt = std::process::Command::new("rundll32")
+        .args(["url.dll,FileProtocolHandler", url])
+        .spawn();
+    #[cfg(target_os = "macos")]
+    let attempt = std::process::Command::new("open").arg(url).spawn();
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    let attempt = std::process::Command::new("xdg-open").arg(url).spawn();
+    attempt.is_ok()
 }
 
 fn add_menus(menu_bar: &mut menu::MenuBar, tx: &app::Sender<Ui>, prefs: &Prefs) {
@@ -1131,6 +1483,18 @@ fn add_menus(menu_bar: &mut menu::MenuBar, tx: &app::Sender<Ui>, prefs: &Prefs) 
     for (path, shortcut, flag, message) in entries {
         let tx = tx.clone();
         menu_bar.add(path, shortcut, flag, move |_| {
+            let _ = tx.send(message.clone());
+        });
+    }
+    for (path, message) in [
+        ("Sync/Connect to edit.phext.io...", Ui::SyncConnect),
+        ("Sync/Pull from Server", Ui::SyncPull),
+        ("Sync/Pull Current Scroll", Ui::SyncPullScroll),
+        ("Sync/Push to Server", Ui::SyncPush),
+        ("Sync/Disconnect", Ui::SyncDisconnect),
+    ] {
+        let tx = tx.clone();
+        menu_bar.add(path, Shortcut::None, menu::MenuFlag::Normal, move |_| {
             let _ = tx.send(message.clone());
         });
     }
