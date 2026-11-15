@@ -15,6 +15,12 @@ This is for 64-bit Windows 10 or Windows 11. You do not install .NET yourself. T
 
 The download page starts working after a version is published. Publishing steps are in [docs/publishing.md](docs/publishing.md).
 
+## Native builds for Windows, macOS, and Linux
+
+The cross-platform editor is in [`native/`](native/). It keeps the WinForms app in this folder as the Windows ClickOnce build. The native app is Rust and FLTK, with no web view. Phext bytes go through [libphext-rs](https://github.com/wbic16/libphext-rs). Zoom follows the three coordinate arms: outer `library.shelf.series` (11D), middle `collection.volume.book` (7D), and inner `chapter.section.scroll` (4D). Dimension steps match [phext-lattice](https://github.com/wbic16/phext-lattice) `CoordinateNav`, copied into the native crate so the memory-map and rayon dependencies stay out.
+
+A version tag on `exo` builds unsigned binaries for all three systems and attaches zip or tar.gz archives to the GitHub Release. The install page links to those files. Steps are in [docs/native-publishing.md](docs/native-publishing.md).
+
 Historical Note
 ---------------
 Phext Notepad was written before libphext-rs or libphext-node. It was the implementation I used to improve my ability to reason about sparse text volumes, prior to the creation of phext-native editors. It bridges the gap between 11D text and plain text. You should think of Phext Notepad as an historic artifact - a reference editor.

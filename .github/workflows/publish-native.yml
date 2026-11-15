@@ -1,0 +1,147 @@
+# Unsigned Windows, macOS, and Linux binaries of the FLTK Phext Notepad.
+#
+# A version tag builds three archives and attaches them to the GitHub Release.
+# Pull requests and "Run workflow" compile and test the same way, and keep the
+# archives as Actions artifacts. This file has to be in the tagged commit.
+# The Actions button appears once this file is on the repository default branch.
+# See docs/native-publishing.md.
+#
+# Code signing is deferred. Sign the finished binary with codesign or signtool
+# in a later step. Do not add Azure Trusted Signing.
+
+name: Publish native builds
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [exo]
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+concurrency:
+  group: native-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install FLTK build libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake pkg-config \
+            libx11-dev libxext-dev libxft-dev libxinerama-dev \
+            libxcursor-dev libxrender-dev libxfixes-dev \
+            libpango1.0-dev libcairo2-dev libfontconfig1-dev \
+            libgl1-mesa-dev libglu1-mesa-dev
+
+      - name: Install CMake
+        shell: bash
+        run: |
+          if ! command -v cmake >/dev/null 2>&1; then
+            if command -v brew >/dev/null 2>&1; then
+              brew install cmake
+            elif command -v choco >/dev/null 2>&1; then
+              choco install cmake -y --no-progress
+            else
+              sudo apt-get update
+              sudo apt-get install -y cmake
+            fi
+          fi
+          cmake --version
+
+      - name: Set the app version from the tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        working-directory: native
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          case "$version" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "Tag is not MAJOR.MINOR.PATCH; leaving Cargo.toml versions." && exit 0 ;;
+          esac
+          for file in app/Cargo.toml core/Cargo.toml; do
+            awk -v ver="$version" '
+              BEGIN { done = 0 }
+              !done && /^version = "/ { sub(/"[^"]*"/, "\"" ver "\""); done = 1 }
+              { print }
+            ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+          done
+
+      - name: Test the phext model
+        working-directory: native
+        run: cargo test -p phext-notepad-core
+
+      - name: Build the release binary
+        working-directory: native
+        run: cargo build --release -p phext-notepad
+
+      - name: Package the binary
+        shell: bash
+        working-directory: native
+        run: |
+          case "${{ runner.os }}" in
+            Linux) os_name=linux ;;
+            macOS) os_name=macos ;;
+            Windows) os_name=windows ;;
+          esac
+          arch=$(uname -m)
+          case "$arch" in
+            arm64|aarch64) arch=aarch64 ;;
+            x86_64|amd64) arch=x86_64 ;;
+          esac
+          bin="phext-notepad"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            bin="phext-notepad.exe"
+          fi
+          name="phext-notepad-${os_name}-${arch}"
+          mkdir -p dist
+          cp "target/release/${bin}" "dist/${bin}"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            archive="${name}.zip"
+            # Git's tar writes a tar archive even when the name ends in .zip.
+            powershell.exe -NoProfile -Command "Compress-Archive -LiteralPath 'dist/${bin}' -DestinationPath 'dist/${archive}' -Force"
+          else
+            archive="${name}.tar.gz"
+            tar -czf "dist/${archive}" -C dist "$bin"
+          fi
+          echo "ARCHIVE_NAME=${archive}" >> "$GITHUB_ENV"
+          echo "ARCHIVE_PATH=native/dist/${archive}" >> "$GITHUB_ENV"
+          ls -l "target/release/${bin}" "dist/${archive}"
+
+      - name: Upload the archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARCHIVE_NAME }}
+          path: ${{ env.ARCHIVE_PATH }}
+
+      - name: Attach the archive to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --title "Phext Notepad ${tag}" \
+              --notes "Unsigned native binaries are attached as zip and tar.gz archives. The install page links to them. https://wbic16.github.io/phext-notepad/"
+          fi
+          gh release upload "$tag" "$ARCHIVE_PATH" --clobber
