@@ -39,6 +39,14 @@ fn bundled_emise() -> Option<String> {
     // load_font needs a real path: stage the embedded bytes beside the
     // prefs file, refreshed when the bundled size changes.
     let path = prefs_path().with_file_name("Emise.ttf");
+    // The prefs directory may not exist yet on a first run — create it,
+    // exactly as Prefs::store does for the settings file itself, or the
+    // staging write fails and the default silently falls back to Courier.
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+    }
     let stale = std::fs::metadata(&path)
         .map(|m| m.len() as usize != EMISE_TTF.len())
         .unwrap_or(true);
