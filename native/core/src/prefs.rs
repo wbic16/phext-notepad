@@ -47,6 +47,9 @@ pub struct Prefs {
     pub splitter: u32,
     pub zoom: ZoomLevel,
     pub theme: Theme,
+    /// Editor text face by name. "Emise" (the default) is bundled with
+    /// the app; any other name is resolved by FLTK at startup.
+    pub font: String,
     pub word_wrap: bool,
     pub last_path: Option<String>,
     pub coordinate: String,
@@ -60,6 +63,7 @@ impl Default for Prefs {
             splitter: 320,
             zoom: ZoomLevel::Inner,
             theme: Theme::System,
+            font: "Emise".to_string(),
             word_wrap: true,
             last_path: None,
             coordinate: "1.1.1/1.1.1/1.1.1".to_string(),
@@ -101,6 +105,7 @@ impl Prefs {
                         prefs.theme = theme;
                     }
                 }
+                "font" if !value.is_empty() => prefs.font = value.to_string(),
                 "word_wrap" => prefs.word_wrap = value != "false",
                 "coordinate" => {
                     if parse_coordinate(value).is_some() {
@@ -123,11 +128,12 @@ impl Prefs {
             }
         }
         let mut text = format!(
-            "tree_visible={}\nsplitter={}\nzoom={}\ntheme={}\nword_wrap={}\ncoordinate={}\n",
+            "tree_visible={}\nsplitter={}\nzoom={}\ntheme={}\nfont={}\nword_wrap={}\ncoordinate={}\n",
             self.tree_visible,
             self.splitter,
             self.zoom.as_str(),
             self.theme.as_str(),
+            self.font,
             self.word_wrap,
             self.coordinate,
         );
@@ -168,6 +174,7 @@ mod tests {
         assert_eq!(prefs.splitter, 320);
         assert_eq!(prefs.zoom, ZoomLevel::Inner);
         assert_eq!(prefs.theme, Theme::System);
+        assert_eq!(prefs.font, "Emise");
         assert!(prefs.word_wrap);
     }
 

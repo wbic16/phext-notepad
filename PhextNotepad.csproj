@@ -55,6 +55,12 @@
     <PackageReference Include="System.IO.Hashing" Version="9.0.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Fonts\Emise.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
 
 

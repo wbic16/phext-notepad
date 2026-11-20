@@ -29,6 +29,48 @@ const GRIP: i32 = 6;
 
 const LEVELS: [ZoomLevel; 3] = [ZoomLevel::Outer, ZoomLevel::Middle, ZoomLevel::Inner];
 const ARM_RGB: [(u8, u8, u8); 3] = [(0, 168, 176), (196, 64, 168), (36, 150, 72)];
+/// Emise — the bundled text face: Will's handwriting (Willbot) redrawn as a
+/// designed monospace, a Will–Emise collaboration. It ships inside the
+/// binary so the default editor font needs no system install.
+/// `Font::load_font` registers the file with FLTK for this process only.
+static EMISE_TTF: &[u8] = include_bytes!("../assets/Emise.ttf");
+
+fn bundled_emise() -> Option<String> {
+    // load_font needs a real path: stage the embedded bytes beside the
+    // prefs file, refreshed when the bundled size changes.
+    let path = prefs_path().with_file_name("Emise.ttf");
+    let stale = std::fs::metadata(&path)
+        .map(|m| m.len() as usize != EMISE_TTF.len())
+        .unwrap_or(true);
+    if stale && std::fs::write(&path, EMISE_TTF).is_err() {
+        return None;
+    }
+    Font::load_font(&path).ok()
+}
+
+/// Resolve the text font for the editor, the coordinate box, and the
+/// outline. "Emise" (the default) binds the bundled face over the Courier
+/// slot — the fltk crate's documented load-then-bind pattern — so the
+/// existing Courier call sites render Emise. Any other configured name is
+/// used when FLTK knows it; an unknown name keeps Courier rather than
+/// silently landing on a proportional face.
+fn text_font(want: &str) -> Font {
+    if want.eq_ignore_ascii_case("Emise") {
+        if let Some(family) = bundled_emise() {
+            Font::set_font(Font::Courier, &family);
+        }
+        return Font::Courier;
+    }
+    if app::get_font_names()
+        .iter()
+        .any(|name| name.eq_ignore_ascii_case(want))
+    {
+        Font::by_name(want)
+    } else {
+        Font::Courier
+    }
+}
+
 
 #[derive(Clone)]
 enum Ui {
@@ -263,6 +305,7 @@ impl Notepad {
     fn new(running: app::App, tx: app::Sender<Ui>) -> Self {
         let prefs_path = prefs_path();
         let mut prefs = Prefs::load(&prefs_path);
+        let text_font = text_font(&prefs.font);
         let (doc, open_note) = open_initial(&prefs);
         prefs.zoom = doc.zoom();
         prefs.coordinate = format!("{}", doc.coordinate());
@@ -300,7 +343,7 @@ impl Notepad {
         coord_label.set_label_size(14);
 
         let mut coordinate = input::Input::new(0, 0, 10, 28, "");
-        coordinate.set_text_font(Font::Courier);
+        coordinate.set_text_font(text_font);
         coordinate.set_text_size(16);
         coordinate.set_maximum_size(128);
         coordinate.set_tooltip(
@@ -370,6 +413,7 @@ impl Notepad {
         let mut tree = tree::Tree::new(0, 0, 10, 10, "");
         tree.set_select_mode(tree::TreeSelect::Single);
         tree.set_show_root(false);
+        tree.set_item_label_font(text_font);
         let filling = Arc::new(AtomicBool::new(false));
         {
             let tx = tx.clone();
@@ -416,7 +460,7 @@ impl Notepad {
         }
         let mut editor = text::TextEditor::new(0, 0, 10, 10, "");
         editor.set_buffer(buffer.clone());
-        editor.set_text_font(Font::Courier);
+        editor.set_text_font(text_font);
         editor.set_text_size(15);
         editor.set_linenumber_width(46);
         editor.wrap_mode(

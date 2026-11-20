@@ -26,6 +26,7 @@ The lattice memory-map and sentron panel are not in this editor. Notepad holds t
 - Three zoom levels. The tree and the coordinate bar follow the current level. Double-click a row to zoom in.
 - Dark, light, or follow the system
 - Recent files, word wrap, line and column
+- Editor text in the bundled Emise font by default (Will's handwriting, evolved); set `font=<name>` in the prefs file to choose another face — Courier is the fallback
 - Sync with a phext-edit server (edit.phext.io) from the Sync menu: sign in through the server's GitHub/Google OAuth, pick a library phext, pull and push at scroll granularity. Each scroll's base is hashed at sync time; a scroll changed on both sides is reported as a conflict and never overwritten silently. Editing stays fully local — sync only happens when you ask for it.
 
 Not carried over from WinForms: SQ sync, vim keys, scroll lock, font settings, and the hierarchical checksum panel.
