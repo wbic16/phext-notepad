@@ -65,7 +65,7 @@ namespace PhextNotepad
         public string Coords { get; set; } = "";
         public bool TreeView { get; set; } = true;
         public int TreeSplitDistance { get; set; } = 642;
-        public string Font { get; set; } = "Cascadia Code";
+        public string Font { get; set; } = "Emise";
         public int FontSize { get; set; } = 11;
         public string LastError { get; set; } = "";
         public string Dimension1 { get; set; } = "Column";

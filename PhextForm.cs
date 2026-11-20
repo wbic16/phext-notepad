@@ -1,3 +1,4 @@
+using System.Drawing.Text;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Policy;
@@ -24,7 +25,7 @@ namespace PhextNotepad
         private int _priorColumn = 1;
         private Coordinates? _checkout = null;
         private PhextConfig _settings = new();
-        private Font SCROLL_NODE_FONT = new("Cascadia Code", 11);
+        private Font SCROLL_NODE_FONT = new("Emise", 11);
 
         public PhextForm(string[] args)
         {
@@ -207,11 +208,49 @@ Contact me (Will Bickford) at x.com/wbic16 for more info!
             }
         }
 
+        // The bundled Emise face (Fonts\Emise.ttf beside the executable) is
+        // loaded as a private font so the default renders without a system
+        // install. A user-chosen Font name still wins: the private
+        // collection is only consulted when it carries the requested face.
+        private static readonly PrivateFontCollection BundledFonts = new();
+        private static bool _bundledFontsTried = false;
+
+        private static void LoadBundledFonts()
+        {
+            if (_bundledFontsTried) return;
+            _bundledFontsTried = true;
+            try
+            {
+                var path = Path.Combine(AppContext.BaseDirectory, "Fonts", "Emise.ttf");
+                if (File.Exists(path))
+                {
+                    BundledFonts.AddFontFile(path);
+                }
+            }
+            catch (Exception)
+            {
+                // A missing or unreadable bundled font must never break the
+                // editor; LoadFonts falls back to the named system font.
+            }
+        }
+
         private void LoadFonts()
         {
             try
             {
-                SCROLL_NODE_FONT = new Font(_settings.Font, _settings.FontSize);
+                LoadBundledFonts();
+                FontFamily? family = null;
+                foreach (var candidate in BundledFonts.Families)
+                {
+                    if (string.Equals(candidate.Name, _settings.Font, StringComparison.OrdinalIgnoreCase))
+                    {
+                        family = candidate;
+                        break;
+                    }
+                }
+                SCROLL_NODE_FONT = family != null
+                    ? new Font(family, _settings.FontSize)
+                    : new Font(_settings.Font, _settings.FontSize);
                 textBox.Font = SCROLL_NODE_FONT;
                 treeView.Font = SCROLL_NODE_FONT;
             }

@@ -88,7 +88,7 @@
             textBox.BorderStyle = BorderStyle.FixedSingle;
             textBox.Cursor = Cursors.IBeam;
             textBox.Dock = DockStyle.Fill;
-            textBox.Font = new Font("Cascadia Code", 11F);
+            textBox.Font = new Font("Emise", 11F);
             textBox.ForeColor = Color.WhiteSmoke;
             textBox.Location = new Point(0, 0);
             textBox.Margin = new Padding(5);
