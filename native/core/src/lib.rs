@@ -16,6 +16,12 @@
 //! in phext-lattice's editor. Dimension steps follow that editor's
 //! `CoordinateNav` (see `nav`), so moving library or book resets the
 //! dimensions below it the same way a phext break does.
+//!
+//! Above the nine dimensions sits libphext's stream level: a document
+//! that arrives as a chain (member phexts joined by 0x02, optionally
+//! closed by 0x03) opens as a multiverse — one universe per member,
+//! traversed and addressed with `$N:` multiverse addresses (see
+//! `document`).
 
 /// The editor's coordinate bound: components run 1..=1000.
 ///
@@ -34,6 +40,6 @@ mod sha256;
 pub mod sync;
 pub mod zoom;
 
-pub use document::{parse_coordinate, Document, DocumentView};
+pub use document::{parse_coordinate, parse_multiverse_address, Document, DocumentView};
 pub use prefs::{Prefs, Theme};
 pub use zoom::ZoomLevel;

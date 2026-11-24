@@ -105,6 +105,7 @@ enum Ui {
     Buffer,
     CoordCommit,
     Nudge(usize, i32),
+    UniverseStep(i32),
     Splitter { x: i32, release: bool },
     Relayout,
 }
@@ -286,6 +287,9 @@ struct Notepad {
     minus: [button::Button; 3],
     plus: [button::Button; 3],
     dim_labels: [frame::Frame; 3],
+    universe_prev: button::Button,
+    universe_label: frame::Frame,
+    universe_next: button::Button,
     outline_title: frame::Frame,
     tree: tree::Tree,
     grip: frame::Frame,
@@ -355,7 +359,8 @@ impl Notepad {
         coordinate.set_text_size(16);
         coordinate.set_maximum_size(128);
         coordinate.set_tooltip(
-            "Type or paste a coordinate such as 1.2.3/4.5.6/7.8.9, then press Enter",
+            "Type or paste a coordinate such as 1.2.3/4.5.6/7.8.9, then press Enter. \
+             In a chain, $N:1.2.3/4.5.6/7.8.9 jumps to universe N.",
         );
         // set_callback keeps FLTK's own key handling. A custom handle()
         // would replace it, and the coordinate box would ignore typing and paste.
@@ -412,6 +417,23 @@ impl Notepad {
             label.set_frame(FrameType::NoBox);
             label.set_label_size(13);
         }
+
+        // Multiverse traversal, on the same step row as the dimension
+        // steppers: previous / next universe, with the current $N in
+        // between. Hidden unless the document is a chain.
+        let mut universe_prev = button::Button::new(0, 0, 28, 24, "<");
+        let mut universe_next = button::Button::new(0, 0, 28, 24, ">");
+        universe_prev.set_tooltip("Previous universe");
+        universe_next.set_tooltip("Next universe");
+        wire(&mut universe_prev, &tx, Ui::UniverseStep(-1));
+        wire(&mut universe_next, &tx, Ui::UniverseStep(1));
+        let mut universe_label = frame::Frame::new(0, 0, 88, 24, "");
+        universe_label.set_align(Align::Center | Align::Inside);
+        universe_label.set_frame(FrameType::NoBox);
+        universe_label.set_label_size(13);
+        universe_prev.hide();
+        universe_next.hide();
+        universe_label.hide();
 
         let mut outline_title = frame::Frame::new(0, 0, 10, 22, "");
         outline_title.set_align(Align::Left | Align::Inside);
@@ -516,6 +538,9 @@ impl Notepad {
             minus,
             plus,
             dim_labels,
+            universe_prev,
+            universe_label,
+            universe_next,
             outline_title,
             tree,
             grip,
@@ -630,6 +655,13 @@ impl Notepad {
             self.plus[index].resize(x, step_y + 4, 28, 24);
             x += 40;
         }
+        // The universe stepper follows the same rhythm, after a gap.
+        x += 8;
+        self.universe_prev.resize(x, step_y + 4, 28, 24);
+        x += 28;
+        self.universe_label.resize(x, step_y + 4, 132, 24);
+        x += 136;
+        self.universe_next.resize(x, step_y + 4, 28, 24);
 
         let body_y = step_y + STEP_H;
         let body_h = (height - body_y - STATUS_H).max(40);
@@ -708,6 +740,30 @@ impl Notepad {
             self.zoom_out.activate();
         } else {
             self.zoom_out.deactivate();
+        }
+        if view.is_chain {
+            self.universe_prev.show();
+            self.universe_next.show();
+            self.universe_label.show();
+            let closed = if view.chain_closed { "" } else { " · unclosed" };
+            self.universe_label.set_label(&format!(
+                "${} of {}{}",
+                view.universe, view.universe_count, closed
+            ));
+            if view.can_prev_universe {
+                self.universe_prev.activate();
+            } else {
+                self.universe_prev.deactivate();
+            }
+            if view.can_next_universe {
+                self.universe_next.activate();
+            } else {
+                self.universe_next.deactivate();
+            }
+        } else {
+            self.universe_prev.hide();
+            self.universe_next.hide();
+            self.universe_label.hide();
         }
 
         let scroll = view.scroll.clone();
@@ -1099,6 +1155,16 @@ impl Notepad {
                 self.refresh();
             }
             Ui::CoordCommit => self.commit_coordinate(),
+            Ui::UniverseStep(delta) => {
+                let moved = if delta < 0 {
+                    self.doc.prev_universe()
+                } else {
+                    self.doc.next_universe()
+                };
+                if moved {
+                    self.refresh();
+                }
+            }
             Ui::Nudge(index, delta) => {
                 let name = self
                     .doc

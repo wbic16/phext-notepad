@@ -3,6 +3,15 @@
 //! libphext's `explode` / `implode` that stay proportional to the occupied
 //! scrolls (libphext 0.3.1's `explode` is quadratic in file size, and its
 //! `implode` forced a full clone of every scroll on each call).
+//!
+//! A document is one *universe* — a single phext — or, when the stream
+//! arrives as a chain (libphext's stream level: member phexts joined by
+//! 0x02, optionally closed by 0x03), a *multiverse*: one universe per
+//! chain member, traversed with [`Document::next_universe`] and friends,
+//! and addressed across members by `$N:` multiverse addresses
+//! ([`Document::fetch`]). Editing always happens in the active universe
+//! and stays byte-local to it: untouched members serialize from the
+//! exact bytes they arrived in.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -39,6 +48,21 @@ pub struct DocumentView {
     pub outline_title: String,
     pub outline: Vec<OutlineNode>,
     pub scroll: String,
+    /// True when the document is a chain (a multiverse). The fields
+    /// below are only meaningful then; a plain phext reports universe
+    /// 1 of 1, closed.
+    pub is_chain: bool,
+    /// The active universe, 1-based — the `$N` of the multiverse
+    /// address for the universe being edited.
+    pub universe: usize,
+    /// How many universes the chain holds.
+    pub universe_count: usize,
+    /// Whether the chain was terminated by a chain close. An unclosed
+    /// chain ran out at EOF — possibly truncated — and is never
+    /// silently promoted to closed.
+    pub chain_closed: bool,
+    pub can_prev_universe: bool,
+    pub can_next_universe: bool,
     pub path: Option<String>,
     pub filename: String,
     pub dirty: bool,
@@ -55,28 +79,76 @@ pub struct DocumentView {
     pub recent: Vec<String>,
 }
 
+/// One universe of a document: a single phext's scroll map, plus the
+/// member's original stream text while it is untouched. Serializing an
+/// untouched member reproduces its arrival bytes exactly, whatever
+/// shape they were in; the first edit drops `raw`, and that member
+/// serializes from its scroll map from then on. The single universe of
+/// a chain-free document never carries `raw` — plain phexts have
+/// always normalized through the scroll map.
+#[derive(Debug, Clone)]
+struct Universe {
+    scrolls: BTreeMap<Coordinate, String>,
+    raw: Option<String>,
+}
+
+impl Universe {
+    fn from_member(text: &str) -> Self {
+        Self {
+            scrolls: parse::explode(text),
+            raw: Some(text.to_string()),
+        }
+    }
+
+    /// The bytes this member contributes to the serialized document.
+    fn byte_len(&self) -> usize {
+        match &self.raw {
+            Some(raw) => raw.len(),
+            None => parse::serialized_len(&self.scrolls),
+        }
+    }
+
+    fn word_count(&self) -> usize {
+        self.scrolls.values().map(|text| word_count(text)).sum()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Document {
-    scrolls: BTreeMap<Coordinate, String>,
+    /// Every universe of the document, in chain order. Always at
+    /// least one; exactly one for a chain-free phext.
+    universes: Vec<Universe>,
+    /// Index into `universes` of the universe being edited
+    /// (0 = `$1`). The coordinate, zoom, and outline all describe
+    /// this universe.
+    active: usize,
+    /// True when the document arrived as a chain.
+    chain: bool,
+    /// Whether the chain was terminated by a chain close. Meaningless
+    /// when `chain` is false (stored true: nothing is missing).
+    chain_closed: bool,
     coordinate: Coordinate,
     zoom: ZoomLevel,
     path: Option<PathBuf>,
     dirty: bool,
     virtual_name: Option<String>,
     message: String,
-    /// Length of the serialized phext, maintained arithmetically by
-    /// [`parse::serialized_len`] — never by serializing.
+    /// Length of the serialized document, maintained arithmetically —
+    /// never by serializing. For a chain this counts every member plus
+    /// the chain breaks between them and the close, when present.
     byte_count: usize,
-    /// Sum of the word counts of every scroll, maintained incrementally
-    /// so `view()` does not rescan the whole document.
+    /// Sum of the word counts of every scroll in every universe,
+    /// maintained incrementally so `view()` does not rescan the whole
+    /// document.
     total_words: usize,
-    /// Bumped on every scroll mutation. Together with the zoom and the
-    /// coordinate it keys the outline cache: the outline is a pure
-    /// function of (scrolls, zoom, coordinate), and rebuilding it walks
-    /// every occupied scroll, so repeated views at the same position
-    /// reuse the last build instead.
+    /// Bumped on every scroll mutation. Together with the active
+    /// universe, the zoom, and the coordinate it keys the outline
+    /// cache: the outline is a pure function of (active scrolls, zoom,
+    /// coordinate), and rebuilding it walks every occupied scroll, so
+    /// repeated views at the same position reuse the last build instead.
     revision: u64,
-    outline_cache: std::cell::RefCell<Option<(u64, ZoomLevel, Coordinate, Vec<OutlineNode>)>>,
+    outline_cache:
+        std::cell::RefCell<Option<(u64, usize, ZoomLevel, Coordinate, Vec<OutlineNode>)>>,
 }
 
 impl Document {
@@ -89,7 +161,13 @@ impl Document {
 
     pub fn empty() -> Self {
         Self {
-            scrolls: BTreeMap::new(),
+            universes: vec![Universe {
+                scrolls: BTreeMap::new(),
+                raw: None,
+            }],
+            active: 0,
+            chain: false,
+            chain_closed: true,
             coordinate: default_coordinate(),
             zoom: ZoomLevel::Inner,
             path: None,
@@ -105,22 +183,64 @@ impl Document {
 
     pub fn from_phext(text: &str, path: Option<PathBuf>) -> Self {
         let text = text.strip_prefix('\u{feff}').unwrap_or(text);
-        let scrolls = parse::explode(text);
-        let total_words = scrolls.values().map(|text| word_count(text)).sum();
-        let byte_count = parse::serialized_len(&scrolls);
-        Self {
-            scrolls,
+        // A single chain opens as a multiverse, one universe per
+        // member; anything else is one universe on the flat path
+        // (see `parse::split_chain` for the boundary).
+        let (universes, chain, chain_closed) = match parse::split_chain(text) {
+            Some((members, closed)) => (
+                members.iter().map(|member| Universe::from_member(member)).collect(),
+                true,
+                closed,
+            ),
+            None => (
+                vec![Universe {
+                    scrolls: parse::explode(text),
+                    raw: None,
+                }],
+                false,
+                true,
+            ),
+        };
+        let total_words = universes.iter().map(|universe| universe.word_count()).sum();
+        let mut doc = Self {
+            universes,
+            active: 0,
+            chain,
+            chain_closed,
             coordinate: default_coordinate(),
             zoom: ZoomLevel::Inner,
             path,
             dirty: false,
             virtual_name: None,
             message: String::new(),
-            byte_count,
+            byte_count: 0,
             total_words,
             revision: 0,
             outline_cache: std::cell::RefCell::new(None),
+        };
+        let byte_count = doc.compute_byte_count();
+        doc.byte_count = byte_count;
+        doc
+    }
+
+    /// The serialized length of the whole document, computed by
+    /// walking the universes arithmetically: each member contributes
+    /// its raw length while untouched, else its scroll map's
+    /// serialized length; a chain adds one break byte per boundary
+    /// plus one for the close when closed.
+    fn compute_byte_count(&self) -> usize {
+        let members: usize = self.universes.iter().map(|universe| universe.byte_len()).sum();
+        if self.chain {
+            members + (self.universes.len() - 1) + usize::from(self.chain_closed)
+        } else {
+            members
         }
+    }
+
+    /// The active universe's scroll map — the one the coordinate,
+    /// zoom, and outline describe, and the one editing writes to.
+    fn active_scrolls(&self) -> &BTreeMap<Coordinate, String> {
+        &self.universes[self.active].scrolls
     }
 
     pub fn load_path(&mut self, path: &Path) -> Result<(), String> {
@@ -152,7 +272,21 @@ impl Document {
     }
 
     pub fn serialize(&self) -> String {
-        parse::serialize(&self.scrolls)
+        if !self.chain {
+            return parse::serialize(&self.universes[0].scrolls);
+        }
+        // Untouched members contribute their arrival bytes; edited
+        // members serialize from their scroll maps. Either way the
+        // join is libphext's chain serialization over the members.
+        let members: Vec<String> = self
+            .universes
+            .iter()
+            .map(|universe| match &universe.raw {
+                Some(raw) => raw.clone(),
+                None => parse::serialize(&universe.scrolls),
+            })
+            .collect();
+        parse::join_chain(&members, self.chain_closed)
     }
 
     pub fn set_scroll(&mut self, text: &str) {
@@ -164,9 +298,10 @@ impl Document {
         self.message.clear();
     }
 
-    /// The text at an arbitrary coordinate, if a scroll lives there.
+    /// The text at an arbitrary coordinate in the active universe,
+    /// if a scroll lives there.
     pub fn scroll_at(&self, coordinate: Coordinate) -> Option<&str> {
-        self.scrolls.get(&coordinate).map(String::as_str)
+        self.active_scrolls().get(&coordinate).map(String::as_str)
     }
 
     /// Write a scroll at an arbitrary coordinate (empty text removes
@@ -182,32 +317,42 @@ impl Document {
     fn apply_scroll(&mut self, coordinate: Coordinate, text: &str) {
         // Keep the running totals exact without rescanning the document:
         // words adjust by the edited scroll's delta, and the byte count
-        // is an arithmetic walk over the map (no string is built).
+        // is an arithmetic walk over the maps (no string is built).
         let current = self.scroll_at(coordinate).unwrap_or("").to_string();
         self.total_words -= word_count(&current);
         self.total_words += word_count(text);
+        let universe = &mut self.universes[self.active];
         if text.is_empty() {
-            self.scrolls.remove(&coordinate);
+            universe.scrolls.remove(&coordinate);
         } else {
-            self.scrolls.insert(coordinate, text.to_string());
+            universe.scrolls.insert(coordinate, text.to_string());
         }
+        // The member has been edited: it serializes from its scroll
+        // map from now on, never from its arrival bytes again.
+        universe.raw = None;
         self.dirty = true;
-        self.byte_count = parse::serialized_len(&self.scrolls);
+        self.byte_count = self.compute_byte_count();
         self.revision += 1;
     }
 
     /// The outline for the current zoom and coordinate, rebuilt only
-    /// when the scrolls, zoom, or coordinate changed since the last one.
+    /// when the active universe's scrolls, the universe itself, the
+    /// zoom, or the coordinate changed since the last one.
     fn outline(&self) -> Vec<OutlineNode> {
-        if let Some((revision, zoom, coordinate, outline)) = &*self.outline_cache.borrow() {
-            if *revision == self.revision && *zoom == self.zoom && *coordinate == self.coordinate
+        if let Some((revision, active, zoom, coordinate, outline)) = &*self.outline_cache.borrow()
+        {
+            if *revision == self.revision
+                && *active == self.active
+                && *zoom == self.zoom
+                && *coordinate == self.coordinate
             {
                 return outline.clone();
             }
         }
-        let outline = zoom::outline(&self.scrolls, self.zoom, self.coordinate);
+        let outline = zoom::outline(self.active_scrolls(), self.zoom, self.coordinate);
         *self.outline_cache.borrow_mut() = Some((
             self.revision,
+            self.active,
             self.zoom,
             self.coordinate,
             outline.clone(),
@@ -216,16 +361,139 @@ impl Document {
     }
 
     pub fn scroll_text(&self) -> &str {
-        self.scrolls
+        self.active_scrolls()
             .get(&self.coordinate)
             .map(String::as_str)
             .unwrap_or("")
     }
 
+    /// True when the document is a chain — a multiverse of two or
+    /// more member phexts, or a single phext closed by a chain close.
+    pub fn is_chain(&self) -> bool {
+        self.chain
+    }
+
+    /// Whether the chain was terminated by a chain close. An unclosed
+    /// chain ran out at EOF — possibly truncated — and the flag is
+    /// state to surface, never an error to swallow. True for
+    /// chain-free documents, where nothing is missing.
+    pub fn chain_closed(&self) -> bool {
+        self.chain_closed
+    }
+
+    /// How many universes the document holds: the chain's member
+    /// count, or 1 for a plain phext.
+    pub fn universe_count(&self) -> usize {
+        self.universes.len()
+    }
+
+    /// The active universe, 1-based — its `$N` in a multiverse
+    /// address.
+    pub fn current_universe(&self) -> usize {
+        self.active + 1
+    }
+
+    /// The table of contents of one universe: the addresses of its
+    /// occupied scrolls, in coordinate order. `universe` is 1-based;
+    /// an out-of-range universe has an empty table of contents.
+    pub fn universe_toc(&self, universe: usize) -> Vec<Coordinate> {
+        if universe < 1 {
+            return Vec::new();
+        }
+        self.universes
+            .get(universe - 1)
+            .map(|universe| universe.scrolls.keys().copied().collect())
+            .unwrap_or_default()
+    }
+
+    /// Fetch a scroll by multiverse address: `"$N:1.1.1/1.1.1/1.1.1"`,
+    /// or a bare coordinate, which names universe 1 — libphext's
+    /// `Chain::fetch` semantics exactly. An absent scroll, an
+    /// out-of-range universe, and a malformed address all yield an
+    /// empty string, as `fetch` does: absence is a named empty,
+    /// never a crash.
+    pub fn fetch(&self, address: &str) -> String {
+        let Some((universe, coord)) = parse_multiverse_address(address) else {
+            return String::new();
+        };
+        self.universes
+            .get(universe - 1)
+            .and_then(|universe| universe.scrolls.get(&coord))
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    /// Step to the next universe, keeping the coordinate: the same
+    /// address in the next member is the same element one step later
+    /// in the chain. Returns false at the last universe, like a
+    /// dimension step at its bound.
+    pub fn next_universe(&mut self) -> bool {
+        if self.active + 1 >= self.universes.len() {
+            return false;
+        }
+        self.active += 1;
+        self.message.clear();
+        true
+    }
+
+    /// Step to the previous universe, keeping the coordinate.
+    /// Returns false at universe 1.
+    pub fn prev_universe(&mut self) -> bool {
+        if self.active == 0 {
+            return false;
+        }
+        self.active -= 1;
+        self.message.clear();
+        true
+    }
+
+    /// Jump straight to universe `universe` (1-based), keeping the
+    /// coordinate. Returns false when the universe does not exist.
+    pub fn goto_universe(&mut self, universe: usize) -> bool {
+        if universe < 1 || universe > self.universes.len() {
+            return false;
+        }
+        self.active = universe - 1;
+        self.message.clear();
+        true
+    }
+
+    /// Jump to a coordinate. The address may carry a `$N:` universe
+    /// prefix — `"$3:1.1.1/1.1.1/1.1.1"` moves to that universe and
+    /// coordinate together; a bare coordinate stays in the current
+    /// universe. A failed jump changes nothing.
     pub fn jump(&mut self, text: &str) -> Result<(), String> {
-        let coord = parse_coordinate(text).ok_or_else(|| {
+        let bad_address = || {
             "Use a coordinate like 1.1.1/1.1.1/1.1.1. Each number is from 1 to 1000.".to_string()
-        })?;
+        };
+        let text = text.trim();
+        let (universe, address) = match text.strip_prefix('$') {
+            Some(rest) => {
+                let (number, coord) = rest.split_once(':').ok_or_else(bad_address)?;
+                let number: usize = number.trim().parse().map_err(|_| bad_address())?;
+                if number < 1 {
+                    return Err(bad_address());
+                }
+                (Some(number), coord)
+            }
+            None => (None, text),
+        };
+        let coord = parse_coordinate(address).ok_or_else(bad_address)?;
+        if let Some(universe) = universe {
+            if !self.chain {
+                return Err(
+                    "This document is a single phext, not a chain — a $N: address needs a multiverse."
+                        .to_string(),
+                );
+            }
+            if universe > self.universes.len() {
+                return Err(format!(
+                    "Universe ${universe} is not in this chain — it has {} universes.",
+                    self.universes.len()
+                ));
+            }
+            self.active = universe - 1;
+        }
         self.coordinate = coord;
         self.message.clear();
         Ok(())
@@ -286,8 +554,11 @@ impl Document {
         self.dirty = false;
     }
 
+    /// The active universe's scroll map. For a chain this is one
+    /// member's scrolls — [`Document::universe_toc`] and
+    /// [`Document::fetch`] reach the others.
     pub fn scrolls(&self) -> &BTreeMap<Coordinate, String> {
-        &self.scrolls
+        self.active_scrolls()
     }
 
     pub fn clear_message(&mut self) {
@@ -357,13 +628,19 @@ impl Document {
             outline_title: format!("{} · {}", self.zoom.subspace(), self.zoom.arm_title()),
             outline: self.outline(),
             scroll,
+            is_chain: self.chain,
+            universe: self.current_universe(),
+            universe_count: self.universe_count(),
+            chain_closed: self.chain_closed,
+            can_prev_universe: self.active > 0,
+            can_next_universe: self.active + 1 < self.universes.len(),
             path: self.path.as_ref().map(|path| path.display().to_string()),
             filename: self.filename(),
             dirty: self.dirty,
             bytes: self.byte_count,
             words,
             scroll_words: word_count(self.scroll_text()),
-            scroll_count: self.scrolls.len(),
+            scroll_count: self.active_scrolls().len(),
             summary,
             message: self.message.clone(),
             tree_visible: prefs.tree_visible,
@@ -373,6 +650,26 @@ impl Document {
             recent: prefs.recent.clone(),
         }
     }
+}
+
+/// Parse a multiverse address: an optional `$N:` universe prefix and
+/// a coordinate. A bare coordinate names universe 1 — libphext's
+/// `parse_universe_address` semantics, with this editor's stricter
+/// coordinate parser (components bounded, as everywhere here).
+pub fn parse_multiverse_address(address: &str) -> Option<(usize, Coordinate)> {
+    let address = address.trim();
+    let (universe, coord_part) = match address.strip_prefix('$') {
+        Some(rest) => {
+            let (number, coord) = rest.split_once(':')?;
+            let number: usize = number.trim().parse().ok()?;
+            if number < 1 {
+                return None;
+            }
+            (number, coord)
+        }
+        None => (1, address),
+    };
+    Some((universe, parse_coordinate(coord_part)?))
 }
 
 pub fn parse_coordinate(address: &str) -> Option<Coordinate> {
@@ -472,9 +769,9 @@ mod tests {
     #[test]
     fn sample_round_trips_through_libphext() {
         let doc = sample();
-        assert_eq!(doc.scrolls.len(), 4);
+        assert_eq!(doc.scrolls().len(), 4);
         let again = Document::from_phext(&doc.serialize(), None);
-        assert_eq!(again.scrolls, doc.scrolls);
+        assert_eq!(again.scrolls(), doc.scrolls());
         let mut opened = sample();
         opened.jump("1.1.1/1.1.2/1.1.1").unwrap();
         assert_eq!(opened.scroll_text(), "gamma book");
@@ -587,7 +884,7 @@ mod tests {
         assert_eq!(view.bytes, doc.serialize().len());
         assert_eq!(
             view.words,
-            doc.scrolls.values().map(|text| word_count(text)).sum::<usize>()
+            doc.scrolls().values().map(|text| word_count(text)).sum::<usize>()
         );
         doc.jump("1.1.1/1.1.1/1.1.2").unwrap();
         doc.set_scroll("one two three four");
@@ -595,14 +892,14 @@ mod tests {
         assert_eq!(view.bytes, doc.serialize().len());
         assert_eq!(
             view.words,
-            doc.scrolls.values().map(|text| word_count(text)).sum::<usize>()
+            doc.scrolls().values().map(|text| word_count(text)).sum::<usize>()
         );
         doc.set_scroll("");
         let view = doc.view("edit", &Prefs::default());
         assert_eq!(view.bytes, doc.serialize().len());
         assert_eq!(
             view.words,
-            doc.scrolls.values().map(|text| word_count(text)).sum::<usize>()
+            doc.scrolls().values().map(|text| word_count(text)).sum::<usize>()
         );
         // A scroll created far from every other scroll: the byte count
         // must pick up the full break run to reach it.
@@ -639,6 +936,280 @@ mod tests {
             fourth.outline,
             zoom::outline(doc.scrolls(), ZoomLevel::Outer, doc.coordinate())
         );
+    }
+
+    // ---- multiverse (chain) documents ---------------------------------
+
+    const CHAIN_EXAMPLE: &str = include_str!("../../../multiverse-example.phext");
+
+    fn chain_example() -> Document {
+        Document::from_phext(CHAIN_EXAMPLE, None)
+    }
+
+    #[test]
+    fn chain_fixture_is_the_canonical_example() {
+        // The fixture at the repo root is the canonical multiversal
+        // phext: 742 bytes, the hash the demo correction pass pinned.
+        assert_eq!(CHAIN_EXAMPLE.len(), 742);
+        assert_eq!(
+            crate::sha256::sha256_hex(CHAIN_EXAMPLE.as_bytes()),
+            "62e8881e3a3444cd2673b668640bc09cd8a543d6beedaea5089c957565dc7652"
+        );
+    }
+
+    #[test]
+    fn chain_detection_member_count_and_tocs() {
+        let doc = chain_example();
+        assert!(doc.is_chain());
+        assert!(doc.chain_closed());
+        assert_eq!(doc.universe_count(), 8);
+        assert_eq!(doc.current_universe(), 1);
+        // Universe $1 holds the scene scroll plus the first frame's
+        // two element scrolls; every later universe holds two.
+        assert_eq!(doc.universe_toc(1).len(), 3);
+        for universe in 2..=8 {
+            assert_eq!(doc.universe_toc(universe).len(), 2, "universe {universe}");
+        }
+        let addresses: Vec<String> = doc
+            .universe_toc(1)
+            .iter()
+            .map(|coord| format!("{coord}"))
+            .collect();
+        assert_eq!(
+            addresses,
+            ["1.1.1/1.1.1/1.1.1", "1.1.1/1.1.1/1.1.2", "1.1.1/1.1.1/1.1.3"]
+        );
+        // Out-of-range universes have empty tables of contents.
+        assert!(doc.universe_toc(0).is_empty());
+        assert!(doc.universe_toc(9).is_empty());
+        // The view reports the multiverse.
+        let view = doc.view("open", &Prefs::default());
+        assert!(view.is_chain);
+        assert_eq!(view.universe, 1);
+        assert_eq!(view.universe_count, 8);
+        assert!(view.chain_closed);
+        assert!(!view.can_prev_universe);
+        assert!(view.can_next_universe);
+    }
+
+    #[test]
+    fn chain_fetch_matches_libphext() {
+        let doc = chain_example();
+        let chain = libphext::phext::parse_chains(CHAIN_EXAMPLE).remove(0);
+        for address in [
+            "1.1.1/1.1.1/1.1.1",
+            "1.1.1/1.1.1/1.1.2",
+            "$1:1.1.1/1.1.1/1.1.2",
+            "$2:1.1.1/1.1.1/1.1.2",
+            "$5:1.1.1/1.1.1/1.1.3",
+            "$8:1.1.1/1.1.1/1.1.2",
+            "$9:1.1.1/1.1.1/1.1.1",
+            "$2:1.1.1/1.1.1/1.1.1",
+            "$3:9.9.9/9.9.9/9.9.9",
+        ] {
+            assert_eq!(doc.fetch(address), chain.fetch(address), "{address}");
+        }
+        // The circle in universe $2 is the one at cx=44.
+        assert!(doc.fetch("$2:1.1.1/1.1.1/1.1.2").contains("cx=44"));
+        // Absent and malformed addresses are named empties, not crashes.
+        assert_eq!(doc.fetch("$9:1.1.1/1.1.1/1.1.1"), "");
+        assert_eq!(doc.fetch("$0:1.1.1/1.1.1/1.1.1"), "");
+        assert_eq!(doc.fetch("not an address"), "");
+        assert_eq!(doc.fetch("$x:1.1.1/1.1.1/1.1.1"), "");
+        assert_eq!(doc.fetch(""), "");
+    }
+
+    #[test]
+    fn member_maps_match_libphext_universe_for_universe() {
+        // Every universe's scroll map equals libphext's own explode of
+        // that member — the chain layer reads members with the same
+        // semantics the library does.
+        let doc = chain_example();
+        let chain = libphext::phext::parse_chains(CHAIN_EXAMPLE).remove(0);
+        for (index, member) in chain.members.iter().enumerate() {
+            let expected: BTreeMap<Coordinate, String> = libphext::phext::explode(member)
+                .into_iter()
+                .filter(|(_, scroll)| !scroll.is_empty())
+                .collect();
+            let toc = doc.universe_toc(index + 1);
+            assert_eq!(toc.len(), expected.len(), "universe {}", index + 1);
+            for coord in &toc {
+                assert_eq!(
+                    doc.fetch(&format!("${}:{coord}", index + 1)),
+                    expected[coord],
+                    "universe {} at {coord}",
+                    index + 1
+                );
+            }
+            // Members also round-trip canonically through the sparse map.
+            assert_eq!(
+                crate::parse::serialize(&expected),
+                *member,
+                "universe {}",
+                index + 1
+            );
+        }
+    }
+
+    #[test]
+    fn traversal_walks_the_frames_in_order() {
+        let mut doc = chain_example();
+        doc.jump("1.1.1/1.1.1/1.1.2").unwrap();
+        // The same address in each universe is the same element one
+        // frame later: the circle's cx advances by 24 per universe.
+        let mut centres = vec![doc.scroll_text().to_string()];
+        while doc.next_universe() {
+            centres.push(doc.scroll_text().to_string());
+        }
+        assert_eq!(doc.current_universe(), 8);
+        assert!(!doc.next_universe());
+        let cx: Vec<&str> = centres
+            .iter()
+            .map(|text| {
+                text.lines()
+                    .find_map(|line| line.strip_prefix("cx="))
+                    .unwrap()
+            })
+            .collect();
+        assert_eq!(cx, ["20", "44", "68", "92", "116", "140", "164", "188"]);
+        // Traversal kept the coordinate the whole way.
+        assert_eq!(format!("{}", doc.coordinate()), "1.1.1/1.1.1/1.1.2");
+        // And back again.
+        while doc.prev_universe() {}
+        assert_eq!(doc.current_universe(), 1);
+        assert!(!doc.prev_universe());
+        // Direct jumps land; out-of-range jumps refuse and stay put.
+        assert!(doc.goto_universe(5));
+        assert_eq!(doc.current_universe(), 5);
+        assert!(!doc.goto_universe(9));
+        assert!(!doc.goto_universe(0));
+        assert_eq!(doc.current_universe(), 5);
+    }
+
+    #[test]
+    fn jump_accepts_universe_prefixes() {
+        let mut doc = chain_example();
+        doc.jump("$3:1.1.1/1.1.1/1.1.2").unwrap();
+        assert_eq!(doc.current_universe(), 3);
+        assert!(doc.scroll_text().contains("cx=68"));
+        // A bare coordinate stays in the current universe.
+        doc.jump("1.1.1/1.1.1/1.1.3").unwrap();
+        assert_eq!(doc.current_universe(), 3);
+        // Out-of-range universes error and change nothing.
+        let before = (doc.current_universe(), format!("{}", doc.coordinate()));
+        assert!(doc.jump("$9:1.1.1/1.1.1/1.1.1").is_err());
+        assert_eq!(
+            (doc.current_universe(), format!("{}", doc.coordinate())),
+            before
+        );
+        // A plain phext refuses $N: outright.
+        let mut plain = sample();
+        assert!(plain.jump("$2:1.1.1/1.1.1/1.1.1").is_err());
+        assert_eq!(plain.current_universe(), 1);
+    }
+
+    #[test]
+    fn untouched_chain_round_trips_byte_identical() {
+        let doc = chain_example();
+        assert_eq!(doc.serialize(), CHAIN_EXAMPLE);
+        let chains = libphext::phext::parse_chains(CHAIN_EXAMPLE);
+        assert_eq!(
+            doc.serialize(),
+            libphext::phext::serialize_chains(&chains)
+        );
+        // Totals cover the whole multiverse.
+        let view = doc.view("open", &Prefs::default());
+        assert_eq!(view.bytes, CHAIN_EXAMPLE.len());
+        let expected_words: usize = chains[0]
+            .members
+            .iter()
+            .map(|member| {
+                crate::parse::explode(member)
+                    .values()
+                    .map(|text| word_count(text))
+                    .sum::<usize>()
+            })
+            .sum();
+        assert_eq!(view.words, expected_words);
+    }
+
+    #[test]
+    fn editing_one_universe_leaves_the_others_byte_identical() {
+        let mut doc = chain_example();
+        let before = libphext::phext::parse_chains(&doc.serialize());
+        assert!(doc.goto_universe(3));
+        doc.jump("1.1.1/1.1.1/1.1.2").unwrap();
+        doc.set_scroll("circle\ncx=999\ncy=60\nr=12\nfill=#000000");
+        assert!(doc.dirty());
+        let after = libphext::phext::parse_chains(&doc.serialize());
+        assert_eq!(after.len(), 1);
+        assert_eq!(after[0].members.len(), 8);
+        assert!(after[0].closed);
+        for (index, (was, is)) in before[0]
+            .members
+            .iter()
+            .zip(&after[0].members)
+            .enumerate()
+        {
+            if index == 2 {
+                assert_ne!(was, is, "universe 3 must change");
+                assert!(is.contains("cx=999"));
+            } else {
+                assert_eq!(was, is, "universe {} must not change", index + 1);
+            }
+        }
+        // Totals still describe the whole serialized document.
+        let view = doc.view("edit", &Prefs::default());
+        assert_eq!(view.bytes, doc.serialize().len());
+    }
+
+    #[test]
+    fn unclosed_chain_surfaces_its_state() {
+        // The canonical example with its close removed is truncated,
+        // not closed — and it round-trips without gaining one.
+        let truncated = CHAIN_EXAMPLE.strip_suffix('\u{03}').unwrap();
+        let doc = Document::from_phext(truncated, None);
+        assert!(doc.is_chain());
+        assert_eq!(doc.universe_count(), 8);
+        assert!(!doc.chain_closed());
+        assert_eq!(doc.serialize(), truncated);
+        let view = doc.view("open", &Prefs::default());
+        assert!(view.is_chain && !view.chain_closed);
+        // A minimal unclosed chain behaves the same way.
+        let doc = Document::from_phext("one\u{02}two", None);
+        assert!(doc.is_chain());
+        assert!(!doc.chain_closed());
+        assert_eq!(doc.serialize(), "one\u{02}two");
+    }
+
+    #[test]
+    fn closed_single_member_is_a_one_universe_chain() {
+        let doc = Document::from_phext("hello\u{03}", None);
+        assert!(doc.is_chain());
+        assert_eq!(doc.universe_count(), 1);
+        assert!(doc.chain_closed());
+        assert_eq!(doc.scroll_text(), "hello");
+        assert_eq!(doc.serialize(), "hello\u{03}");
+    }
+
+    #[test]
+    fn plain_and_multi_chain_streams_keep_flat_behaviour() {
+        let doc = sample();
+        assert!(!doc.is_chain());
+        assert_eq!(doc.universe_count(), 1);
+        assert_eq!(doc.current_universe(), 1);
+        let mut doc = doc;
+        assert!(!doc.next_universe());
+        assert!(!doc.prev_universe());
+        // A chain-free phext is a single universe at $1.
+        assert_eq!(doc.fetch("$1:1.1.1/1.1.1/1.1.1"), "alpha line");
+        assert_eq!(doc.fetch("$2:1.1.1/1.1.1/1.1.1"), "");
+        // A stream of several chains is not one multiverse: it opens
+        // flat, chain bytes riding as content, bytes preserved.
+        let multi = "a\u{02}b\u{03}c\u{02}d\u{03}";
+        let doc = Document::from_phext(multi, None);
+        assert!(!doc.is_chain());
+        assert_eq!(doc.serialize(), multi);
     }
 
     #[test]
