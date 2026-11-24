@@ -20,8 +20,9 @@
 use std::collections::BTreeMap;
 
 use libphext::phext::{
-    default_coordinate, Coordinate, BOOK_BREAK, CHAPTER_BREAK, COLLECTION_BREAK, LIBRARY_BREAK,
-    SCROLL_BREAK, SECTION_BREAK, SERIES_BREAK, SHELF_BREAK, VOLUME_BREAK,
+    default_coordinate, Coordinate, BOOK_BREAK, CHAIN_BREAK, CHAIN_CLOSE, CHAPTER_BREAK,
+    COLLECTION_BREAK, LIBRARY_BREAK, SCROLL_BREAK, SECTION_BREAK, SERIES_BREAK, SHELF_BREAK,
+    VOLUME_BREAK,
 };
 
 /// The nine phext break bytes, highest dimension first.
@@ -78,6 +79,54 @@ pub fn explode(text: &str) -> BTreeMap<Coordinate, String> {
         scrolls.insert(run_coord, text[start..].to_string());
     }
     scrolls
+}
+
+/// Split a stream into the member phexts of its chain, when the stream
+/// is a single chain: members joined by `CHAIN_BREAK` (0x02), optionally
+/// terminated by `CHAIN_CLOSE` (0x03). Returns the member texts and the
+/// closed flag, using libphext's own `parse_chains` — the chain layer is
+/// libphext's semantics, not a second reading of the bytes.
+///
+/// Two kinds of stream return `None`, and the caller keeps today's flat
+/// single-phext behaviour for both:
+///
+/// * a stream with no chain bytes at all — to libphext that is one
+///   unclosed single-member chain, which is simply a plain phext;
+/// * a stream holding several chains — the editor models one multiverse
+///   per document, and a multi-chain stream's chain bytes ride as scroll
+///   content instead, byte-preserving through `explode` / `serialize`.
+///
+/// A single phext closed by a trailing 0x03 *is* a chain here: one
+/// universe, closed.
+pub fn split_chain(text: &str) -> Option<(Vec<String>, bool)> {
+    let chains = libphext::phext::parse_chains(text);
+    if chains.len() != 1 {
+        return None;
+    }
+    let chain = &chains[0];
+    if chain.members.len() > 1 || chain.closed {
+        Some((chain.members.clone(), chain.closed))
+    } else {
+        None
+    }
+}
+
+/// Join member phexts back into a chain stream: members separated by
+/// `CHAIN_BREAK`, with a trailing `CHAIN_CLOSE` when `closed`. The exact
+/// inverse of [`split_chain`], and byte-identical to libphext's
+/// `serialize_chains` over the same members.
+pub fn join_chain(members: &[String], closed: bool) -> String {
+    let mut out = String::new();
+    for (index, member) in members.iter().enumerate() {
+        if index > 0 {
+            out.push(CHAIN_BREAK);
+        }
+        out.push_str(member);
+    }
+    if closed {
+        out.push(CHAIN_CLOSE);
+    }
+    out
 }
 
 /// The nine components of a coordinate, highest dimension first.
@@ -279,5 +328,48 @@ mod tests {
         let scrolls = explode(baseline);
         assert_eq!(scrolls, libphext_map(baseline));
         assert_eq!(serialize(&scrolls), libphext_bytes(&scrolls));
+    }
+
+    #[test]
+    fn split_chain_recognizes_single_chains_only() {
+        // No chain bytes: a plain phext, not a chain document.
+        assert_eq!(split_chain("alpha\u{17}beta"), None);
+        assert_eq!(split_chain(""), None);
+        // A closed chain of two, and an unclosed one.
+        assert_eq!(
+            split_chain("one\u{02}two\u{03}"),
+            Some((vec!["one".to_string(), "two".to_string()], true))
+        );
+        assert_eq!(
+            split_chain("one\u{02}two"),
+            Some((vec!["one".to_string(), "two".to_string()], false))
+        );
+        // A lone phext closed by 0x03 is a one-universe chain.
+        assert_eq!(
+            split_chain("one\u{03}"),
+            Some((vec!["one".to_string()], true))
+        );
+        // Several chains in one stream stay on the flat path.
+        assert_eq!(split_chain("a\u{02}b\u{03}c\u{02}d\u{03}"), None);
+        assert_eq!(split_chain("a\u{03}b"), None);
+    }
+
+    #[test]
+    fn join_chain_is_split_chain_inverse_and_matches_libphext() {
+        for stream in [
+            "one\u{02}two\u{03}",
+            "one\u{02}two",
+            "one\u{03}",
+            "a\u{17}x\u{02}\u{02}b\u{03}",
+        ] {
+            let (members, closed) = split_chain(stream).expect("a single chain");
+            assert_eq!(join_chain(&members, closed), stream, "{stream:?}");
+            let chains = libphext::phext::parse_chains(stream);
+            assert_eq!(
+                join_chain(&members, closed),
+                libphext::phext::serialize_chains(&chains),
+                "{stream:?}"
+            );
+        }
     }
 }
