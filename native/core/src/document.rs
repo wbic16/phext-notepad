@@ -7,10 +7,11 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use libphext::phext::{default_coordinate, Coordinate, COORDINATE_MAXIMUM, COORDINATE_MINIMUM};
+use libphext::phext::{default_coordinate, Coordinate, COORDINATE_MINIMUM};
 
 use crate::parse;
 use crate::prefs::Prefs;
+use crate::COORDINATE_MAXIMUM;
 use crate::zoom::{self, Crumb, DimView, OutlineNode, ZoomLevel};
 
 const BASELINE: &str = include_str!("../../../baseline.phext");

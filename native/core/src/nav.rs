@@ -6,7 +6,9 @@
 //! stepping a dimension resets every dimension below it. `peek` and the
 //! delimiter helpers from the same file are not used here.
 
-use libphext::phext::{Coordinate, COORDINATE_MAXIMUM, COORDINATE_MINIMUM};
+use libphext::phext::{Coordinate, COORDINATE_MINIMUM};
+
+use crate::COORDINATE_MAXIMUM;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Dimension {
