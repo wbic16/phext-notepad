@@ -9,7 +9,7 @@ rust-version = "1.90"
 publish = false
 
 [dependencies]
-libphext = "0.3.1"
+libphext = "0.6.4"
 # Sync talks to phext-edit over HTTPS and JSON — the same client
 # stack phext-lattice itself uses (ureq + rustls, serde_json).
 serde = { version = "1", features = ["derive"] }

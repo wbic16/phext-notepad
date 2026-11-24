@@ -17,6 +17,15 @@
 //! `CoordinateNav` (see `nav`), so moving library or book resets the
 //! dimensions below it the same way a phext break does.
 
+/// The editor's coordinate bound: components run 1..=1000.
+///
+/// libphext dropped its `COORDINATE_MAXIMUM` in 0.6.x — components are
+/// unbounded in the format itself, where sparsity, not a cap, keeps the
+/// address space honest. Parsing and navigation here keep the old bound
+/// as an editor rule: it is the range a human can type or step through,
+/// and keeping it preserves the behaviour the tests pin.
+pub(crate) const COORDINATE_MAXIMUM: usize = 1000;
+
 pub mod document;
 pub mod nav;
 pub mod parse;
